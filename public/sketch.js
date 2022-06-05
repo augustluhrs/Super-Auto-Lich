@@ -38,28 +38,40 @@ socket.on('setup', function(data){
 });
 
 // basic setup on connecting to server
-socket.on('initParty', function(data){
+socket.on('initParty', (data, callback) => {
   console.log('init parties');
-  let newParty = data.party;
-  let newEnemyParty = data.enemyParty;
-  console.log(data);
-  for (let m of newParty){
-    m.asset = monsterAssets[m.name];
-  }
-  for (let m of newEnemyParty){
-    m.asset = monsterAssets[m.name];
-  }
-  party = newParty;
-  enemyParty = newEnemyParty;
+  party = data.party;
+  enemyParty = data.enemyParty;
   showParties();
 });
 
 // receive info from battle step
-socket.on('battleStep', function(data){
-  console.log('battling');
+socket.on('battleAftermath', function(data){
+  console.log('battle step over');
   party = data.party;
   enemyParty = data.enemyParty;
   showParties();
+});
+
+// end battle message
+socket.on('battleOver', function(data){
+  console.log('battle finished: ' + data.result);
+  party = data.party;
+  enemyParty = data.enemyParty;
+  showParties();
+  push();
+  textSize(80);
+  if (data.result == "win"){
+    fill(0, 250, 50);
+    text("WIN", width / 2, 3 * height / 6);
+  } else if (data.result == "loss"){
+    fill(200, 0, 0);
+    text("LOSS", width / 2, 3 * height / 6);
+  } else {
+    fill(230);
+    text("TIE", width / 2, 3 * height / 6);
+  }
+  pop();
 });
 
 //
@@ -67,10 +79,10 @@ socket.on('battleStep', function(data){
 //
 
 // player stuff
-let party = [];
+let party = [{}, {}, {}, {}, {}];
 let gold, hp, turn;
 let partyName;
-let enemyParty = [];
+let enemyParty = [{}, {}, {}, {}, {}];
 
 // UI
 let stepButt, updateButt; //just for slowing down debug, will eventually trigger automatically
@@ -97,7 +109,6 @@ function setup(){
 
   //make UI
   stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
-  // updateButt = createButton('UPDATE').position(width/2 + 50, 5 * height / 6).mousePressed(updateParty);
 
   //monsters after loadImage
   monsterAssets = {
@@ -117,17 +128,21 @@ function step(){
 }
 
 function showParties(){
+  background(82,135,39);
+
   push();
   translate(width/2, 0);
-  for (let i = 0; i < 5; i++){
-    show(party[i], true);
-    show(enemyParty[i], false);
+  for (let i = 0; i < party.length; i++){
+    showParty(party[i], true);
+  }
+  for (let i = 0; i < enemyParty.length; i++){
+    showParty(enemyParty[i], false);
   }
   pop();
 }
 
 //annoying, idk why this didn't work as a class method...
-function show(monster, isMyParty){
+function showParty(monster, isMyParty){
   push();
   let x = monster.slot.x;
   let y = monster.slot.y;
@@ -141,11 +156,12 @@ function show(monster, isMyParty){
       //x = -x;
       push();
       scale(-1, 1);
-      image(monster.asset, x, y, size, size);
+      // image(monster.asset, x, y, size, size);
+      image(monsterAssets[monster.name], x, y, size, size);
       pop();
-      x = -x;
+      x = -x; //so text flips
   } else {
-      image(monster.asset, x, y, size, size);
+      image(monsterAssets[monster.name], x, y, size, size);
   }
 
   let powerX = x - xOffset;

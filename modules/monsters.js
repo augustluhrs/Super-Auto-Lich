@@ -1,5 +1,8 @@
 class Monster {
   constructor(stats){
+    // if (stats instanceof Monster){
+    //   this = s
+    // } else {
       this.asset = stats.asset; //p5 image variable
       this.assetSize = stats.assetSize || 80; //relative size, used for stat positioning
       this.name = stats.name; //monster name
@@ -13,6 +16,7 @@ class Monster {
       this.timing = stats.timing; //when does ability trigger
       this.index = stats.index; //unchanging index of party
       this.slot = stats.slot; //its place in line (x,y val based on current index)   
+    // }
   }
 }
 
