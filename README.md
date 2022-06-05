@@ -1,19 +1,21 @@
-Socket.io Foundation Project
-=================
+# Super Auto Lich
 
-Designed to be a project you can remix to instantly have the base dependencies for sockets and p5.js
+Super Auto Pets reskinned for Dungeons and Dragons monsters.
 
-Built upon Glitch's basic hello-express project, with the following changes:
+Browser based version using p5.js and socket.io, hosted on glitch.
 
-- package.json has socketio dependency (v1.0.0)
-- server.js with basic socket connections to default namespace and output namespace
-- public folder with sketch.js, index.html, style.css:
-  - sketch.js -- basic p5 setup/draw with socket
-  - index.html -- barebones with socket.io and p5.js (v1.0.0)
-  - style.css -- emptied
-- identical "output" folder inside public for shared screen output
+## Credits
+
+Made by [August Luhrs](https://augustluhrs.art) and [Casey Conchinha](https://cargocollective.com/kcconch)
+
+Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood Games and Wizards of the Coast respectively. We make no claim to either and only use their likenesses because we love them, plz no sue
 
 
-
-Made by [August Luhrs](https://augustluhrs.art)
--------------------
+## Roadmap
+- [] 0.0.1 MVP Prototype
+- [] 0.0.2
+  - [] team names
+  - [] abilities
+  - [] CR (tiers)
+- [] Multiplayer
+  - [] nedb database for login and stats tracking

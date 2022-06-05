@@ -18,6 +18,9 @@ var inputs = io.of('/')
 inputs.on('connection', function(socket){
   console.log('new input client!: ' + socket.id);
   
+  //send starting data
+  socket.emit('setup', {gold: 10, hp: 10, turn: 1});
+
   //new event listeners
   
   //listen for this client to disconnect
