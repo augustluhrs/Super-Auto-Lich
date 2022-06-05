@@ -1,0 +1,16 @@
+{
+  "name": "superautolich",
+  "version": "0.0.1",
+  "description": "Socket.io Foundation Project =================",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "August Luhrs",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.1",
+    "socket.io": "^4.5.1"
+  }
+}
