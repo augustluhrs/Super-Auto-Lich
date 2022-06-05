@@ -3,11 +3,11 @@
     CLIENT
     ~ * ~ * ~ * 
 */
+
 //
-//  MONSTERS AND ASSET LOAD
+//  MONSTER ASSET LOAD
 //
 
-// let monsters = [];
 let monsterAssets = {};
 let beholder, bulette, skeleton;
 
@@ -29,7 +29,6 @@ socket.on('connect', function(){
   console.log('now connected to server');
 });
 
-
 // basic setup on connecting to server
 socket.on('setup', function(data){
   console.log('setting up');
@@ -38,7 +37,6 @@ socket.on('setup', function(data){
   turn = data.turn;
 });
 
-//party setup for test
 // basic setup on connecting to server
 socket.on('initParty', function(data){
   console.log('init parties');
@@ -53,17 +51,7 @@ socket.on('initParty', function(data){
   }
   party = newParty;
   enemyParty = newEnemyParty;
-
-  //show parties
-  push();
-  translate(width/2, 0);
-  for (let i = 0; i < 5; i++){
-    show(party[i], true);
-    show(enemyParty[i], false);
-    // party[i].show(true);
-    // enemyParty[i].show(false);
-  }
-  pop();
+  showParties();
 });
 
 // receive info from battle step
@@ -71,6 +59,7 @@ socket.on('battleStep', function(data){
   console.log('battling');
   party = data.party;
   enemyParty = data.enemyParty;
+  showParties();
 });
 
 //
@@ -111,77 +100,30 @@ function setup(){
   // updateButt = createButton('UPDATE').position(width/2 + 50, 5 * height / 6).mousePressed(updateParty);
 
   //monsters after loadImage
-  monsterAssets =
-    {
-      beholder: beholder,
-      bulette: bulette,
-      skeleton: skeleton,
-    };
-  // monsters = [
-  //   {
-  //     name: "Beholder",
-  //     asset: beholder,
-  //     power: 5,
-  //     hp: 3
-  //   },
-  //   {
-  //     name: "Bulette",
-  //     asset: bulette,
-  //     power: 3,
-  //     hp: 3
-  //   },
-  //   {
-  //     name: "Skeleton",
-  //     asset: skeleton,
-  //     power: 1,
-  //     hp: 2
-  //   },
-  // ]
-
-  //test
-  // for (let i = 0; i < 5; i++){
-  //   let m = random(monsters);
-  //   party.push(new Monster({asset: m.asset, power: m.power, hp: m.hp, index: i, slot: {x: slots[i], y: slotY}}));
-  //   let e = random(monsters);
-  //   enemyParty.push(new Monster({asset: e.asset, power: e.power, hp: e.hp, index: i, slot: {x: slots[i], y: slotY}}));
-  // }
-
-  //show parties
-  // push();
-  // translate(width/2, 0);
-  // for (let i = 0; i < 5; i++){
-  //   party[i].show(true);
-  //   enemyParty[i].show(false);
-  // }
-  // pop();
-
-  //update server with parties
-  // socket.emit("partyUpdate", {party1: party, party2: enemyParty});
-  // socket.emit("partyUpdate");
+  monsterAssets = {
+    beholder: beholder,
+    bulette: bulette,
+    skeleton: skeleton,
+  };
 
   //send server relative data for use in creating monsters
   socket.emit("clientCoords", {slots: slots, slotY: slotY});
-
 } 
-
-// function draw(){
-
-// }
 
 // the main battle function -- steps through each stage of the battle
 function step(){
-  //show parties
+  //server applies hits
+  socket.emit("battleStep");
+}
+
+function showParties(){
   push();
   translate(width/2, 0);
   for (let i = 0; i < 5; i++){
-    party[i].show(true);
-    enemyParty[i].show(false);
+    show(party[i], true);
+    show(enemyParty[i], false);
   }
   pop();
-
-  //server applies hits
-  //manual and one-sided for now
-  socket.emit("battleStep");
 }
 
 //annoying, idk why this didn't work as a class method...
@@ -227,9 +169,3 @@ function show(monster, isMyParty){
 
   pop();
 }
-
-// function updateParty(){
-//   socket.emit("partyUpdate", {party1: party, party2: enemyParty});
-//   // socket.emit("partyUpdate", party);
-
-// }

@@ -14,49 +14,6 @@ class Monster {
       this.index = stats.index; //unchanging index of party
       this.slot = stats.slot; //its place in line (x,y val based on current index)   
   }
-
-  // show(isMyParty){
-  //     push();
-  //     let x = this.slot.x;
-  //     let y = this.slot.y;
-  //     let size = this.assetSize;
-  //     let xOffset = (2 * size / 5);
-  //     let yOffset = (3 * size / 4);
-  //     let statSize = size / 3;
-
-  //     //annoying, need more elegant solution to flipping images and text
-  //     if (!isMyParty) {
-  //         //x = -x;
-  //         push();
-  //         scale(-1, 1);
-  //         image(this.asset, x, y, size, size);
-  //         pop();
-  //         x = -x;
-  //     } else {
-  //         image(this.asset, x, y, size, size);
-  //     }
-
-  //     let powerX = x - xOffset;
-  //     let hpX = x + xOffset;
-  //     let statY = y + yOffset;
-
-  //     //asset
-  //     strokeWeight(2);
-  //     stroke(0);
-  //     textSize(5 * statSize / 6);
-  //     //power
-  //     fill(100);
-  //     rect(powerX, statY, statSize); 
-  //     fill(255);
-  //     text(this.power, powerX, statY);
-  //     //hp
-  //     fill(200, 0, 0);
-  //     rect(hpX, statY, statSize);
-  //     fill(255);
-  //     text(this.hp, hpX, statY);
-
-  //     pop();
-  // }
 }
 
 class Beholder extends Monster {
@@ -66,10 +23,6 @@ class Beholder extends Monster {
     this.power = 5;
     this.hp = 3;
   }
-
-  // show(isMyParty){
-  //   super.show(isMyParty);
-  // }
 }
 
 class Bulette extends Monster {

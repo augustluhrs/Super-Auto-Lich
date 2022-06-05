@@ -21,12 +21,14 @@ let io = require('socket.io')(server);
 //
 // GAME VARIABLES
 //
-// const Monster = require("./modules/monster");
+
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
-// let party1 = [];
-// let party2 = [];
 let players = [];
+
+//
+// SERVER EVENTS
+//
 
 //clients
 var inputs = io.of('/')
@@ -48,22 +50,12 @@ inputs.on('connection', (socket) => {
         player.slotY = data.slotY;
         let party1 = randomParty(player);
         let party2 = randomParty(player);
-        // console.log(JSON.stringify(party1[1].show));
         socket.emit("initParty", {party: party1, enemyParty: party2});
-        // console.log("sent player these parties");
-        // console.log(party1, party2);
-
+        console.log("sent player random parties");
         return;
       }
     }
   });
-
-  //on changes to party (in market or battle) -- eventually need this to happen on server
-  // socket.on('partyUpdate', function(data){
-  //   console.log(socket.id + "'s party updated");
-  //   party1 = data.party1;
-  //   // party2 = data.party2;
-  // });
 
   //each step of the battle
   socket.on('battleStep', () => {
@@ -76,6 +68,10 @@ inputs.on('connection', (socket) => {
   });
   
 });
+
+//
+// FUNCTION
+//
 
 function randomParty(player){
   let party = [];
