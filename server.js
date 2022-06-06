@@ -50,8 +50,8 @@ inputs.on('connection', (socket) => {
   socket.on("clientCoords", (data) => {
     for (let player of players){
       if (player.id == socket.id) {
-        player.slots = data.slots;
-        player.slotY = data.slotY;
+        // player.slots = data.slots;
+        // player.slotY = data.slotY;
         player1 = player;
         party1 = randomParty(player);
         party2 = randomParty(player);
@@ -67,27 +67,21 @@ inputs.on('connection', (socket) => {
     }
   });
 
-  //get client x,y data for use in making monsters
-  socket.on("updateAssets", (data) => {
-    // party1 = data.party;
-    // party2 = data.enemyParty;
-  });
-
   //each step of the battle
   socket.on('battleStep', () => {
     console.log("battleStep");
     //apply damage
-    party1[0].hp -= party2[0].power;
-    party2[0].hp -= party1[0].power;
+    party1[0].currentHP -= party2[0].power;
+    party2[0].currentHP -= party1[0].power;
 
     //check for death and move up party if so
-    if (party1[0].hp <= 0){
+    if (party1[0].currentHP <= 0){
       party1.splice(0, 1);
       for (let i = 0; i < party1.length; i++){
         party1[i].slot.x = player1.slots[i];
       }
     }
-    if (party2[0].hp <= 0){
+    if (party2[0].currentHP <= 0){
       party2.splice(0, 1);
       for (let i = 0; i < party2.length; i++){
         party2[i].slot.x = player1.slots[i];
@@ -122,7 +116,8 @@ function randomParty(player){
   let party = [];
   for (let i = 0; i < 5; i++){
     let RandomMonster = monsters[Math.floor(Math.random()*monsters.length)];
-    party.push(new RandomMonster({index: i, slot: {x: player.slots[i], y: player.slotY}}));
+    party.push(new RandomMonster({index: i}));
+    // party.push(new RandomMonster({index: i, slot: {x: player.slots[i], y: player.slotY}}));
   }
   return party;
 }

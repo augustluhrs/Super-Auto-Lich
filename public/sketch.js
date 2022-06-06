@@ -42,7 +42,7 @@ socket.on('initParty', (data, callback) => {
   console.log('init parties');
   party = data.party;
   enemyParty = data.enemyParty;
-  showParties();
+  showEverything();
 });
 
 // receive info from battle step
@@ -50,7 +50,7 @@ socket.on('battleAftermath', function(data){
   console.log('battle step over');
   party = data.party;
   enemyParty = data.enemyParty;
-  showParties();
+  showEverything();
 });
 
 // end battle message
@@ -61,10 +61,10 @@ socket.on('battleOver', function(data){
   showParties();
   push();
   textSize(80);
-  if (data.result == "win"){
+  if (data.result == "win") {
     fill(0, 250, 50);
     text("WIN", width / 2, 3 * height / 6);
-  } else if (data.result == "loss"){
+  } else if (data.result == "loss") {
     fill(200, 0, 0);
     text("LOSS", width / 2, 3 * height / 6);
   } else {
@@ -78,6 +78,9 @@ socket.on('battleOver', function(data){
 //  VARIABLES
 //
 
+//overall game state
+let state = "market";
+
 // player stuff
 let party = [{}, {}, {}, {}, {}];
 let gold, hp, turn;
@@ -88,8 +91,11 @@ let enemyParty = [{}, {}, {}, {}, {}];
 let stepButt, updateButt; //just for slowing down debug, will eventually trigger automatically
 
 // Layout
-let slots = []; //party line, translated to center, flipped for enemy
-let slotY; //center height of monsters
+let battleSlots = []; //where party is in battle, translated to center, flipped for enemy
+let marketSlots = []; //where party is in market
+let hireSlots = []; //where available monsters in market are
+let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
+let assetSize;
 
 //
 //  MAIN
@@ -104,8 +110,13 @@ function setup(){
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
-  slotY = 4 * height / 6;
-  slots = [-(width / 12), -(2 * width / 12), -(3 * width / 12), -(4 * width / 12), -(5 * width / 12)];
+  battleSlotY = 6 * height / 8;
+  marketSlotY = 3 * height / 8;
+  hireSlotY = 5 * height / 8;
+  battleSlots = [-(width / 12), -(2 * width / 12), -(3 * width / 12), -(4 * width / 12), -(5 * width / 12)];
+  marketSlots = [8 * width / 13, 7 * width / 13, 6 * width / 13, 5 * width / 13, 4 * width / 13];
+  hireSlots = [4 * width / 13, 5 * width / 13, 6 * width / 13, 7 * width / 13, 8 * width / 13];
+  assetSize = width/14;
 
   //make UI
   stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
@@ -118,7 +129,7 @@ function setup(){
   };
 
   //send server relative data for use in creating monsters
-  socket.emit("clientCoords", {slots: slots, slotY: slotY});
+  socket.emit("clientCoords", {}); //no longer needed
 } 
 
 // the main battle function -- steps through each stage of the battle
@@ -127,27 +138,40 @@ function step(){
   socket.emit("battleStep");
 }
 
-function showParties(){
+function showEverything(){
   background(82,135,39);
+  showUI();
 
   push();
-  translate(width/2, 0);
-  for (let i = 0; i < party.length; i++){
-    showParty(party[i], true);
-  }
-  for (let i = 0; i < enemyParty.length; i++){
-    showParty(enemyParty[i], false);
+  if (state == "market") {
+    for (let i = 0; i < party.length; i++){
+      showParty(party[i], true);
+    }
+  } else if (state == "battle") {
+    translate(width/2, 0); //only translating in battle to make flip easier
+    for (let i = 0; i < party.length; i++){
+      showParty(party[i], true);
+    }
+    for (let i = 0; i < enemyParty.length; i++){
+      showParty(enemyParty[i], false);
+    }
   }
   pop();
 }
 
-//annoying, idk why this didn't work as a class method...
+//shows party whether in market or battle
 function showParty(monster, isMyParty){
   push();
-  let x = monster.slot.x;
-  let y = monster.slot.y;
-  let size = monster.assetSize;
-  let xOffset = (2 * size / 5);
+  let x, y;
+  if (state == "market"){
+    x = marketSlots[monster.index];
+    y = marketSlotY;
+  } else if (state == "battle") {
+    x = battleSlots[monster.index];
+    y = battleSlotY;
+  }
+  let size = assetSize;
+  let xOffset = (1 * size / 5);
   let yOffset = (3 * size / 4);
   let statSize = size / 3;
 
@@ -171,17 +195,27 @@ function showParty(monster, isMyParty){
   //asset
   strokeWeight(2);
   stroke(0);
-  textSize(5 * statSize / 6);
+  let statText = 5 * statSize / 6;
+  textSize(statText);
   //power
   fill(100);
   rect(powerX, statY, statSize); 
   fill(255);
-  text(monster.power, powerX, statY);
+  text(monster.currentPower, powerX, statY + (statText / 12)); //weirdly not in center??
   //hp
   fill(200, 0, 0);
   rect(hpX, statY, statSize);
   fill(255);
-  text(monster.hp, hpX, statY);
+  text(monster.currentHP, hpX, statY + (statText / 12));
 
+  pop();
+}
+
+function showUI(){
+  push();
+  //show current state in top right corner
+  textSize(50);
+  fill(0);
+  text(state, width - (width / 10), height / 10);
   pop();
 }

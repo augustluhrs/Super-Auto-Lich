@@ -18,8 +18,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] battle test
     - [X] layout / positioning
     - [X] server random party generation
-    - [ ] battle steps
-    - [ ] winner / end
+    - [X] battle steps
+    - [X] winner / end
+    - [ ] back to market
   - [ ] market test
     - [ ] layout / positioning
     - [ ] random setup
@@ -31,6 +32,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] multiplayer test
     - [ ] get/show enemy party
   - [ ] fix flip issue
+  - [ ] overall game progress
+    - [ ] turns
+    - [ ] player hp loss
 - [ ] 0.0.2
   - [ ] team names
   - [ ] abilities
