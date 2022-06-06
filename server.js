@@ -44,28 +44,28 @@ inputs.on('connection', (socket) => {
   players.push({id: socket.id, gold: 10, hp: 10, turn: 1});
 
   //send starting data
-  socket.emit('setup', {gold: 10, hp: 10, turn: 1});
+  socket.emit('setup', {gold: 10, hp: 10, turn: 1, hires: refreshHires()});
 
   //get client x,y data for use in making monsters
-  socket.on("clientCoords", (data) => {
-    for (let player of players){
-      if (player.id == socket.id) {
-        // player.slots = data.slots;
-        // player.slotY = data.slotY;
-        player1 = player;
-        party1 = randomParty(player);
-        party2 = randomParty(player);
-        socket.emit("initParty", {party: party1, enemyParty: party2});
-        // socket.emit("initParty", {party: party1, enemyParty: party2}, (response) => {
-        //   //get the asset data so it's not overwritten
-        //   party1 = response.party;
-        //   party2 = response.enemyParty;
-        // });
-        console.log("sent player random parties");
-        return;
-      }
-    }
-  });
+  // socket.on("clientCoords", (data) => {
+  //   for (let player of players){
+  //     if (player.id == socket.id) {
+  //       // player.slots = data.slots;
+  //       // player.slotY = data.slotY;
+  //       player1 = player;
+  //       party1 = randomParty(player);
+  //       party2 = randomParty(player);
+  //       socket.emit("initParty", {party: party1, enemyParty: party2});
+  //       // socket.emit("initParty", {party: party1, enemyParty: party2}, (response) => {
+  //       //   //get the asset data so it's not overwritten
+  //       //   party1 = response.party;
+  //       //   party2 = response.enemyParty;
+  //       // });
+  //       console.log("sent player random parties");
+  //       return;
+  //     }
+  //   }
+  // });
 
   //each step of the battle
   socket.on('battleStep', () => {
@@ -92,7 +92,16 @@ inputs.on('connection', (socket) => {
     if (party1.length == 0 && party2.length == 0){
       socket.emit("battleOver", {party: party1, enemyParty: party2, result: "tie"})
     } else if (party1.length == 0){
-      socket.emit("battleOver", {party: party1, enemyParty: party2, result: "loss"})
+      let hp;
+      //reduce HP here so they can see it on the loss screen;
+      for (let player of players) {
+        if (player.id == socket.id) {
+          player.hp -= 2;
+          hp = player.hp;
+          return;
+        }
+      }
+      socket.emit("battleOver", {party: party1, enemyParty: party2, hp: hp, result: "loss"})
     } else if (party2.length == 0){
       socket.emit("battleOver", {party: party1, enemyParty: party2, result: "win"})
     } else {
@@ -109,8 +118,27 @@ inputs.on('connection', (socket) => {
 });
 
 //
-// FUNCTION
+// FUNCTIONS
 //
+
+function backToMarket(id){
+  let gold, turns;
+  for (let player of players) {
+    if (player.id == id){
+      player.gold = 10;
+      player.turns++;
+      gold = player.gold;
+      turns = player.turns;
+      return;
+    }
+  }
+  socket.emit("backToMarket", {gold: gold, turns: turns, hires: refreshHires()})
+}
+
+function refreshHires(){
+  let hires = [];
+  return hires;
+}
 
 function randomParty(player){
   let party = [];

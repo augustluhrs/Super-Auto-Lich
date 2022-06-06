@@ -35,9 +35,10 @@ socket.on('setup', function(data){
   gold = data.gold;
   hp = data.hp;
   turn = data.turn;
+  // showEverything();
 });
 
-// basic setup on connecting to server
+// receive parties once both have sent to server
 socket.on('initParty', (data, callback) => {
   console.log('init parties');
   party = data.party;
@@ -65,6 +66,7 @@ socket.on('battleOver', function(data){
     fill(0, 250, 50);
     text("WIN", width / 2, 3 * height / 6);
   } else if (data.result == "loss") {
+    hp = data.hp;
     fill(200, 0, 0);
     text("LOSS", width / 2, 3 * height / 6);
   } else {
@@ -82,20 +84,19 @@ socket.on('battleOver', function(data){
 let state = "market";
 
 // player stuff
-let party = [{}, {}, {}, {}, {}];
+let party = [];
 let gold, hp, turn;
 let partyName;
-let enemyParty = [{}, {}, {}, {}, {}];
+let enemyParty = [];
 
-// UI
+// UI + Layout
 let stepButt, updateButt; //just for slowing down debug, will eventually trigger automatically
-
-// Layout
 let battleSlots = []; //where party is in battle, translated to center, flipped for enemy
 let marketSlots = []; //where party is in market
 let hireSlots = []; //where available monsters in market are
 let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
 let assetSize;
+let playerStatY; //height of top stats
 
 //
 //  MAIN
@@ -117,7 +118,7 @@ function setup(){
   marketSlots = [8 * width / 13, 7 * width / 13, 6 * width / 13, 5 * width / 13, 4 * width / 13];
   hireSlots = [4 * width / 13, 5 * width / 13, 6 * width / 13, 7 * width / 13, 8 * width / 13];
   assetSize = width/14;
-
+  playerStatY = height / 20;
   //make UI
   stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
 
@@ -129,7 +130,9 @@ function setup(){
   };
 
   //send server relative data for use in creating monsters
-  socket.emit("clientCoords", {}); //no longer needed
+  // socket.emit("clientCoords", {}); //no longer needed
+
+  showEverything();
 } 
 
 // the main battle function -- steps through each stage of the battle
@@ -213,9 +216,18 @@ function showParty(monster, isMyParty){
 
 function showUI(){
   push();
+  //upper left stats
+  textSize(40);
+  fill(249,224,50);
+  text(gold, width / 10, playerStatY);
+  fill(217,65,60);
+  text(hp, 2 * width / 10, playerStatY);
+  fill(30,161,202);
+  text(turn, 3 * width / 10, playerStatY);
+
   //show current state in top right corner
   textSize(50);
   fill(0);
-  text(state, width - (width / 10), height / 10);
+  text(state, width - (width / 10), playerStatY);
   pop();
 }
