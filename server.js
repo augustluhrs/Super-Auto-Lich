@@ -24,7 +24,8 @@ let io = require('socket.io')(server);
 
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
-let players = [];
+let players = []; // holds all current players, their parties, their stats, etc.
+
 //just for testing
 let player1;
 let party1 = [];
@@ -44,28 +45,25 @@ inputs.on('connection', (socket) => {
   players.push({id: socket.id, gold: 10, hp: 10, turn: 1});
 
   //send starting data
-  socket.emit('setup', {gold: 10, hp: 10, turn: 1, hires: refreshHires()});
+  socket.emit('setup', {gold: 10, hp: 10, turn: 1, hires: refreshHires(3)});
 
-  //get client x,y data for use in making monsters
-  // socket.on("clientCoords", (data) => {
-  //   for (let player of players){
-  //     if (player.id == socket.id) {
-  //       // player.slots = data.slots;
-  //       // player.slotY = data.slotY;
-  //       player1 = player;
-  //       party1 = randomParty(player);
-  //       party2 = randomParty(player);
-  //       socket.emit("initParty", {party: party1, enemyParty: party2});
-  //       // socket.emit("initParty", {party: party1, enemyParty: party2}, (response) => {
-  //       //   //get the asset data so it's not overwritten
-  //       //   party1 = response.party;
-  //       //   party2 = response.enemyParty;
-  //       // });
-  //       console.log("sent player random parties");
-  //       return;
-  //     }
-  //   }
-  // });
+  //if gold left, replaces hires with random hires
+  socket.on("refreshHires", (data) => {
+    for (let player of players) {
+      if (player.id == socket.id){
+        if (player.gold > 0){
+          //get random monsters and send them to player's market
+          //TODO: allow for frozen hires
+          player.gold--;
+          socket.emit("newHires", {gold: player.gold, hires: refreshHires(data.availableHireNum)});
+          console.log("sent " + socket.id + "new hires");
+          return;
+        } else {
+          console.log('not enough gold');
+        }
+      }
+    }
+  });
 
   //each step of the battle
   socket.on('battleStep', () => {
@@ -135,8 +133,12 @@ function backToMarket(id){
   socket.emit("backToMarket", {gold: gold, turns: turns, hires: refreshHires()})
 }
 
-function refreshHires(){
+function refreshHires(availableHireNum){
   let hires = [];
+  for (let i = 0; i < availableHireNum; i++){
+    let RandomMonster = monsters[Math.floor(Math.random()*monsters.length)];
+    hires.push(new RandomMonster({index: i}));
+  }
   return hires;
 }
 

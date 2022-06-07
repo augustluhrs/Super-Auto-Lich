@@ -25,16 +25,17 @@ function preload() {
 let socket = io('/');
 
 //listen for the confirmation of connection 
-socket.on('connect', function(){
+socket.on('connect', () => {
   console.log('now connected to server');
 });
 
 // basic setup on connecting to server
-socket.on('setup', function(data){
+socket.on('setup', (data) => {
   console.log('setting up');
   gold = data.gold;
   hp = data.hp;
   turn = data.turn;
+  hires = data.hires;
   // showEverything();
 });
 
@@ -46,8 +47,15 @@ socket.on('initParty', (data, callback) => {
   showEverything();
 });
 
+//get refreshed hires during market
+socket.on('newHires', (data) => {
+  hires = data.hires;
+  gold = data.gold;
+  showEverything();
+});
+
 // receive info from battle step
-socket.on('battleAftermath', function(data){
+socket.on('battleAftermath', (data) => {
   console.log('battle step over');
   party = data.party;
   enemyParty = data.enemyParty;
@@ -55,7 +63,7 @@ socket.on('battleAftermath', function(data){
 });
 
 // end battle message
-socket.on('battleOver', function(data){
+socket.on('battleOver', (data) => {
   console.log('battle finished: ' + data.result);
   party = data.party;
   enemyParty = data.enemyParty;
@@ -82,6 +90,8 @@ socket.on('battleOver', function(data){
 
 //overall game state
 let state = "market";
+let availableHireNum = 3;
+let hires = []; //available monsters in market
 
 // player stuff
 let party = [];
@@ -95,8 +105,9 @@ let battleSlots = []; //where party is in battle, translated to center, flipped 
 let marketSlots = []; //where party is in market
 let hireSlots = []; //where available monsters in market are
 let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
-let assetSize;
+let assetSize; //size to display monster pngs
 let playerStatY; //height of top stats
+let refreshButt, readyButt; // market buttons
 
 //
 //  MAIN
@@ -116,11 +127,13 @@ function setup(){
   hireSlotY = 5 * height / 8;
   battleSlots = [-(width / 12), -(2 * width / 12), -(3 * width / 12), -(4 * width / 12), -(5 * width / 12)];
   marketSlots = [8 * width / 13, 7 * width / 13, 6 * width / 13, 5 * width / 13, 4 * width / 13];
-  hireSlots = [4 * width / 13, 5 * width / 13, 6 * width / 13, 7 * width / 13, 8 * width / 13];
+  hireSlots = [4 * width / 13, 5 * width / 13, 6 * width / 13, 7 * width / 13, 8 * width / 13, 9 * width / 13, 10 * width / 13];
   assetSize = width/14;
   playerStatY = height / 20;
   //make UI
   stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
+  refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
+  readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp")}); //sends msg that we're ready to battle
 
   //monsters after loadImage
   monsterAssets = {
@@ -129,9 +142,7 @@ function setup(){
     skeleton: skeleton,
   };
 
-  //send server relative data for use in creating monsters
-  // socket.emit("clientCoords", {}); //no longer needed
-
+  //display
   showEverything();
 } 
 
@@ -144,6 +155,7 @@ function step(){
 function showEverything(){
   background(82,135,39);
   showUI();
+  showSlots();
 
   push();
   if (state == "market") {
@@ -229,5 +241,35 @@ function showUI(){
   textSize(50);
   fill(0);
   text(state, width - (width / 10), playerStatY);
+  pop();
+}
+
+//shows the party slots, market slots, and hires, regardless of if they're filled or not
+function showSlots(){
+  push();
+  noStroke();
+  fill(230, 150);
+
+  if (state == "market") {
+    for (let i = 0; i < 5; i++){//party in market
+      rect(marketSlots[i], marketSlotY, assetSize);
+    }
+    for (let i = 0; i < availableHireNum; i++){ //hires, variable based on tier reached
+      rect(hireSlots[i], hireSlotY, assetSize);
+      image(monsterAssets[hires[i].name], hireSlots[i], hireSlotY, assetSize, assetSize);
+    }
+    for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
+      rect(hireSlots[hireSlots.length - i], hireSlotY, assetSize);
+    }
+  } else if (state == "battle") {
+    translate(width/2, 0); //only translating in battle to make flip easier
+    for (let i = 0; i < 5; i++){
+      rect(battleSlots[i], battleSlotY, assetSize);
+    }
+    for (let i = 0; i < 5; i++){
+      rect(-battleSlots[i], battleSlotY, assetSize);
+    }
+  }
+
   pop();
 }
