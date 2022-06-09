@@ -65,6 +65,18 @@ inputs.on('connection', (socket) => {
     }
   });
 
+  //on end turn from market, signals to server we're ready to battle
+  socket.on("readyUp", () => {
+    for (let player of players) {
+      if (player.id == socket.id){
+        player.ready = true;
+        //TODO server check both and send to battle
+        socket.emit("waitingForBattle");
+        //else io.room.emit("startBattle");
+      }
+    }
+  });
+
   //each step of the battle
   socket.on('battleStep', () => {
     console.log("battleStep");
@@ -88,8 +100,12 @@ inputs.on('connection', (socket) => {
 
     //check for end, send next step or end event
     if (party1.length == 0 && party2.length == 0){
+      //TODO server send both back and unReady
+
       socket.emit("battleOver", {party: party1, enemyParty: party2, result: "tie"})
     } else if (party1.length == 0){
+      //TODO server send both back and unReady
+
       let hp;
       //reduce HP here so they can see it on the loss screen;
       for (let player of players) {
@@ -101,6 +117,8 @@ inputs.on('connection', (socket) => {
       }
       socket.emit("battleOver", {party: party1, enemyParty: party2, hp: hp, result: "loss"})
     } else if (party2.length == 0){
+      //TODO server send both back and unReady
+
       socket.emit("battleOver", {party: party1, enemyParty: party2, result: "win"})
     } else {
       socket.emit("battleAftermath", {party: party1, enemyParty: party2});

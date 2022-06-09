@@ -50,7 +50,20 @@ socket.on('initParty', (data, callback) => {
 //get refreshed hires during market
 socket.on('newHires', (data) => {
   hires = data.hires;
+  slots[1].m = hires;
   gold = data.gold;
+  showEverything();
+});
+
+//if other player isn't ready for battle, show waiting
+socket.on("waitingForBattle", () => {
+  waitingForBattle = true;
+  showEverything();
+});
+
+//start battle
+socket.on("startBattle", () => {
+  waitingForBattle = false;
   showEverything();
 });
 
@@ -91,10 +104,10 @@ socket.on('battleOver', (data) => {
 //overall game state
 let state = "market";
 let availableHireNum = 3;
-let hires = []; //available monsters in market
+let hires = [null, null, null, null, null]; //available monsters in market
 
 // player stuff
-let party = [];
+let party = [null, null, null, null, null];
 let gold, hp, turn;
 let partyName;
 let enemyParty = [];
@@ -105,9 +118,15 @@ let battleSlots = []; //where party is in battle, translated to center, flipped 
 let marketSlots = []; //where party is in market
 let hireSlots = []; //where available monsters in market are
 let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
+let slots = []; //array for all draggable slots, with appropriate Ys
 let assetSize; //size to display monster pngs
+let r; //radius of image
 let playerStatY; //height of top stats
 let refreshButt, readyButt; // market buttons
+let waitingForBattle = false; //when ready but opponent isn't
+let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleased
+let dragged = {}; //image asset to show on mouseDragged + original party and index for return
+let hoverCheckTime = 70; //timer before hover triggers
 
 //
 //  MAIN
@@ -129,7 +148,11 @@ function setup(){
   marketSlots = [8 * width / 13, 7 * width / 13, 6 * width / 13, 5 * width / 13, 4 * width / 13];
   hireSlots = [4 * width / 13, 5 * width / 13, 6 * width / 13, 7 * width / 13, 8 * width / 13, 9 * width / 13, 10 * width / 13];
   assetSize = width/14;
+  r = assetSize / 2; //radius of image
   playerStatY = height / 20;
+  slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
+  // slots = [{sX: battleSlots, sY: battleSlotY, m: party}, {sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
+
   //make UI
   stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
   refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
@@ -146,11 +169,185 @@ function setup(){
   showEverything();
 } 
 
+//
+//  FUNCTIONS
+//
+
+function draw(){
+  //had to move drag hover functions here or else would only trigger on move, makes hover wonky
+  if (pickedUpSomething) {
+    showEverything();
+    image(dragged.image, mouseX, mouseY, assetSize, assetSize);
+    //check for hover over party slot, reset timer if not, check timer if so
+    let s = slots[0];
+    let isHovering = false;
+    for (let [i, slotX] of s.sX.entries()){
+      if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+        // console.log("hovering");
+        isHovering = true;
+        hoverTimer++;
+        //if over slot and timesUp and underlying exists then move underlying
+        if (hoverTimer > hoverCheckTime){
+          // console.log("trying to push");
+          //if spot isn't empty, try to move left, if can't, move right
+          if(s.m[i] !== null){
+            console.log("trying to push");
+            pushParty(s.m, i);
+          }
+        }
+      }
+    }
+    //reset timer if not hovering
+    if (!isHovering){
+      hoverTimer = 0;
+    }
+  }
+}
+
+//drag functions
+function mouseDragged(){ //just for pickup now
+  //only pick up in market before readying
+  if (state == "market" && !waitingForBattle && !pickedUpSomething) {
+    for (let s of slots){
+      for (let [i, slotX] of s.sX.entries()){
+        if (s.m[i] !== null && mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+          //in bounds, grab image and remove from original spot
+          pickedUpSomething = true;
+          dragged = {
+            image: monsterAssets[s.m[i].name],
+            party: s.m,
+            index: i,
+            monster: s.m[i] //TODO check if just reference...
+          }
+          s.m[i] = null;
+        }
+      }
+    }
+    //show currently dragged image
+    /*
+    if (pickedUpSomething) {
+      showEverything();
+      image(dragged.image, mouseX, mouseY, assetSize, assetSize);
+      //check for hover over party slot, reset timer if not, check timer if so
+      let s = slots[0];
+      let isHovering = false;
+      for (let [i, slotX] of s.sX.entries()){
+        if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+          console.log("hovering");
+          isHovering = true;
+          hoverTimer++;
+          //if over slot and timesUp and underlying exists then move underlying
+          if (hoverTimer > hoverCheckTime){
+            console.log("trying to push");
+            //if spot isn't empty, try to move left, if can't, move right
+            if(s.m[i] !== null){
+              pushParty(s.m, i);
+            }
+          }
+        }
+      }
+      //reset timer if not hovering
+      if (!isHovering){
+        hoverTimer = 0;
+      }
+      
+    } else { //check for image/slot, "pick up" if so
+      for (let s of slots){
+        for (let [i, slotX] of s.sX.entries()){
+          if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+            //in bounds, grab image and remove from original spot
+            pickedUpSomething = true;
+            dragged = {
+              image: monsterAssets[s.m[i].name],
+              party: s.m,
+              index: i,
+              monster: s.m[i] //TODO check if just reference...
+            }
+            s.m[i] = null;
+          }
+        }
+      }
+    }
+    */
+  }
+}
+
+function mouseReleased() {
+  //only if we're dragging something
+  if (pickedUpSomething) {
+    //on release, check for slot, gold, monster, etc. -- can only release into party, else it just snaps back
+    let needsToReturn = true;
+    for (let [i, slotX] of marketSlots.entries()){
+      if (party[i] == null && mouseX > slotX - r && mouseX < slotX + r && mouseY > marketSlotY - r && mouseY < marketSlotY + r) {
+        //in bounds and empty slot, drop in
+        party[i] = dragged.monster;
+        party[i].index = i;
+        needsToReturn = false;
+        //TODO -- should this have some sort of server communication?
+      }
+    }
+    if (needsToReturn) {
+      dragged.party[dragged.index] = dragged.monster;
+    }
+    // dragged.image = null; //not needed?
+    pickedUpSomething = false;
+    showEverything();
+  }
+}
+
+function pushParty(p, i){ //party, index
+  //if not on edge, try to push left (backwards because show party in reverse array)
+  if (i < p.length - 1) {
+    let dir = 1;
+    let [canPushLeft, numToPushLeft] = checkPush(p, i, 1, dir);
+    if (canPushLeft) {
+      for (let j = i + numToPushLeft; j > i; j--){ //could simplify this with dir, but overoptimization
+        p[j] = p[j-1]; //TODO check... is this going to just be a reference...?
+        p[j].index = j;
+      }
+      p[i] = null;
+      return;
+    } 
+  }
+  if (i > 0) { //if not on edge, try to push right
+    dir = -1;
+    let [canPushRight, numToPushRight] = checkPush(p, i, 1, dir);
+    if (canPushRight) {
+      for (let j = i - numToPushRight; j < i; j++){ //could simplify this with dir, but overoptimization
+        p[j] = p[j+1];
+        p[j].index = j;
+      }
+      p[i] = null;
+    }
+  }
+}
+
+//recursive function that checks right or left for shifting slots
+function checkPush(p, i, num, dir) {
+  let indexToCheck = i + (num * dir);
+  console.log("index: " + indexToCheck);
+  if(p[indexToCheck] == null) { //found empty spot, return it
+    return [true, num]; //don't need dir since not using in push loop
+  } else if ((indexToCheck < p.length - 1 && indexToCheck > 0)) { //if still room, keep checking down line
+    console.log("inside: " + indexToCheck, num, dir);
+    num ++;
+    return checkPush(p, i, num, dir);
+  } else { //shifting not possible
+    console.log("not possible");
+    return [false, 0];
+  }
+}
+
 // the main battle function -- steps through each stage of the battle
 function step(){
   //server applies hits
   socket.emit("battleStep");
 }
+
+
+//
+//  SHOW FUNCTIONS
+//
 
 function showEverything(){
   background(82,135,39);
@@ -160,15 +357,21 @@ function showEverything(){
   push();
   if (state == "market") {
     for (let i = 0; i < party.length; i++){
-      showParty(party[i], true);
+      if (party[i] !== null){
+        showParty(party[i], true);
+      }
     }
   } else if (state == "battle") {
     translate(width/2, 0); //only translating in battle to make flip easier
     for (let i = 0; i < party.length; i++){
-      showParty(party[i], true);
+      if (party[i] !== null){
+        showParty(party[i], true);
+      }
     }
     for (let i = 0; i < enemyParty.length; i++){
-      showParty(enemyParty[i], false);
+      if (party[i] !== null){
+        showParty(enemyParty[i], false);
+      }
     }
   }
   pop();
@@ -241,6 +444,13 @@ function showUI(){
   textSize(50);
   fill(0);
   text(state, width - (width / 10), playerStatY);
+
+  //if waiting, show under button
+  if (waitingForBattle){
+    textSize(25);
+    text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50);
+  }
+
   pop();
 }
 
@@ -256,7 +466,9 @@ function showSlots(){
     }
     for (let i = 0; i < availableHireNum; i++){ //hires, variable based on tier reached
       rect(hireSlots[i], hireSlotY, assetSize);
-      image(monsterAssets[hires[i].name], hireSlots[i], hireSlotY, assetSize, assetSize);
+      if (hires[i] !== null){
+        image(monsterAssets[hires[i].name], hireSlots[i], hireSlotY, assetSize, assetSize);
+      }
     }
     for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
       rect(hireSlots[hireSlots.length - i], hireSlotY, assetSize);

@@ -28,7 +28,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] random setup
     - [X] reset gold
     - [ ] drag to buy
-    - [ ] drag and rearrange
+    - [X] drag and rearrange
     - [X] refresh (roll)
     - [ ] ready up (send party and trigger battle)
   - [ ] multiplayer test
@@ -45,6 +45,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] CR (tiers)
   - [ ] assets
   - [ ] freeze hires
+  - [ ] Misc. QoL
+    - [ ] relative text sizes
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
