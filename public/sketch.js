@@ -55,6 +55,12 @@ socket.on('newHires', (data) => {
   showEverything();
 });
 
+//get updated gold after hiring
+socket.on('updateGold', (data) => {
+  gold = data.gold;
+  showEverything();
+});
+
 //if other player isn't ready for battle, show waiting
 socket.on("waitingForBattle", () => {
   waitingForBattle = true;
@@ -156,12 +162,12 @@ function setup(){
   //make UI
   stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
   refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
-  readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp")}); //sends msg that we're ready to battle
+  readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
 
   //monsters after loadImage
   monsterAssets = {
     beholder: beholder,
-    bulette: bulette,
+    bulette: bulette, 
     skeleton: skeleton,
   };
 
@@ -176,6 +182,7 @@ function setup(){
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
   if (pickedUpSomething) {
+    //show dragged image
     showEverything();
     image(dragged.image, mouseX, mouseY, assetSize, assetSize);
     //check for hover over party slot, reset timer if not, check timer if so
@@ -217,58 +224,13 @@ function mouseDragged(){ //just for pickup now
             image: monsterAssets[s.m[i].name],
             party: s.m,
             index: i,
-            monster: s.m[i] //TODO check if just reference...
+            monster: s.m[i]
           }
+          //empty origin slot
           s.m[i] = null;
         }
       }
     }
-    //show currently dragged image
-    /*
-    if (pickedUpSomething) {
-      showEverything();
-      image(dragged.image, mouseX, mouseY, assetSize, assetSize);
-      //check for hover over party slot, reset timer if not, check timer if so
-      let s = slots[0];
-      let isHovering = false;
-      for (let [i, slotX] of s.sX.entries()){
-        if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
-          console.log("hovering");
-          isHovering = true;
-          hoverTimer++;
-          //if over slot and timesUp and underlying exists then move underlying
-          if (hoverTimer > hoverCheckTime){
-            console.log("trying to push");
-            //if spot isn't empty, try to move left, if can't, move right
-            if(s.m[i] !== null){
-              pushParty(s.m, i);
-            }
-          }
-        }
-      }
-      //reset timer if not hovering
-      if (!isHovering){
-        hoverTimer = 0;
-      }
-      
-    } else { //check for image/slot, "pick up" if so
-      for (let s of slots){
-        for (let [i, slotX] of s.sX.entries()){
-          if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
-            //in bounds, grab image and remove from original spot
-            pickedUpSomething = true;
-            dragged = {
-              image: monsterAssets[s.m[i].name],
-              party: s.m,
-              index: i,
-              monster: s.m[i] //TODO check if just reference...
-            }
-            s.m[i] = null;
-          }
-        }
-      }
-    }
-    */
   }
 }
 
@@ -280,21 +242,28 @@ function mouseReleased() {
     for (let [i, slotX] of marketSlots.entries()){
       if (party[i] == null && mouseX > slotX - r && mouseX < slotX + r && mouseY > marketSlotY - r && mouseY < marketSlotY + r) {
         //in bounds and empty slot, drop in
-        party[i] = dragged.monster;
-        party[i].index = i;
-        needsToReturn = false;
-        //TODO -- should this have some sort of server communication?
+        if (dragged.party == hires && gold >= 3){ //check if buying or just rearranging
+          party[i] = dragged.monster;
+          party[i].index = i;
+          needsToReturn = false;
+          //update server with party and get gold back -- TODO, should be other way around, incase not enough gold on server
+          socket.emit("hireMonster", {party: party});
+        } else if (dragged.party !== hires) {
+          party[i] = dragged.monster;
+          party[i].index = i;
+          needsToReturn = false;
+        }
       }
     }
     if (needsToReturn) {
       dragged.party[dragged.index] = dragged.monster;
     }
-    // dragged.image = null; //not needed?
     pickedUpSomething = false;
     showEverything();
   }
 }
 
+//if hovering over full slot, try to shift party to make room
 function pushParty(p, i){ //party, index
   //if not on edge, try to push left (backwards because show party in reverse array)
   if (i < p.length - 1) {

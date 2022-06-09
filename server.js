@@ -30,6 +30,7 @@ let players = []; // holds all current players, their parties, their stats, etc.
 let player1;
 let party1 = [];
 let party2 = [];
+let testLobby = "testLobby";
 
 //
 // SERVER EVENTS
@@ -65,11 +66,30 @@ inputs.on('connection', (socket) => {
     }
   });
 
+  //when player hires a monster
+  socket.on("hireMonster", (data) => {
+    for (let player of players) {
+      if (player.id == socket.id){
+        player.party = data.party;
+        player.gold -= 3;
+        console.log(player.id + "has " + player.gold + " left");
+        socket.emit("updateGold", {gold: player.gold});
+      }
+    }
+  });
+
   //on end turn from market, signals to server we're ready to battle
-  socket.on("readyUp", () => {
+  //for test, just going to put in room on here instead of joining lobby at start, TODO
+  socket.on("readyUp", (data) => {
     for (let player of players) {
       if (player.id == socket.id){
         player.ready = true;
+        player.party = party;
+        if (player.lobby == undefined){
+          player.lobby = testLobby;
+          socket.join(player.lobby);
+          console.log(socket.rooms);
+        }
         //TODO server check both and send to battle
         socket.emit("waitingForBattle");
         //else io.room.emit("startBattle");
