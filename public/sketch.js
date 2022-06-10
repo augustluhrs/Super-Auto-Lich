@@ -29,14 +29,21 @@ socket.on('connect', () => {
   console.log('now connected to server');
 });
 
-// basic setup on connecting to server
-socket.on('setup', (data) => {
-  console.log('setting up');
+// basic setup on connecting to server or after battle when going back to market
+socket.on('goToMarket', (data) => {
+  console.log('going to market');
+  state = "market";
   gold = data.gold;
   hp = data.hp;
   turn = data.turn;
   hires = data.hires;
-  // showEverything();
+  party = data.party; //refreshes after battle
+  
+  if (doneSetup){
+    refreshButt.show();
+    readyButt.show();
+    showEverything();
+  }
 });
 
 // receive parties once both have sent to server
@@ -68,25 +75,54 @@ socket.on("waitingForBattle", () => {
 });
 
 //start battle
-socket.on("startBattle", () => {
+socket.on("startBattle", (data) => {
+  for (let client of data){
+    if (client.id != socket.id){
+      enemyParty = client.party;
+      console.log("enemyParty");
+      console.log(enemyParty);
+    } else {
+      console.log("party");
+      console.log(party);
+      party = client.party;
+    }
+  }
+  state = "battle";
   waitingForBattle = false;
+  refreshButt.hide();
+  readyButt.hide();
   showEverything();
 });
 
 // receive info from battle step
 socket.on('battleAftermath', (data) => {
   console.log('battle step over');
-  party = data.party;
-  enemyParty = data.enemyParty;
+  for (let client of data){ //just sending battle array
+    if (client.id == socket.id){
+      party = client.party;
+    } else {
+      enemyParty = client.party;
+    }
+  }
+  // party = data.battle;
+  // enemyParty = data.enemyParty;
   showEverything();
 });
 
 // end battle message
 socket.on('battleOver', (data) => {
   console.log('battle finished: ' + data.result);
-  party = data.party;
-  enemyParty = data.enemyParty;
-  showParties();
+  for (let client of data.battle){
+    if (client.id == socket.id){
+      party = client.party;
+    } else {
+      enemyParty = client.party;
+    }
+  }
+  // party = data.party;
+  // enemyParty = data.enemyParty;
+  showEverything();
+  // showParties();
   push();
   textSize(80);
   if (data.result == "win") {
@@ -94,6 +130,7 @@ socket.on('battleOver', (data) => {
     text("WIN", width / 2, 3 * height / 6);
   } else if (data.result == "loss") {
     hp = data.hp;
+    showUI();
     fill(200, 0, 0);
     text("LOSS", width / 2, 3 * height / 6);
   } else {
@@ -101,6 +138,11 @@ socket.on('battleOver', (data) => {
     text("TIE", width / 2, 3 * height / 6);
   }
   pop();
+
+  //set timer for going back to market
+  setTimeout(() => {
+    socket.emit("goToMarket")
+  }, 3000);
 });
 
 //
@@ -111,6 +153,7 @@ socket.on('battleOver', (data) => {
 let state = "market";
 let availableHireNum = 3;
 let hires = [null, null, null, null, null]; //available monsters in market
+let doneSetup = false;
 
 // player stuff
 let party = [null, null, null, null, null];
@@ -172,6 +215,7 @@ function setup(){
   };
 
   //display
+  doneSetup = true;
   showEverything();
 } 
 
