@@ -170,14 +170,14 @@ inputs.on('connection', (socket) => {
             for (let i = 0; i < party2.length; i++){
               party2[i].index = i;
             }
-            console.log("party 1");
-            console.log(party1);
-            console.log("party 2");
-            console.log(party2);
-            console.log("player party");
-            console.log(player.party);
-            console.log("player battleParty");
-            console.log(player.battleParty);
+            // console.log("party 1");
+            // console.log(party1);
+            // console.log("party 2");
+            // console.log(party2);
+            // console.log("player party");
+            // console.log(player.party);
+            // console.log("player battleParty");
+            // console.log(player.battleParty);
 
             let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
             io.to(player.lobby).emit("startBattle", battle);
@@ -262,7 +262,12 @@ function battleStep(battle, lobby){
     for (let player of players) {
       if (player.id == battle[0].id){
         player.hp -= 2;
-        io.to(player.id).emit("battleOver", {battle: battle, hp: player.hp, result: "loss"})
+        if (player.hp <= 0) {
+          gameOver(player, lobby);
+          return;
+        } else {
+          io.to(player.id).emit("battleOver", {battle: battle, hp: player.hp, result: "loss"})
+        }
       } else if (player.id == battle[1].id){
         io.to(player.id).emit("battleOver", {battle: battle, result: "win"})
       }
@@ -272,7 +277,12 @@ function battleStep(battle, lobby){
     for (let player of players) {
       if (player.id == battle[1].id){
         player.hp -= 2;
-        io.to(player.id).emit("battleOver", {battle: battle, hp: player.hp, result: "loss"})
+        if (player.hp <= 0) {
+          gameOver(player, lobby);
+          return;
+        } else {
+          io.to(player.id).emit("battleOver", {battle: battle, hp: player.hp, result: "loss"});
+        }
       } else if (player.id == battle[0].id){
         io.to(player.id).emit("battleOver", {battle: battle, result: "win"})
       }
@@ -295,6 +305,15 @@ function refreshHires(availableHireNum){
   return hires;
 }
 
+function gameOver(player, lobby){
+  for (let p of players){
+    if (p.id == player.id){
+      io.to(player.id).emit("gameOver", {result: "loss"});
+    } else if (p.lobby == lobby){
+      io.to(p.id).emit("gameOver", {result: "win"});
+    }
+  }
+}
 // function randomParty(player){
 //   let party = [];
 //   for (let i = 0; i < 5; i++){

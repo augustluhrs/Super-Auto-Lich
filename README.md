@@ -37,15 +37,17 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] fix flip issue
   - [ ] overall game progress
     - [X] starting market flow and send party
-    - [ ] turns
+    - [X] turns
     - [X] player hp loss
-    - [ ] game loss/win
+    - [X] game loss/win
 - [ ] 0.0.2
   - [ ] team names
   - [ ] abilities
   - [ ] CR (tiers)
   - [ ] assets
   - [ ] freeze hires
+  - [ ] sell
+  - [ ] hp loss by turn
   - [ ] Misc. QoL
     - [ ] relative text sizes
 - [ ] 0.0.3

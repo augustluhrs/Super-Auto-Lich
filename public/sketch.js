@@ -145,6 +145,33 @@ socket.on('battleOver', (data) => {
   }, 3000);
 });
 
+// game end message
+socket.on('gameOver', (data) => {
+  console.log('gameOver: ' + data.result);
+  // for (let client of data.battle){
+  //   if (client.id == socket.id){
+  //     party = client.party;
+  //   } else {
+  //     enemyParty = client.party;
+  //   }
+  // }
+  // showEverything();
+  // showParties();
+  push();
+  textSize(80);
+  background(20);
+  if (data.result == "win") {
+    fill(0, 250, 50);
+    text("YOU WIN", width / 2, 3 * height / 6);
+  } else if (data.result == "loss") {
+    // hp = data.hp;
+    // showUI();
+    fill(200, 0, 0);
+    text("YOU LOST", width / 2, 3 * height / 6);
+  }
+  pop();
+});
+
 //
 //  VARIABLES
 //
