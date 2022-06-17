@@ -3,7 +3,7 @@ class Monster {
     // if (stats instanceof Monster){
     //   this = s
     // } else {
-      this.asset = stats.asset; //p5 image variable
+      //this.asset = stats.asset; //p5 image variable
       // this.assetSize = stats.assetSize || 80; //relative size, used for stat positioning
       this.name = stats.name; //monster name
       this.cr = stats.cr; //tier / challenge rating

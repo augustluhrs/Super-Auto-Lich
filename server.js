@@ -25,7 +25,7 @@ let io = require('socket.io')(server);
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
 let players = []; // holds all current players, their parties, their stats, etc.
-let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
+let battleStepTime = 2000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
 
 //just for testing
 // let player1;
@@ -44,7 +44,7 @@ inputs.on('connection', (socket) => {
   console.log('new input client!: ' + socket.id);
 
   //add entry to players array
-  players.push({id: socket.id, gold: 10, hp: 10, turn: 1, party: [null, null, null, null, null]});
+  players.push({id: socket.id, gold: 10, hp: 10, turn: 1, hireNum: 3, party: [null, null, null, null, null]});
   console.log(players);
 
   //send starting data
@@ -88,8 +88,15 @@ inputs.on('connection', (socket) => {
       if (player.id == socket.id){
         player.ready = true;
         player.party = data.party;
-        player.battleParty = data.party; //to hold the party that gets changed in battle
-
+        //player.battleParty = data.party; //to hold the party that gets changed in battle
+        player.battleParty = []; //i still don't understand references...
+        for (let i = 0; i < data.party.length; i++){
+          if (data.party[i] == null){
+            player.battleParty[i] = null;
+          } else {
+            player.battleParty[i] = new Monster(data.party[i]);
+          }
+        }
         if (player.lobby == undefined){ //join a lobby if not in one already
           player.lobby = testLobby;
           socket.join(player.lobby);
@@ -108,7 +115,7 @@ inputs.on('connection', (socket) => {
                 console.log(other.ready);
                 if (other.id == id && other.ready == true){
                   enemy.id = other.id;
-                  enemy.party = other.battleParty;
+                  enemy.battleParty = other.battleParty;
                   enemyIsReady = true;
                   // io.to(player.lobby).emit("startBattle", [{id: player.id, party: player.party}, {id: other.id, party: other.party}]);
                 } 
@@ -134,12 +141,16 @@ inputs.on('connection', (socket) => {
                 party1.splice(i, 1);
               }
             }
+            //reset indexes
+            for (let i = 0; i < party1.length; i++){
+              party1[i].index = i;
+            }
             // for (let [i, slot] of party1.entries()){
             //   if (slot == null){
             //     party1.splice(i, 1);
             //   }
             // }
-            let party2 = enemy.party;
+            let party2 = enemy.battleParty;
             for(let i = 0; i < party2.length; i++){
               if (party2[i] == null){
                 for (let j = i; j < party2.length - 1; j++){
@@ -155,10 +166,18 @@ inputs.on('connection', (socket) => {
                 party2.splice(i, 1);
               }
             }
+            //reset indexes
+            for (let i = 0; i < party2.length; i++){
+              party2[i].index = i;
+            }
             console.log("party 1");
             console.log(party1);
             console.log("party 2");
             console.log(party2);
+            console.log("player party");
+            console.log(player.party);
+            console.log("player battleParty");
+            console.log(player.battleParty);
 
             let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
             io.to(player.lobby).emit("startBattle", battle);
@@ -176,53 +195,6 @@ inputs.on('connection', (socket) => {
     }
   });
 
-  //each step of the battle -- triggered from client for testing
-  // socket.on('battleStep', () => {
-  //   console.log("battleStep");
-  //   //apply damage
-  //   party1[0].currentHP -= party2[0].power;
-  //   party2[0].currentHP -= party1[0].power;
-
-  //   //check for death and move up party if so
-  //   if (party1[0].currentHP <= 0){
-  //     party1.splice(0, 1);
-  //     for (let i = 0; i < party1.length; i++){
-  //       party1[i].slot.x = player1.slots[i];
-  //     }
-  //   }
-  //   if (party2[0].currentHP <= 0){
-  //     party2.splice(0, 1);
-  //     for (let i = 0; i < party2.length; i++){
-  //       party2[i].slot.x = player1.slots[i];
-  //     }
-  //   }
-
-  //   //check for end, send next step or end event
-  //   if (party1.length == 0 && party2.length == 0){
-  //     //TODO server send both back and unReady
-
-  //     socket.emit("battleOver", {party: party1, enemyParty: party2, result: "tie"})
-  //   } else if (party1.length == 0){
-  //     //TODO server send both back and unReady
-
-  //     let hp;
-  //     //reduce HP here so they can see it on the loss screen;
-  //     for (let player of players) {
-  //       if (player.id == socket.id) {
-  //         player.hp -= 2;
-  //         hp = player.hp;
-  //         return;
-  //       }
-  //     }
-  //     socket.emit("battleOver", {party: party1, enemyParty: party2, hp: hp, result: "loss"})
-  //   } else if (party2.length == 0){
-  //     //TODO server send both back and unReady
-  //     socket.emit("battleOver", {party: party1, enemyParty: party2, result: "win"})
-  //   } else {
-  //     socket.emit("battleAftermath", {party: party1, enemyParty: party2});
-  //   }
-  // });
-
   //after battle timeout, send back to market
   socket.on("goToMarket", () => {
     for (let player of players) {
@@ -230,7 +202,7 @@ inputs.on('connection', (socket) => {
         player.gold = 10;
         player.turns++;
         player.ready = false;
-        socket.emit("goToMarket", {gold: player.gold, turns: player.turns, party: player.party, hires: refreshHires()});
+        socket.emit("goToMarket", {gold: player.gold, turns: player.turns, party: player.party, hires: refreshHires(player.hireNum)});
       }
     }
   });
@@ -251,17 +223,6 @@ inputs.on('connection', (socket) => {
 // FUNCTIONS
 //
 
-// function backToMarket(id){
-//   for (let player of players) {
-//     if (player.id == id){
-//       player.gold = 10;
-//       player.turns++;
-//       socket.emit("goToMarket", {gold: player.gold, turns: player.turns, hires: refreshHires()})
-//       return;
-//     }
-//   }
-// }
-
 function battleStep(battle, lobby){
   console.log("battleStep");
   let party1 = battle[0].party;
@@ -276,15 +237,17 @@ function battleStep(battle, lobby){
   //check for death and move up party if so
   if (party1[0].currentHP <= 0){
     party1.splice(0, 1);
-    // while (party1[0] == null){
-    //   party1.splice(0, 1);
-    // }
+    //reset indexes
+    for (let i = 0; i < party1.length; i++){
+      party1[i].index = i;
+    }
   }
   if (party2[0].currentHP <= 0){
     party2.splice(0, 1);
-    // while (party2[0] == null){
-    //   party2.splice(0, 1);
-    // }
+    //reset indexes
+    for (let i = 0; i < party2.length; i++){
+      party2[i].index = i;
+    }
   }
 
   battle[0].party = party1;

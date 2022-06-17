@@ -82,9 +82,9 @@ socket.on("startBattle", (data) => {
       console.log("enemyParty");
       console.log(enemyParty);
     } else {
+      party = client.party;
       console.log("party");
       console.log(party);
-      party = client.party;
     }
   }
   state = "battle";
@@ -203,7 +203,7 @@ function setup(){
   // slots = [{sX: battleSlots, sY: battleSlotY, m: party}, {sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
 
   //make UI
-  stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
+  //stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
   refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
   readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
 

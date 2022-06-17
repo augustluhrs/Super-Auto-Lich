@@ -15,15 +15,15 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 - [ ] 0.0.1 MVP Prototype
   - [X] set up project and repo
   - [X] asset test
-  - [ ] battle test
+  - [X] battle test
     - [X] start from market
-    - [ ] auto battle
+    - [X] auto battle
     - [X] layout / positioning
     - [X] server random party generation
     - [X] battle steps
     - [X] winner / end
     - [X] back to market
-  - [ ] market test
+  - [X] market test
     - [X] layout / positioning
     - [X] random setup
     - [X] reset gold
@@ -31,8 +31,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] drag and rearrange
     - [X] refresh (roll)
     - [X] ready up (send party and trigger battle)
-  - [ ] multiplayer test
-    - [ ] get/show enemy party
+  - [X] multiplayer test
+    - [X] get/show enemy party
     - [X] check if both are ready, then start battle
   - [ ] fix flip issue
   - [ ] overall game progress
