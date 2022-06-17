@@ -200,9 +200,9 @@ inputs.on('connection', (socket) => {
     for (let player of players) {
       if (player.id == socket.id){
         player.gold = 10;
-        player.turns++;
+        player.turn++;
         player.ready = false;
-        socket.emit("goToMarket", {gold: player.gold, turns: player.turns, party: player.party, hires: refreshHires(player.hireNum)});
+        socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.hireNum)});
       }
     }
   });
