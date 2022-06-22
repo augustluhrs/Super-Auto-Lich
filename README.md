@@ -12,7 +12,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
 
 ## Roadmap
-- [ ] 0.0.1 MVP Prototype
+- [X] 0.0.1 MVP Prototype
   - [X] set up project and repo
   - [X] asset test
   - [X] battle test
@@ -34,18 +34,20 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [X] multiplayer test
     - [X] get/show enemy party
     - [X] check if both are ready, then start battle
-  - [ ] fix flip issue
-  - [ ] overall game progress
+  - [X] fix flip issue
+  - [X] overall game progress
     - [X] starting market flow and send party
     - [X] turns
     - [X] player hp loss
     - [X] game loss/win
+  - [X] put on glitch
 - [ ] 0.0.2
   - [ ] team names
   - [ ] abilities
   - [ ] CR (tiers)
   - [ ] assets
   - [ ] freeze hires
+  - [ ] hire stats
   - [ ] sell
   - [ ] hp loss by turn
   - [ ] Misc. QoL
@@ -55,3 +57,10 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] freeze items
 - [ ] Multiplayer
   - [ ] nedb database for login and stats tracking
+
+  ## Playtest Notes
+
+  6/17/22
+  - [ ] dupes party if you drag party slots after first battle
+  - [ ] pulling from hires on return to market shows wrong unless refresh
+  - [ ] server.js  index line 146 i of null -- why null?
