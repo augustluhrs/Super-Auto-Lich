@@ -81,6 +81,18 @@ inputs.on('connection', (socket) => {
     }
   });
 
+  //when player sells a monster
+  socket.on("sellMonster", (data) => {
+    for (let player of players) {
+      if (player.id == socket.id){
+        player.party = data.party;
+        player.gold += 1;
+        console.log(player.id + "has " + player.gold + " left");
+        socket.emit("updateGold", {gold: player.gold});
+      }
+    }
+  });
+
   //on end turn from market, signals to server we're ready to battle
   //for test, just going to put in room on here instead of joining lobby at start, TODO
   socket.on("readyUp", (data) => {
@@ -137,13 +149,16 @@ inputs.on('connection', (socket) => {
                 }
               }
             }
-            for (let i = party1.length - 1; i > 0; i--){
+            console.log("before splice");
+            console.log(party1);
+            for (let i = party1.length - 1; i >= 0; i--){
               if (party1[i] == null){
                 party1.splice(i, 1);
               }
             }
             //reset indexes
-            // console.log(party1);
+            console.log("before index");
+            console.log(party1);
             for (let i = 0; i < party1.length; i++){
               //hmm hacky because this shouldn't happen but w/e -- TODO: remove?
               // if (party1[i] !== null){
@@ -166,7 +181,7 @@ inputs.on('connection', (socket) => {
                 }
               }
             }
-            for (let i = party2.length - 1; i > 0; i--){
+            for (let i = party2.length - 1; i >= 0; i--){
               if (party2[i] == null){
                 party2.splice(i, 1);
               }

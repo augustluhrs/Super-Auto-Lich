@@ -58,9 +58,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] placeholder level 1s
   - [ ] freeze hires
   - [X] hire stats
-  - [ ] sell
-    - [ ] drag to sell
-    - [ ] sell location
+  - [X] sell
+    - [X] drag to sell
+    - [X] sell location
   - [ ] hp loss by turn
   - [ ] Misc. QoL
     - [ ] relative text sizes

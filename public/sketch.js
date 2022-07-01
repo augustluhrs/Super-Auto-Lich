@@ -206,6 +206,7 @@ let waitingForBattle = false; //when ready but opponent isn't
 let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleased
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
 let hoverCheckTime = 70; //timer before hover triggers
+let sellSlot;
 
 //
 //  MAIN
@@ -230,10 +231,9 @@ function setup(){
   r = assetSize / 2; //radius of image
   playerStatY = height / 20;
   slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
-  // slots = [{sX: battleSlots, sY: battleSlotY, m: party}, {sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
+  sellSlot = {x: width/2, y: 7 * height / 8};
 
   //make UI
-  //stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
   refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
   readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
   readyButt.hide(); //hiding until there's a party to send to battle
@@ -330,6 +330,21 @@ function mouseReleased() {
         }
       }
     }
+    //check for sell slot drop
+    if (dragged.party == party && mouseX > sellSlot.x - r && mouseX < sellSlot.x + r && mouseY > sellSlot.y - r && mouseY < sellSlot.y + r) {
+      let notLast = false; // prevents from selling last party member
+      for (let i = 0; i < party.length; i++){
+        if (party[i] !== null){
+          notLast = true;
+        }
+      }
+      if (notLast) {
+        socket.emit("sellMonster", {party: party});
+        needsToReturn = false;
+      }
+    }
+
+    //send back to slot if dropped over nothing
     if (needsToReturn) {
       dragged.party[dragged.index] = dragged.monster;
     }
@@ -475,6 +490,7 @@ function showParty(monster, isMyParty){
 
 function showUI(){
   push();
+
   //upper left stats
   textSize(40);
   fill(249,224,50);
@@ -494,7 +510,7 @@ function showUI(){
     textSize(25);
     text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50);
   }
-
+  
   pop();
 }
 
@@ -518,6 +534,14 @@ function showSlots(){
     for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
       rect(hireSlots[hireSlots.length - i], hireSlotY, assetSize);
     }
+
+    //sell slot
+    rect(sellSlot.x, sellSlot.y, assetSize);
+    textSize(assetSize /4);
+    fill(0);
+    text("SELL", sellSlot.x, sellSlot.y);
+    // fill(230, 150);
+
   } else if (state == "battle") {
     translate(width/2, 0); //only translating in battle to make flip easier
     for (let i = 0; i < 5; i++){
