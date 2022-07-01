@@ -40,6 +40,7 @@ socket.on('goToMarket', (data) => {
   party = data.party; //refreshes after battle
   
   if (doneSetup){
+    slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
     refreshButt.show();
     readyButt.show();
     showEverything();
@@ -66,6 +67,8 @@ socket.on('newHires', (data) => {
 socket.on('updateGold', (data) => {
   gold = data.gold;
   showEverything();
+  //showing ready button here because it's after first hire
+  readyButt.show();
 });
 
 //if other player isn't ready for battle, show waiting
@@ -233,6 +236,7 @@ function setup(){
   //stepButt = createButton('STEP').position(width/2 - 50, 5 * height / 6).mousePressed(step);
   refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
   readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
+  readyButt.hide(); //hiding until there's a party to send to battle
 
   //monsters after loadImage
   monsterAssets = {
@@ -504,10 +508,11 @@ function showSlots(){
     for (let i = 0; i < 5; i++){//party in market
       rect(marketSlots[i], marketSlotY, assetSize);
     }
-    for (let i = 0; i < availableHireNum; i++){ //hires, variable based on tier reached
+    for (let i = 0; i < availableHireNum; i++) { //hires, variable based on tier reached
       rect(hireSlots[i], hireSlotY, assetSize);
-      if (hires[i] !== null){
-        image(monsterAssets[hires[i].name], hireSlots[i], hireSlotY, assetSize, assetSize);
+      if (hires[i] !== null) {
+        showMonster(hires[i]);
+        // image(monsterAssets[hires[i].name], hireSlots[i], hireSlotY, assetSize, assetSize);
       }
     }
     for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
@@ -522,6 +527,41 @@ function showSlots(){
       rect(-battleSlots[i], battleSlotY, assetSize);
     }
   }
+
+  pop();
+}
+
+//shows hires and stats
+function showMonster(monster){
+  push();
+  let x = hireSlots[monster.index];
+  let y = hireSlotY;
+  let size = assetSize;
+  let xOffset = (1 * size / 5);
+  let yOffset = (3 * size / 4);
+  let statSize = size / 3;
+
+  image(monsterAssets[monster.name], x, y, size, size);
+
+  let powerX = x - xOffset;
+  let hpX = x + xOffset;
+  let statY = y + yOffset;
+
+  //asset
+  strokeWeight(2);
+  stroke(0);
+  let statText = 5 * statSize / 6;
+  textSize(statText);
+  //power
+  fill(100);
+  rect(powerX, statY, statSize); 
+  fill(255);
+  text(monster.currentPower, powerX, statY + (statText / 12)); //weirdly not in center??
+  //hp
+  fill(200, 0, 0);
+  rect(hpX, statY, statSize);
+  fill(255);
+  text(monster.currentHP, hpX, statY + (statText / 12));
 
   pop();
 }

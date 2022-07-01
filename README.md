@@ -41,14 +41,26 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] player hp loss
     - [X] game loss/win
   - [X] put on glitch
+  - [X] playtest bugs
+    - [X] party dupe after first battle
+    - [?] refresh hires after battle (can't reproduce)
+    - [X] server line 146 null (shouldn't happen...)
 - [ ] 0.0.2
   - [ ] team names
+  - [ ] upgrade
+    - [ ] lvl and next lvl slots stat above
+    - [ ] drag to upgrade
   - [ ] abilities
+    - [ ] hover to see name, level, and ability text
   - [ ] CR (tiers)
+    - [ ] dice UI above hires
   - [ ] assets
+    - [ ] placeholder level 1s
   - [ ] freeze hires
-  - [ ] hire stats
+  - [X] hire stats
   - [ ] sell
+    - [ ] drag to sell
+    - [ ] sell location
   - [ ] hp loss by turn
   - [ ] Misc. QoL
     - [ ] relative text sizes
@@ -61,6 +73,6 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   ## Playtest Notes
 
   6/17/22
-  - [ ] dupes party if you drag party slots after first battle
-  - [ ] pulling from hires on return to market shows wrong unless refresh
-  - [ ] server.js  index line 146 i of null -- why null?
+  - dupes party if you drag party slots after first battle
+  - pulling from hires on return to market shows wrong unless refresh
+  - server.js  index line 146 i of null -- why null?

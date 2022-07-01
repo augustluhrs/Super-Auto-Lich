@@ -7,6 +7,7 @@
 //create server
 let port = process.env.PORT || 8000;
 let express = require('express');
+const { isNullOrUndefined } = require('util');
 let app = express();
 let server = require('http').createServer(app).listen(port, function(){
   console.log('Server is listening at port: ', port);
@@ -25,7 +26,7 @@ let io = require('socket.io')(server);
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
 let players = []; // holds all current players, their parties, their stats, etc.
-let battleStepTime = 2000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
+let battleStepTime = 500; //interval it takes each battle step to take -- TODO, client speed (array of events?)
 
 //just for testing
 // let player1;
@@ -142,8 +143,12 @@ inputs.on('connection', (socket) => {
               }
             }
             //reset indexes
+            // console.log(party1);
             for (let i = 0; i < party1.length; i++){
-              party1[i].index = i;
+              //hmm hacky because this shouldn't happen but w/e -- TODO: remove?
+              // if (party1[i] !== null){
+                party1[i].index = i;
+              // }
             }
             // for (let [i, slot] of party1.entries()){
             //   if (slot == null){
@@ -168,16 +173,10 @@ inputs.on('connection', (socket) => {
             }
             //reset indexes
             for (let i = 0; i < party2.length; i++){
-              party2[i].index = i;
+              // if (party2[i] !== null){ // TODO: remove? shouldn't happen
+                party2[i].index = i;
+              // }
             }
-            // console.log("party 1");
-            // console.log(party1);
-            // console.log("party 2");
-            // console.log(party2);
-            // console.log("player party");
-            // console.log(player.party);
-            // console.log("player battleParty");
-            // console.log(player.battleParty);
 
             let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
             io.to(player.lobby).emit("startBattle", battle);
