@@ -26,12 +26,8 @@ let io = require('socket.io')(server);
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
 let players = []; // holds all current players, their parties, their stats, etc.
-let battleStepTime = 500; //interval it takes each battle step to take -- TODO, client speed (array of events?)
+let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
 
-//just for testing
-// let player1;
-// let party1 = [];
-// let party2 = [];
 let testLobby = "testLobby";
 
 //
@@ -101,7 +97,6 @@ inputs.on('connection', (socket) => {
       if (player.id == socket.id){
         player.ready = true;
         player.party = data.party;
-        //player.battleParty = data.party; //to hold the party that gets changed in battle
         player.battleParty = []; //i still don't understand references...
         for (let i = 0; i < data.party.length; i++){
           if (data.party[i] == null){
@@ -110,12 +105,14 @@ inputs.on('connection', (socket) => {
             player.battleParty[i] = new Monster(data.party[i]);
           }
         }
-        if (player.lobby == undefined){ //join a lobby if not in one already
+
+        //join a lobby if not in one already
+        if (player.lobby == undefined){ 
           player.lobby = testLobby;
           socket.join(player.lobby);
-          // console.log(io.sockets.adapter.rooms.get(player.lobby)); //map
         }
-        //TODO server check both and send to battle
+
+        // check to see if both are ready, if so, send to battle
         let lobby = io.sockets.adapter.rooms.get(player.lobby);
         console.log(lobby);
         if (lobby.size == 2){ //size instead of length because its a set
@@ -135,7 +132,7 @@ inputs.on('connection', (socket) => {
               }
             }
           }
-          //TODO make less clunky...
+          //TODO make less clunky... trims up the parties for better battle display
           if (enemyIsReady){
             //remove nulls from party so battle step works
             let party1 = player.battleParty;
@@ -160,16 +157,9 @@ inputs.on('connection', (socket) => {
             console.log("before index");
             console.log(party1);
             for (let i = 0; i < party1.length; i++){
-              //hmm hacky because this shouldn't happen but w/e -- TODO: remove?
-              // if (party1[i] !== null){
-                party1[i].index = i;
-              // }
+              party1[i].index = i;
             }
-            // for (let [i, slot] of party1.entries()){
-            //   if (slot == null){
-            //     party1.splice(i, 1);
-            //   }
-            // }
+
             let party2 = enemy.battleParty;
             for(let i = 0; i < party2.length; i++){
               if (party2[i] == null){
@@ -188,9 +178,7 @@ inputs.on('connection', (socket) => {
             }
             //reset indexes
             for (let i = 0; i < party2.length; i++){
-              // if (party2[i] !== null){ // TODO: remove? shouldn't happen
-                party2[i].index = i;
-              // }
+              party2[i].index = i;
             }
 
             let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
@@ -328,12 +316,3 @@ function gameOver(player, lobby){
     }
   }
 }
-// function randomParty(player){
-//   let party = [];
-//   for (let i = 0; i < 5; i++){
-//     let RandomMonster = monsters[Math.floor(Math.random()*monsters.length)];
-//     party.push(new RandomMonster({index: i}));
-//     // party.push(new RandomMonster({index: i, slot: {x: player.slots[i], y: player.slotY}}));
-//   }
-//   return party;
-// }

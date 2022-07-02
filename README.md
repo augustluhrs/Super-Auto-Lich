@@ -64,11 +64,20 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] hp loss by turn
   - [ ] Misc. QoL
     - [ ] relative text sizes
+    - [X] bigger slots/assets and slot positions relative to size
+    - [X] cleanup comments from 0.0.1
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
 - [ ] Multiplayer
   - [ ] nedb database for login and stats tracking
+  - [ ] join random lobby
+  - [ ] join arena lobby
+    - [ ] random pairings
+    - [ ] duplicate battles if odd number
+  - [ ] join lobby by id
+- [ ] QoL
+  - [ ] better scrollbar removal
 
   ## Playtest Notes
 

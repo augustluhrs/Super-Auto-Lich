@@ -107,8 +107,6 @@ socket.on('battleAftermath', (data) => {
       enemyParty = client.party;
     }
   }
-  // party = data.battle;
-  // enemyParty = data.enemyParty;
   showEverything();
 });
 
@@ -122,10 +120,7 @@ socket.on('battleOver', (data) => {
       enemyParty = client.party;
     }
   }
-  // party = data.party;
-  // enemyParty = data.enemyParty;
   showEverything();
-  // showParties();
   push();
   textSize(80);
   if (data.result == "win") {
@@ -151,15 +146,6 @@ socket.on('battleOver', (data) => {
 // game end message
 socket.on('gameOver', (data) => {
   console.log('gameOver: ' + data.result);
-  // for (let client of data.battle){
-  //   if (client.id == socket.id){
-  //     party = client.party;
-  //   } else {
-  //     enemyParty = client.party;
-  //   }
-  // }
-  // showEverything();
-  // showParties();
   push();
   textSize(80);
   background(20);
@@ -198,22 +184,24 @@ let marketSlots = []; //where party is in market
 let hireSlots = []; //where available monsters in market are
 let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
 let slots = []; //array for all draggable slots, with appropriate Ys
+let sellSlot; //the slot to drag to sell
 let assetSize; //size to display monster pngs
 let r; //radius of image
+// let slotBuffer; //spacing between slots
+// let slotSize; //total X size of slot + space
 let playerStatY; //height of top stats
 let refreshButt, readyButt; // market buttons
 let waitingForBattle = false; //when ready but opponent isn't
 let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleased
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
 let hoverCheckTime = 70; //timer before hover triggers
-let sellSlot;
 
 //
 //  MAIN
 //
 
 function setup(){
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(windowWidth - 5, windowHeight - 5); //TODO better way of ensuring scrollbars don't show up
   // createCanvas(1920, 1080);
   background(82,135,39);
 
@@ -221,15 +209,18 @@ function setup(){
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
-  battleSlotY = 6 * height / 8;
-  marketSlotY = 3 * height / 8;
-  hireSlotY = 5 * height / 8;
-  battleSlots = [-(width / 12), -(2 * width / 12), -(3 * width / 12), -(4 * width / 12), -(5 * width / 12)];
-  marketSlots = [8 * width / 13, 7 * width / 13, 6 * width / 13, 5 * width / 13, 4 * width / 13];
-  hireSlots = [4 * width / 13, 5 * width / 13, 6 * width / 13, 7 * width / 13, 8 * width / 13, 9 * width / 13, 10 * width / 13];
-  assetSize = width/14;
-  r = assetSize / 2; //radius of image
-  playerStatY = height / 20;
+  battleSlotY = 6 * height / 8; //y position of party in battle
+  marketSlotY = 3 * height / 8; //y position of party in market
+  hireSlotY = 5 * height / 8; //y position of hires and items
+  playerStatY = height / 20; //y position of top stats
+  assetSize = width / 11; //size of slots and images
+  r = assetSize / 2; //radius of image, for checking interaction range
+  let slotBuffer = assetSize / 20; //space between slots
+  let slotSize = assetSize + slotBuffer; //total X size of slot + space
+  let spacing = slotSize / 3; // to prevent battle positions from going offscreen
+  battleSlots = [-(slotSize - spacing), -(2 * slotSize - spacing), -(3 * slotSize - spacing), -(4 * slotSize - spacing), -(5 * slotSize - spacing)]; // going to be translated to center and flipped
+  marketSlots = [6 * slotSize, 5 * slotSize, 4 * slotSize, 3 * slotSize, 2 * slotSize];
+  hireSlots = [2 * slotSize, 3 * slotSize, 4 * slotSize, 5 * slotSize, 6 * slotSize, 7 * slotSize + spacing, 8 * slotSize + spacing]; //items have slight gap
   slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
   sellSlot = {x: width/2, y: 7 * height / 8};
 
@@ -265,12 +256,10 @@ function draw(){
     let isHovering = false;
     for (let [i, slotX] of s.sX.entries()){
       if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
-        // console.log("hovering");
         isHovering = true;
         hoverTimer++;
         //if over slot and timesUp and underlying exists then move underlying
         if (hoverTimer > hoverCheckTime){
-          // console.log("trying to push");
           //if spot isn't empty, try to move left, if can't, move right
           if(s.m[i] !== null){
             console.log("trying to push");
@@ -361,7 +350,7 @@ function pushParty(p, i){ //party, index
     let [canPushLeft, numToPushLeft] = checkPush(p, i, 1, dir);
     if (canPushLeft) {
       for (let j = i + numToPushLeft; j > i; j--){ //could simplify this with dir, but overoptimization
-        p[j] = p[j-1]; //TODO check... is this going to just be a reference...?
+        p[j] = p[j-1];
         p[j].index = j;
       }
       p[i] = null;
@@ -396,13 +385,6 @@ function checkPush(p, i, num, dir) {
     return [false, 0];
   }
 }
-
-// the main battle function -- steps through each stage of the battle
-function step(){
-  //server applies hits
-  socket.emit("battleStep");
-}
-
 
 //
 //  SHOW FUNCTIONS
@@ -457,7 +439,6 @@ function showParty(monster, isMyParty){
       //x = -x;
       push();
       scale(-1, 1);
-      // image(monster.asset, x, y, size, size);
       image(monsterAssets[monster.name], x, y, size, size);
       pop();
       x = -x; //so text flips
@@ -528,7 +509,6 @@ function showSlots(){
       rect(hireSlots[i], hireSlotY, assetSize);
       if (hires[i] !== null) {
         showMonster(hires[i]);
-        // image(monsterAssets[hires[i].name], hireSlots[i], hireSlotY, assetSize, assetSize);
       }
     }
     for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
@@ -540,7 +520,6 @@ function showSlots(){
     textSize(assetSize /4);
     fill(0);
     text("SELL", sellSlot.x, sellSlot.y);
-    // fill(230, 150);
 
   } else if (state == "battle") {
     translate(width/2, 0); //only translating in battle to make flip easier
