@@ -8,7 +8,8 @@ class Monster {
       this.name = stats.name; //monster name
       this.cr = stats.cr; //tier / challenge rating
       this.level = stats.level || 1; //monster level
-      this.nextLevel = stats.nextLevel || 2; //num of upgrades needed to level
+      this.nextLevel = stats.nextLevel || 3; //num of upgrades needed to level
+      this.currentUpgrades = stats.currentUpgrades || 0; //num of upgrades done so far
       this.power = stats.power; //attack power
       this.hp = stats.hp; //hit points
       this.currentPower = stats.power; //adjusted during battle

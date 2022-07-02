@@ -82,7 +82,8 @@ inputs.on('connection', (socket) => {
     for (let player of players) {
       if (player.id == socket.id){
         player.party = data.party;
-        player.gold += 1;
+        player.gold += data.level;
+        // player.gold += 1;
         console.log(player.id + "has " + player.gold + " left");
         socket.emit("updateGold", {gold: player.gold});
       }

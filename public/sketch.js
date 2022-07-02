@@ -120,18 +120,21 @@ socket.on('battleOver', (data) => {
       enemyParty = client.party;
     }
   }
-  showEverything();
+  // showEverything();
   push();
   textSize(80);
   if (data.result == "win") {
+    showEverything();
     fill(0, 250, 50);
     text("WIN", width / 2, 3 * height / 6);
   } else if (data.result == "loss") {
     hp = data.hp;
-    showUI();
+    // showUI();
+    showEverything();
     fill(200, 0, 0);
     text("LOSS", width / 2, 3 * height / 6);
   } else {
+    showEverything();
     fill(230);
     text("TIE", width / 2, 3 * height / 6);
   }
@@ -230,11 +233,7 @@ function setup(){
   readyButt.hide(); //hiding until there's a party to send to battle
 
   //monsters after loadImage
-  monsterAssets = {
-    beholder: beholder,
-    bulette: bulette, 
-    skeleton: skeleton,
-  };
+  loadMonsterAssets();
 
   //display
   doneSetup = true;
@@ -303,9 +302,9 @@ function mouseReleased() {
   if (pickedUpSomething) {
     //on release, check for slot, gold, monster, etc. -- can only release into party, else it just snaps back
     let needsToReturn = true;
-    for (let [i, slotX] of marketSlots.entries()){
+    for (let [i, slotX] of marketSlots.entries()){ //TODO lots of redundant code here
+      //in bounds and empty slot, drop in
       if (party[i] == null && mouseX > slotX - r && mouseX < slotX + r && mouseY > marketSlotY - r && mouseY < marketSlotY + r) {
-        //in bounds and empty slot, drop in
         if (dragged.party == hires && gold >= 3){ //check if buying or just rearranging
           party[i] = dragged.monster;
           party[i].index = i;
@@ -315,6 +314,17 @@ function mouseReleased() {
         } else if (dragged.party !== hires) {
           party[i] = dragged.monster;
           party[i].index = i;
+          needsToReturn = false;
+        }
+      } 
+      //if same monster, upgrade and combine when drop
+      else if (party[i] !== null && party[i].name == dragged.monster.name && mouseX > slotX - r && mouseX < slotX + r && mouseY > marketSlotY - r && mouseY < marketSlotY + r) {
+        if (dragged.party == hires && gold >= 3){
+          upgradeMonster(i, dragged.monster.currentUpgrades); //TODO should do on server side...
+          needsToReturn = false;
+          socket.emit("hireMonster", {party: party});
+        } else if (dragged.party !== hires) {
+          upgradeMonster(i, dragged.monster.currentUpgrades); //TODO should do on server side...
           needsToReturn = false;
         }
       }
@@ -328,7 +338,7 @@ function mouseReleased() {
         }
       }
       if (notLast) {
-        socket.emit("sellMonster", {party: party});
+        socket.emit("sellMonster", {party: party, level: dragged.monster.level}); //TODO sell amount equal to level?
         needsToReturn = false;
       }
     }
@@ -449,7 +459,10 @@ function showParty(monster, isMyParty){
   let powerX = x - xOffset;
   let hpX = x + xOffset;
   let statY = y + yOffset;
-
+  let lvlX = x - xOffset;
+  let upgradeX = x;
+  let lvlY = y - yOffset;
+  let upgradeSize = xOffset/2;
   //asset
   strokeWeight(2);
   stroke(0);
@@ -465,7 +478,22 @@ function showParty(monster, isMyParty){
   rect(hpX, statY, statSize);
   fill(255);
   text(monster.currentHP, hpX, statY + (statText / 12));
-
+  //level
+  fill(230,206,38);
+  textAlign(RIGHT, BOTTOM);
+  textSize(statText/2);
+  text("lvl.", lvlX, lvlY);
+  textSize(statText);
+  text(monster.level, lvlX + statText/2, lvlY + statText/4);
+  //upgrades
+  for (let i = 0; i < monster.nextLevel; i++){
+    if (monster.currentUpgrades > i){
+      fill(230,206,38);
+    } else {
+      fill(50);
+    }
+    rect(upgradeX + (upgradeSize * i), lvlY + statText/2, upgradeSize);
+  }
   pop();
 }
 
@@ -567,4 +595,33 @@ function showMonster(monster){
   text(monster.currentHP, hpX, statY + (statText / 12));
 
   pop();
+}
+
+//upgrades monster after dropping to combine, TODO: should be on server
+function upgradeMonster(index, draggedUpgrades){
+  let m = party[index];
+  // m.currentUpgrades++;
+  //need to address if combining two monsters with existing upgrades
+  m.currentUpgrades += draggedUpgrades + 1;
+  if (m.currentUpgrades < m.nextLevel){
+    //increase power and hp, TODO: is this always +1?
+    m.hp += draggedUpgrades + 1;
+    m.power += draggedUpgrades + 1;
+  } else {
+    //on level up, increase stats by 2
+    m.level++;
+    m.currentUpgrades -= m.nextLevel; //not resetting to 0 incase combining two who upgrades
+    m.hp += draggedUpgrades + 2;
+    m.power += draggedUpgrades + 2;
+  }
+  m.currentHP = m.hp;
+  m.currentPower = m.power;
+}
+
+function loadMonsterAssets(){
+  monsterAssets = {
+    beholder: beholder,
+    bulette: bulette, 
+    skeleton: skeleton,
+  };
 }

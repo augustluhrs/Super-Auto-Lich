@@ -47,9 +47,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] server line 146 null (shouldn't happen...)
 - [ ] 0.0.2
   - [ ] team names
-  - [ ] upgrade
-    - [ ] lvl and next lvl slots stat above
-    - [ ] drag to upgrade
+  - [X] upgrade
+    - [X] lvl and next lvl slots stat above
+    - [X] drag to upgrade, combine correctly
   - [ ] abilities
     - [ ] hover to see name, level, and ability text
   - [ ] CR (tiers)
@@ -61,11 +61,13 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [X] sell
     - [X] drag to sell
     - [X] sell location
+    - [X] sell return by level
   - [ ] hp loss by turn
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size
     - [X] cleanup comments from 0.0.1
+    - [X] fix hp display on battle end
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
