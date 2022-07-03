@@ -12,7 +12,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
 
 ## Roadmap
-<details><summary>0.0.1 MVP Prototype</summary>
+
 - [X] 0.0.1 MVP Prototype
   - [X] set up project and repo
   - [X] asset test
@@ -46,8 +46,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] party dupe after first battle
     - [ ] refresh hires after battle (can't reproduce)
     - [X] server line 146 null (shouldn't happen...)
-</details>
-<details><summary>0.0.2 Playable Prototype</summary>
+
 - [ ] 0.0.2
   - [ ] team names
     - [ ] pool of adjectives and nouns
@@ -85,8 +84,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] cleanup comments from 0.0.1
     - [X] fix hp display on battle end
     - [ ] bigger/better top stat UI
-</details>
-<details><summary>0.0.3 Multiplayer 3+ Prototype</summary>
+
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
@@ -97,8 +95,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] random pairings
     - [ ] duplicate battles if odd number
   - [ ] join lobby by id
-</details>
-<details><summary>Art and QoL</summary>
+
 - [ ] Art
   - [ ] font
   - [ ] market background
@@ -123,7 +120,6 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] tier 6
 - [ ] QoL
   - [ ] better scrollbar removal
-</details>
 
   ## Playtest Notes
 
