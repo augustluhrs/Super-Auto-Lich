@@ -43,16 +43,28 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [X] put on glitch
   - [X] playtest bugs
     - [X] party dupe after first battle
-    - [?] refresh hires after battle (can't reproduce)
+    - [ ] refresh hires after battle (can't reproduce)
     - [X] server line 146 null (shouldn't happen...)
 - [ ] 0.0.2
   - [ ] team names
+    - [ ] pool of adjectives and nouns
+    - [ ] generator
+    - [ ] choose team name on first ready up
+    - [ ] team name display
   - [X] upgrade
     - [X] lvl and next lvl slots stat above
     - [X] drag to upgrade, combine correctly
   - [ ] abilities
     - [ ] hover to see name, level, and ability text
+    - [ ] timing
+      - [ ] initial battle effect
+      - [ ] before attack
+      - [ ] on attack
+      - [ ] on damage
+      - [ ] on death
+      - [ ] end of market
   - [ ] CR (tiers)
+    - [X] dice assets
     - [ ] dice UI above hires
   - [ ] assets
     - [ ] placeholder level 1s
@@ -68,6 +80,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] bigger slots/assets and slot positions relative to size
     - [X] cleanup comments from 0.0.1
     - [X] fix hp display on battle end
+    - [ ] bigger/better top stat UI
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
@@ -78,6 +91,21 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] random pairings
     - [ ] duplicate battles if odd number
   - [ ] join lobby by id
+- [ ] Art
+  - [ ] font
+  - [ ] market background
+  - [ ] battle background
+  - [ ] end game background
+  - [ ] slots
+    - [ ] asset
+    - [ ] layout
+  - [ ] level/upgrades
+  - [ ] tiers
+    - [ ] asset
+    - [ ] layout
+  - [ ] monster popups
+    - [ ] background
+    - [ ] layout
 - [ ] QoL
   - [ ] better scrollbar removal
 

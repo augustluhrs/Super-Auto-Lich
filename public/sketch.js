@@ -5,16 +5,40 @@
 */
 
 //
-//  MONSTER ASSET LOAD
+//  ASSET LOAD
 //
 
 let monsterAssets = {};
-let beholder, bulette, skeleton;
+let dice1, dice2, dice3, dice4, dice5, dice6;
+let diceAssets = [];
+let cavebear, flumph, gnoll, goblin, kobold, mephit, skeleton, stirge, vegepygmy;
+let bulette;
+let beholder;
 
 function preload() {
-  beholder = loadImage('assets/beholder.png');
-  bulette = loadImage('assets/bulette.png');
+  dice1 = loadImage('assets/dice1.png');
+  dice2 = loadImage('assets/dice2.png');
+  dice3 = loadImage('assets/dice3.png');
+  dice4 = loadImage('assets/dice4.png');
+  dice5 = loadImage('assets/dice5.png');
+  dice6 = loadImage('assets/dice6.png');
+  //tier1
+  cavebear = loadImage('assets/cavebear.png');
+  flumph = loadImage('assets/flumph.png');
+  gnoll = loadImage('assets/gnoll.png');
+  goblin = loadImage('assets/goblin.png');
+  kobold = loadImage('assets/kobold.png');
+  mephit = loadImage('assets/mephit.png');
   skeleton = loadImage('assets/skeleton.png');
+  stirge = loadImage('assets/stirge.png');
+  vegepygmy = loadImage('assets/vegepygmy.png');
+  //tier2
+  //tier3
+  //tier4
+  bulette = loadImage('assets/bulette.png');
+  //tier5
+  beholder = loadImage('assets/beholder.png');
+  //tier6
 }
 
 //
@@ -190,6 +214,7 @@ let slots = []; //array for all draggable slots, with appropriate Ys
 let sellSlot; //the slot to drag to sell
 let assetSize; //size to display monster pngs
 let r; //radius of image
+let tierSize; //size of dice assets
 // let slotBuffer; //spacing between slots
 // let slotSize; //total X size of slot + space
 let playerStatY; //height of top stats
@@ -218,6 +243,7 @@ function setup(){
   playerStatY = height / 20; //y position of top stats
   assetSize = width / 11; //size of slots and images
   r = assetSize / 2; //radius of image, for checking interaction range
+  tierSize = assetSize/3; //size of dice for hires
   let slotBuffer = assetSize / 20; //space between slots
   let slotSize = assetSize + slotBuffer; //total X size of slot + space
   let spacing = slotSize / 3; // to prevent battle positions from going offscreen
@@ -232,8 +258,9 @@ function setup(){
   readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
   readyButt.hide(); //hiding until there's a party to send to battle
 
-  //monsters after loadImage
+  //assets after loadImage
   loadMonsterAssets();
+  diceAssets = [null, dice1, dice2, dice3, dice4, dice5, dice6];
 
   //display
   doneSetup = true;
@@ -536,7 +563,7 @@ function showSlots(){
     for (let i = 0; i < availableHireNum; i++) { //hires, variable based on tier reached
       rect(hireSlots[i], hireSlotY, assetSize);
       if (hires[i] !== null) {
-        showMonster(hires[i]);
+        showHire(hires[i]);
       }
     }
     for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
@@ -563,7 +590,7 @@ function showSlots(){
 }
 
 //shows hires and stats
-function showMonster(monster){
+function showHire(monster){
   push();
   let x = hireSlots[monster.index];
   let y = hireSlotY;
@@ -577,6 +604,8 @@ function showMonster(monster){
   let powerX = x - xOffset;
   let hpX = x + xOffset;
   let statY = y + yOffset;
+  let tierX = x - xOffset;
+  let tierY = y - yOffset;
 
   //asset
   strokeWeight(2);
@@ -593,7 +622,8 @@ function showMonster(monster){
   rect(hpX, statY, statSize);
   fill(255);
   text(monster.currentHP, hpX, statY + (statText / 12));
-
+  //tier
+  image(diceAssets[monster.tier], tierX, tierY, tierSize, tierSize);
   pop();
 }
 
@@ -620,8 +650,22 @@ function upgradeMonster(index, draggedUpgrades){
 
 function loadMonsterAssets(){
   monsterAssets = {
-    beholder: beholder,
-    bulette: bulette, 
-    skeleton: skeleton,
+    //tier1
+  cavebear: cavebear,
+  flumph: flumph,
+  gnoll: gnoll,
+  goblin: goblin,
+  kobold: kobold,
+  mephit: mephit,
+  skeleton: skeleton,
+  stirge: stirge,
+  vegepygmy: vegepygmy,
+  //tier2
+  //tier3
+  //tier4
+  bulette: bulette,
+  //tier5
+  beholder: beholder,
+  //tier6
   };
 }
