@@ -12,6 +12,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
 
 ## Roadmap
+<details><summary>0.0.1 MVP Prototype</summary>
 - [X] 0.0.1 MVP Prototype
   - [X] set up project and repo
   - [X] asset test
@@ -45,6 +46,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] party dupe after first battle
     - [ ] refresh hires after battle (can't reproduce)
     - [X] server line 146 null (shouldn't happen...)
+</details>
+<details><summary>0.0.2 Playable Prototype</summary>
 - [ ] 0.0.2
   - [ ] team names
     - [ ] pool of adjectives and nouns
@@ -65,9 +68,10 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] end of market
   - [ ] CR (tiers)
     - [X] dice assets
-    - [ ] dice UI above hires
+    - [X] dice UI above hires
+    - [ ] only show hires from unlocked tiers
   - [ ] assets
-    - [ ] placeholder level 1s
+    - [X] placeholder level 1s
   - [ ] freeze hires
   - [X] hire stats
   - [X] sell
@@ -81,6 +85,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] cleanup comments from 0.0.1
     - [X] fix hp display on battle end
     - [ ] bigger/better top stat UI
+</details>
+<details><summary>0.0.3 Multiplayer 3+ Prototype</summary>
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
@@ -91,6 +97,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] random pairings
     - [ ] duplicate battles if odd number
   - [ ] join lobby by id
+</details>
+<details><summary>Art and QoL</summary>
 - [ ] Art
   - [ ] font
   - [ ] market background
@@ -106,12 +114,22 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] monster popups
     - [ ] background
     - [ ] layout
+  - Assets 
+    - [ ] tier 1
+    - [ ] tier 2
+    - [ ] tier 3
+    - [ ] tier 4
+    - [ ] tier 5
+    - [ ] tier 6
 - [ ] QoL
   - [ ] better scrollbar removal
+</details>
 
   ## Playtest Notes
 
-  6/17/22
+  ### 0.0.1
+
+  **6/17/22**
   - dupes party if you drag party slots after first battle
   - pulling from hires on return to market shows wrong unless refresh
   - server.js  index line 146 i of null -- why null?
