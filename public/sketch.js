@@ -520,13 +520,15 @@ function showParty(monster, isMyParty){
   textSize(statText);
   text(monster.level, lvlX + statText/2, lvlY + statText/4);
   //upgrades
-  for (let i = 0; i < monster.nextLevel; i++){
-    if (monster.xp > i){
-      fill(230,206,38);
-    } else {
-      fill(50);
+  if (monster.level < 3){ //don't show xp if at max level
+    for (let i = 0; i < monster.nextLevel; i++){
+      if (monster.xp > i) {
+        fill(230,206,38);
+      } else {
+        fill(50);
+      }
+      rect(upgradeX + (upgradeSize * i), lvlY + statText/2, upgradeSize);
     }
-    rect(upgradeX + (upgradeSize * i), lvlY + statText/2, upgradeSize);
   }
   pop();
 }
@@ -655,11 +657,11 @@ function upgradeMonster(index, draggedUpgrades){
   // m.xp++;
   //need to address if combining two monsters with existing upgrades
   m.xp += draggedUpgrades + 1;
-  if (m.xp < m.nextLevel){
+  if (m.xp < m.nextLevel || m.level == 3){ //prevent from going up level, but still get bonus
     //increase power and hp, TODO: is this always +1?
     m.hp += draggedUpgrades + 1;
     m.power += draggedUpgrades + 1;
-  } else {
+  } else { 
     //on level up, increase stats by 2
     m.level++;
     m.xp -= m.nextLevel; //not resetting to 0 incase combining two who upgrades

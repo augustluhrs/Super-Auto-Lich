@@ -56,6 +56,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [X] upgrade
     - [X] lvl and next lvl slots stat above
     - [X] drag to upgrade, combine correctly
+    - [X] can't upgrade past lvl 3
   - [ ] abilities
     - [ ] hover to see name, level, and ability text
     - [ ] timing
