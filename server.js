@@ -7,7 +7,6 @@
 //create server
 let port = process.env.PORT || 8000;
 let express = require('express');
-const { isNullOrUndefined } = require('util');
 let app = express();
 let server = require('http').createServer(app).listen(port, function(){
   console.log('Server is listening at port: ', port);
@@ -22,10 +21,10 @@ let io = require('socket.io')(server);
 //
 // GAME VARIABLES
 //
-
+const Player = require("./modules/player").Player;
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
-let players = []; // holds all current players, their parties, their stats, etc.
+let players = {}; // holds all current players, their parties, their stats, etc.
 let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
 
 let testLobby = "testLobby";
@@ -40,186 +39,170 @@ var inputs = io.of('/')
 inputs.on('connection', (socket) => {
   console.log('new input client!: ' + socket.id);
 
-  //add entry to players array
-  players.push({id: socket.id, gold: 10, hp: 10, turn: 1, hireNum: 3, party: [null, null, null, null, null]});
-  console.log(players);
+  //add entry to players object (search by id);
+  players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null]), lobby: testLobby});
+  // players.push(new Player({id: socket.id, hires: refreshHires(1, [null, null, null])}));
+  // players.push({id: socket.id, gold: 10, hp: 10, turn: 1, hires: [null, null, null], hireNum: 3, party: [null, null, null, null, null]});
+  // console.log(players);
 
   //send starting data
-  socket.emit('goToMarket', {gold: 10, hp: 10, turn: 1, party: [null, null, null, null, null], hires: refreshHires(3)});
+  socket.emit('goToMarket', players[socket.id]);
+  socket.join(players[socket.id].lobby); //TODO placeholder just for testing
 
   //if gold left, replaces hires with random hires
   socket.on("refreshHires", (data) => {
-    for (let player of players) {
-      if (player.id == socket.id){
-        if (player.gold > 0){
-          //get random monsters and send them to player's market
-          //TODO: allow for frozen hires
-          player.gold--;
-          socket.emit("newHires", {gold: player.gold, hires: refreshHires(data.availableHireNum)});
-          console.log("sent " + socket.id + "new hires");
-          return;
-        } else {
-          console.log('not enough gold');
-        }
-      }
+    let player = players[socket.id];
+    if (player.gold > 0){ //get random monsters and send them to player's market
+      //TODO: allow for frozen hires
+      player.hires = data;
+      player.gold--;
+      socket.emit("newHires", {gold: player.gold, hires: refreshHires(player.tier, player.hires)});
+      console.log("sent " + socket.id + "new hires");
+    } else {
+      console.log('not enough gold');
     }
   });
 
   //when player hires a monster
   socket.on("hireMonster", (data) => {
-    for (let player of players) {
-      if (player.id == socket.id){
-        player.party = data.party;
-        player.gold -= 3;
-        console.log(player.id + "has " + player.gold + " left");
-        socket.emit("updateGold", {gold: player.gold});
-      }
-    }
+    let player = players[socket.id];
+    player.party = data.party;
+    player.gold -= 3;
+    console.log(player.id + "has " + player.gold + " left");
+    socket.emit("updateGold", {gold: player.gold});
   });
 
   //when player sells a monster
   socket.on("sellMonster", (data) => {
-    for (let player of players) {
-      if (player.id == socket.id){
-        player.party = data.party;
-        player.gold += data.level;
-        // player.gold += 1;
-        console.log(player.id + "has " + player.gold + " left");
-        socket.emit("updateGold", {gold: player.gold});
-      }
-    }
+    let player = players[socket.id];
+    player.party = data.party;
+    player.gold += data.level;
+    // player.gold += 1;
+    console.log(player.id + "has " + player.gold + " left");
+    socket.emit("updateGold", {gold: player.gold});
   });
 
   //on end turn from market, signals to server we're ready to battle
   //for test, just going to put in room on here instead of joining lobby at start, TODO
   socket.on("readyUp", (data) => {
-    console.log(JSON.stringify(players));
-    for (let player of players) {
-      if (player.id == socket.id){
-        player.ready = true;
-        player.party = data.party;
-        player.battleParty = []; //i still don't understand references...
-        for (let i = 0; i < data.party.length; i++){
-          if (data.party[i] == null){
-            player.battleParty[i] = null;
-          } else {
-            player.battleParty[i] = new Monster(data.party[i]);
-          }
-        }
+    console.log("ready up");
+    console.log(players);
+    let player = players[socket.id];
+    player.ready = true;
+    player.party = data.party;
+    player.battleParty = []; //i still don't understand references...
+    for (let i = 0; i < data.party.length; i++){
+      if (data.party[i] == null){
+        player.battleParty[i] = null;
+      } else {
+        player.battleParty[i] = new Monster(data.party[i]);
+      }
+    }
 
-        //join a lobby if not in one already
-        if (player.lobby == undefined){ 
-          player.lobby = testLobby;
-          socket.join(player.lobby);
-        }
+    //join a lobby if not in one already
+    // if (player.lobby == undefined){ 
+      // player.lobby = testLobby;
+    // socket.join(player.lobby);
+    // }
 
-        // check to see if both are ready, if so, send to battle
-        let lobby = io.sockets.adapter.rooms.get(player.lobby);
-        console.log(lobby);
-        if (lobby.size == 2){ //size instead of length because its a set
-          let enemyIsReady = false;
-          let enemy = {};
-          for (let id of lobby){
-            console.log(id);
-            if (id !== player.id) { //check to see if other player is ready
-              for (let other of players) {
-                console.log(other.ready);
-                if (other.id == id && other.ready == true){
-                  enemy.id = other.id;
-                  enemy.battleParty = other.battleParty;
-                  enemyIsReady = true;
-                  // io.to(player.lobby).emit("startBattle", [{id: player.id, party: player.party}, {id: other.id, party: other.party}]);
-                } 
-              }
-            }
-          }
-          //TODO make less clunky... trims up the parties for better battle display
-          if (enemyIsReady){
-            //remove nulls from party so battle step works
-            let party1 = player.battleParty;
-            for(let i = 0; i < party1.length; i++){
-              if (party1[i] == null){
-                for (let j = i; j < party1.length - 1; j++){
-                  party1[j] = party1[j+1];
-                  if (j == party1.length - 2 && party1[j+1] !== null){
-                    party1[j+1] = null;
-                  }
-                }
-              }
-            }
-            console.log("before splice");
-            console.log(party1);
-            for (let i = party1.length - 1; i >= 0; i--){
-              if (party1[i] == null){
-                party1.splice(i, 1);
-              }
-            }
-            //reset indexes
-            console.log("before index");
-            console.log(party1);
-            for (let i = 0; i < party1.length; i++){
-              party1[i].index = i;
-            }
-
-            let party2 = enemy.battleParty;
-            for(let i = 0; i < party2.length; i++){
-              if (party2[i] == null){
-                for (let j = i; j < party2.length - 1; j++){
-                  party2[j] = party2[j+1];
-                  if (j == party2.length - 2 && party2[j+1] !== null){
-                    party2[j+1] = null;
-                  }
-                }
-              }
-            }
-            for (let i = party2.length - 1; i >= 0; i--){
-              if (party2[i] == null){
-                party2.splice(i, 1);
-              }
-            }
-            //reset indexes
-            for (let i = 0; i < party2.length; i++){
-              party2[i].index = i;
-            }
-
-            let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
-            io.to(player.lobby).emit("startBattle", battle);
-            //start battle sequence
-            setTimeout(() => {
-              battleStep(battle, player.lobby);
-            }, battleStepTime);
-          } else {
-            socket.emit("waitingForBattle");
-          }
-        } else {
-          socket.emit("waitingForBattle");
+    // check to see if both are ready, if so, send to battle
+    let lobby = io.sockets.adapter.rooms.get(player.lobby);
+    console.log(lobby);
+    if (lobby.size == 2){ //size instead of length because its a set
+      let enemyIsReady = false;
+      let enemy = {};
+      for (let id of lobby){
+        console.log(id);
+        if (id !== player.id) { //check to see if other player is ready
+          let other = players[id];
+          if (other.ready){
+            enemy.id = other.id;
+            enemy.battleParty = other.battleParty;
+            enemyIsReady = true;
+          } 
         }
       }
+      //TODO need to do this less 1/2 and more player 1 player 2... 
+      //TODO make less clunky... trims up the parties for better battle display
+      if (enemyIsReady){
+        //remove nulls from party so battle step works
+        let party1 = player.battleParty;
+        for(let i = 0; i < party1.length; i++){
+          if (party1[i] == null){
+            for (let j = i; j < party1.length - 1; j++){
+              party1[j] = party1[j+1];
+              if (j == party1.length - 2 && party1[j+1] !== null){
+                party1[j+1] = null;
+              }
+            }
+          }
+        }
+        for (let i = party1.length - 1; i >= 0; i--){
+          if (party1[i] == null){
+            party1.splice(i, 1);
+          }
+        }
+        //reset indexes
+        for (let i = 0; i < party1.length; i++){
+          party1[i].index = i;
+        }
+
+        let party2 = enemy.battleParty;
+        for(let i = 0; i < party2.length; i++){
+          if (party2[i] == null){
+            for (let j = i; j < party2.length - 1; j++){
+              party2[j] = party2[j+1];
+              if (j == party2.length - 2 && party2[j+1] !== null){
+                party2[j+1] = null;
+              }
+            }
+          }
+        }
+        for (let i = party2.length - 1; i >= 0; i--){
+          if (party2[i] == null){
+            party2.splice(i, 1);
+          }
+        }
+        //reset indexes
+        for (let i = 0; i < party2.length; i++){
+          party2[i].index = i;
+        }
+
+        //reset here since we only check when starting battle
+        players[player.id].ready = false;
+        players[enemy.id].ready = false;
+        
+        //start battle sequence
+        let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
+        io.to(player.lobby).emit("startBattle", battle);
+        setTimeout(() => {
+          battleStep(battle, player.lobby);
+        }, battleStepTime);
+      } else {
+        socket.emit("waitingForBattle");
+      }
+    } else {
+      socket.emit("waitingForBattle");
     }
   });
 
   //after battle timeout, send back to market
   socket.on("goToMarket", () => {
-    for (let player of players) {
-      if (player.id == socket.id){
-        player.gold = 10;
-        player.turn++;
-        player.ready = false;
-        socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.hireNum)});
-      }
-    }
+    let player = players[socket.id];
+    player.gold = 10;
+    player.turn++;
+    // player.ready = false; //wasn't doing this fast enough to prevent spamming battle errors
+    console.log("gotomarket");
+    console.log(player);
+    socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)});
   });
 
   //listen for this client to disconnect
   socket.on('disconnect', () => {
     console.log('input client disconnected: ' + socket.id);
-    for (let [i, player] of players.entries()) {
-      if (player.id == socket.id){
-        players.splice(i, 1);
-      }
-    }
+    delete players[socket.id]; //TODO check to see if throws syntax error if strict https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/delete
   });
-  
+
 });
 
 //
@@ -255,41 +238,37 @@ function battleStep(battle, lobby){
 
   battle[0].party = party1;
   battle[1].party = party2;
+  let p1 = players[battle[0].id];
+  let p2 = players[battle[1].id];
+
+  console.log(players);
 
   //check for end, send next step or end event
   if (party1.length == 0 && party2.length == 0) {
     //send both tie
     io.to(lobby).emit("battleOver", {battle: battle, result: "tie"})
-  } else if (party1.length == 0){
-    //player1 loss
-    for (let player of players) {
-      if (player.id == battle[0].id){
-        player.hp -= 2;
-        if (player.hp <= 0) {
-          gameOver(player, lobby);
-          return;
-        } else {
-          io.to(player.id).emit("battleOver", {battle: battle, hp: player.hp, result: "loss"})
-        }
-      } else if (player.id == battle[1].id){
-        io.to(player.id).emit("battleOver", {battle: battle, result: "win"})
-      }
+  } else if (party1.length == 0){ //player1 loss
+    p1.hp -= 2;
+    if (p1.hp <= 0) {
+      // gameOver(p1, lobby);
+      io.to(p1.id).emit("gameOver", {result: "loss"});
+      io.to(p2.id).emit("gameOver", {result: "win"});
+      return;
+    } else {
+      io.to(p1.id).emit("battleOver", {battle: battle, hp: p1.hp, result: "loss"})
     }
-  } else if (party2.length == 0){
-    //player2 loss
-    for (let player of players) {
-      if (player.id == battle[1].id){
-        player.hp -= 2;
-        if (player.hp <= 0) {
-          gameOver(player, lobby);
-          return;
-        } else {
-          io.to(player.id).emit("battleOver", {battle: battle, hp: player.hp, result: "loss"});
-        }
-      } else if (player.id == battle[0].id){
-        io.to(player.id).emit("battleOver", {battle: battle, result: "win"})
-      }
+    io.to(p2.id).emit("battleOver", {battle: battle, result: "win"})
+  } else if (party2.length == 0){ //player2 loss
+    p2.hp -= 2;
+    if (p2.hp <= 0) {
+      // gameOver(p2, lobby);
+      io.to(p1.id).emit("gameOver", {result: "win"});
+      io.to(p2.id).emit("gameOver", {result: "loss"});
+      return;
+    } else {
+      io.to(p2.id).emit("battleOver", {battle: battle, hp: p2.hp, result: "loss"});
     }
+    io.to(p1.id).emit("battleOver", {battle: battle, result: "win"})
   } else {
     //send both next step and trigger next step
     io.to(lobby).emit("battleAftermath", battle);
@@ -299,21 +278,18 @@ function battleStep(battle, lobby){
   }
 }
 
-function refreshHires(availableHireNum){
-  let hires = [];
-  for (let i = 0; i < availableHireNum; i++){
-    let RandomMonster = monsters[Math.floor(Math.random()*monsters.length)];
-    hires.push(new RandomMonster({index: i}));
+function refreshHires(tier, hires){
+  for (let i = 0; i < hires.length; i++){
+    if (hires[i] == null || !hires[i].isFrozen) {
+      //select randomly from all unlocked tiers
+      let randomTier = Math.floor(Math.random()*tier); //monster array starts at 0 for tier 1, should be fine
+      let RandomMonster = monsters[randomTier][Math.floor(Math.random()*monsters[randomTier].length)];
+      hires[i] = new RandomMonster({index: i});
+    }
   }
   return hires;
 }
 
-function gameOver(player, lobby){
-  for (let p of players){
-    if (p.id == player.id){
-      io.to(player.id).emit("gameOver", {result: "loss"});
-    } else if (p.lobby == lobby){
-      io.to(p.id).emit("gameOver", {result: "win"});
-    }
-  }
-}
+// function gameOver(player, lobby, result){
+//   io.to(player.id).emit("gameOver", {result: result});
+// }

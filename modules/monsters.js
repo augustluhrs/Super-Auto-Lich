@@ -18,6 +18,7 @@ class Monster {
       this.ability = stats.ability; //ability
       this.timing = stats.timing; //when does ability trigger
       this.index = stats.index; //unchanging index of party
+      this.isFrozen = stats.isFrozen || false; //is frozen hire?
       //this.slot = stats.slot; //its place in line (x,y val based on current index)   
     // }
   }
@@ -155,18 +156,13 @@ class Vegepygmy extends Monster {
   }
 }
 
-let monsters = [
-  Beholder,
-  Bulette,
-  Cavebear,
-  Flumph,
-  Gnoll,
-  Goblin,
-  Kobold,
-  Mephit,
-  Skeleton,
-  Stirge,
-  Vegepygmy,
+let monsters = [ //arrays of tiers for random selection
+  [Cavebear, Flumph, Gnoll, Goblin, Kobold, Mephit, Skeleton, Stirge, Vegepygmy],
+  [ ],
+  [ ],
+  [Bulette, ],
+  [Beholder, ],
+  [ ],
 ]
 
 module.exports.monsters = monsters;

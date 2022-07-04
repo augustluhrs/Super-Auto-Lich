@@ -194,8 +194,8 @@ socket.on('gameOver', (data) => {
 
 //overall game state
 let state = "market";
-let availableHireNum = 3;
-let hires = [null, null, null, null, null]; //available monsters in market
+// let availableHireNum = 3; //now just using hires
+let hires = [null, null, null]; //available monsters in market
 let doneSetup = false;
 
 // player stuff
@@ -254,7 +254,7 @@ function setup(){
   sellSlot = {x: width/2, y: 7 * height / 8};
 
   //make UI
-  refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", {availableHireNum: availableHireNum})}); //if gold left, replaces hires with random hires
+  refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
   readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
   readyButt.hide(); //hiding until there's a party to send to battle
 
@@ -560,7 +560,7 @@ function showSlots(){
     for (let i = 0; i < 5; i++){//party in market
       rect(marketSlots[i], marketSlotY, assetSize);
     }
-    for (let i = 0; i < availableHireNum; i++) { //hires, variable based on tier reached
+    for (let i = 0; i < hires.length; i++) { //hires, variable based on tier reached
       rect(hireSlots[i], hireSlotY, assetSize);
       if (hires[i] !== null) {
         showHire(hires[i]);

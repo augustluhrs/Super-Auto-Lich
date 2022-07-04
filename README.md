@@ -64,20 +64,36 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] on attack
       - [ ] on damage
       - [ ] on death
+      - [ ] on buy
+      - [ ] on sell
+      - [ ] on getting an item
+      - [ ] on level up
       - [ ] end of market
+      - [ ] start of battle
+  - [ ] battle speed
+    - [ ] UI (pause, play, fast)
+    - [ ] client goes through list of animation steps
   - [ ] CR (tiers)
     - [X] dice assets
     - [X] dice UI above hires
-    - [ ] only show hires from unlocked tiers
+    - [X] only show hires from unlocked tiers
+    - [ ] hp loss by turn/tier
+    - [ ] increase tier every X turns
   - [ ] assets
     - [X] placeholder level 1s
   - [ ] freeze hires
+    - [X] send hire array as argument instead of tracking freezes on server
+    - [ ] placeholder frozen overlay
+    - [ ] freeze slot
   - [X] hire stats
   - [X] sell
     - [X] drag to sell
     - [X] sell location
     - [X] sell return by level
-  - [ ] hp loss by turn
+  - [ ] Code Refactor
+    - [X] player object and lookup by id instead of array
+    - [X] fix bug with ready and battle spamming
+    - [ ] server battle calculates and sends list of steps
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size
@@ -90,11 +106,13 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] freeze items
 - [ ] Multiplayer
   - [ ] nedb database for login and stats tracking
-  - [ ] join random lobby
-  - [ ] join arena lobby
-    - [ ] random pairings
-    - [ ] duplicate battles if odd number
-  - [ ] join lobby by id
+  - [ ] start screen
+    - [ ] login
+    - [ ] join random lobby
+    - [ ] join arena lobby
+      - [ ] random pairings
+      - [ ] duplicate battles if odd number
+    - [ ] join lobby by id
 
 - [ ] Art
   - [ ] font
@@ -111,7 +129,21 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] monster popups
     - [ ] background
     - [ ] layout
+  - [ ] freezes
+    - [ ] basic overlay for all monsters
   - Assets 
+    - [ ] tier 1
+    - [ ] tier 2
+    - [ ] tier 3
+    - [ ] tier 4
+    - [ ] tier 5
+    - [ ] tier 6
+  - Animations
+    - [ ] basic attack
+    - [ ] basic take damage
+    - [ ] basic dead
+    - [ ] basic scoot up party after death
+    - [ ] basic ability trigger
     - [ ] tier 1
     - [ ] tier 2
     - [ ] tier 3
@@ -120,6 +152,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] tier 6
 - [ ] QoL
   - [ ] better scrollbar removal
+- [ ] Balancing
+  - [ ] some sort of data gathering for what is picked and what wins?
 
   ## Playtest Notes
 
