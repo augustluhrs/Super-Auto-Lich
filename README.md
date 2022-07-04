@@ -77,7 +77,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] dice assets
     - [X] dice UI above hires
     - [X] only show hires from unlocked tiers
-    - [ ] hp loss by turn/tier
+    - [X] hp loss by turn/tier
     - [ ] increase tier every X turns
   - [ ] assets
     - [X] placeholder level 1s
@@ -123,6 +123,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] asset
     - [ ] layout
   - [ ] level/upgrades
+  - [ ] power
+  - [ ] hp
   - [ ] tiers
     - [ ] asset
     - [ ] layout

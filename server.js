@@ -85,8 +85,6 @@ inputs.on('connection', (socket) => {
   //on end turn from market, signals to server we're ready to battle
   //for test, just going to put in room on here instead of joining lobby at start, TODO
   socket.on("readyUp", (data) => {
-    console.log("ready up");
-    console.log(players);
     let player = players[socket.id];
     player.ready = true;
     player.party = data.party;
@@ -171,7 +169,7 @@ inputs.on('connection', (socket) => {
         //reset here since we only check when starting battle
         players[player.id].ready = false;
         players[enemy.id].ready = false;
-        
+
         //start battle sequence
         let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
         io.to(player.lobby).emit("startBattle", battle);
@@ -186,15 +184,29 @@ inputs.on('connection', (socket) => {
     }
   });
 
-  //after battle timeout, send back to market
+  //after battle timeout, send back to market, trigger tier stuff
   socket.on("goToMarket", () => {
     let player = players[socket.id];
     player.gold = 10;
     player.turn++;
+    //adjust hpLoss and tier by turn number -- TODO: not doing tier up yet
+    //SAP wiki: "The formula is tier X being unlockable in turn (2X-1)"
+    if (player.turn >= 11){
+      // player.tier = 6;
+    } else if (player.turn >= 9) {
+      // player.tier = 5;
+      player.hpLoss = 3;
+    } else if (player.turn >= 7) {
+      // player.tier = 4;
+    } else if (player.turn >= 5) {
+      // player.tier = 3;
+      player.hpLoss = 2;
+    }
+    else if (player.turn >= 3) {
+      // player.tier = 2;
+    }
     // player.ready = false; //wasn't doing this fast enough to prevent spamming battle errors
-    console.log("gotomarket");
-    console.log(player);
-    socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)});
+    socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)}); //TODO just send player
   });
 
   //listen for this client to disconnect
@@ -241,14 +253,12 @@ function battleStep(battle, lobby){
   let p1 = players[battle[0].id];
   let p2 = players[battle[1].id];
 
-  console.log(players);
-
   //check for end, send next step or end event
   if (party1.length == 0 && party2.length == 0) {
     //send both tie
     io.to(lobby).emit("battleOver", {battle: battle, result: "tie"})
   } else if (party1.length == 0){ //player1 loss
-    p1.hp -= 2;
+    p1.hp -= p1.hpLoss;
     if (p1.hp <= 0) {
       // gameOver(p1, lobby);
       io.to(p1.id).emit("gameOver", {result: "loss"});
@@ -259,7 +269,7 @@ function battleStep(battle, lobby){
     }
     io.to(p2.id).emit("battleOver", {battle: battle, result: "win"})
   } else if (party2.length == 0){ //player2 loss
-    p2.hp -= 2;
+    p2.hp -= p2.hpLoss;
     if (p2.hp <= 0) {
       // gameOver(p2, lobby);
       io.to(p1.id).emit("gameOver", {result: "win"});

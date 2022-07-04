@@ -8,6 +8,7 @@ class Player {
         this.gold = stats.gold || 10;
         this.hp = stats.hp || 10;
         this.turn = stats.turn || 1;
+        this.hpLoss = stats.hpLoss || 1;
         this.hires = stats.hires || [null, null, null];
         this.party = stats.party || [null, null, null, null, null];
         this.battleParty = stats.battleParty || this.party;

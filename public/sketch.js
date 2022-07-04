@@ -347,11 +347,11 @@ function mouseReleased() {
       //if same monster, upgrade and combine when drop
       else if (party[i] !== null && party[i].name == dragged.monster.name && mouseX > slotX - r && mouseX < slotX + r && mouseY > marketSlotY - r && mouseY < marketSlotY + r) {
         if (dragged.party == hires && gold >= 3){
-          upgradeMonster(i, dragged.monster.currentUpgrades); //TODO should do on server side...
+          upgradeMonster(i, dragged.monster.xp); //TODO should do on server side...
           needsToReturn = false;
           socket.emit("hireMonster", {party: party});
         } else if (dragged.party !== hires) {
-          upgradeMonster(i, dragged.monster.currentUpgrades); //TODO should do on server side...
+          upgradeMonster(i, dragged.monster.xp); //TODO should do on server side...
           needsToReturn = false;
         }
       }
@@ -514,7 +514,7 @@ function showParty(monster, isMyParty){
   text(monster.level, lvlX + statText/2, lvlY + statText/4);
   //upgrades
   for (let i = 0; i < monster.nextLevel; i++){
-    if (monster.currentUpgrades > i){
+    if (monster.xp > i){
       fill(230,206,38);
     } else {
       fill(50);
@@ -630,17 +630,17 @@ function showHire(monster){
 //upgrades monster after dropping to combine, TODO: should be on server
 function upgradeMonster(index, draggedUpgrades){
   let m = party[index];
-  // m.currentUpgrades++;
+  // m.xp++;
   //need to address if combining two monsters with existing upgrades
-  m.currentUpgrades += draggedUpgrades + 1;
-  if (m.currentUpgrades < m.nextLevel){
+  m.xp += draggedUpgrades + 1;
+  if (m.xp < m.nextLevel){
     //increase power and hp, TODO: is this always +1?
     m.hp += draggedUpgrades + 1;
     m.power += draggedUpgrades + 1;
   } else {
     //on level up, increase stats by 2
     m.level++;
-    m.currentUpgrades -= m.nextLevel; //not resetting to 0 incase combining two who upgrades
+    m.xp -= m.nextLevel; //not resetting to 0 incase combining two who upgrades
     m.hp += draggedUpgrades + 2;
     m.power += draggedUpgrades + 2;
   }
