@@ -87,6 +87,7 @@ inputs.on('connection', (socket) => {
   socket.on("readyUp", (data) => {
     let player = players[socket.id];
     player.ready = true;
+    player.hires = data.hires;
     player.party = data.party;
     player.battleParty = []; //i still don't understand references...
     for (let i = 0; i < data.party.length; i++){

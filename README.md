@@ -81,10 +81,11 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] increase tier every X turns
   - [ ] assets
     - [X] placeholder level 1s
-  - [ ] freeze hires
+  - [X] freeze hires
     - [X] send hire array as argument instead of tracking freezes on server
-    - [ ] placeholder frozen overlay
-    - [ ] freeze slot
+    - [X] placeholder frozen overlay
+    - [X] freeze slot
+    - [X] drag to freeze
   - [X] hire stats
   - [X] sell
     - [X] drag to sell

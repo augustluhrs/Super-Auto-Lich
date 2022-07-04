@@ -211,6 +211,7 @@ let marketSlots = []; //where party is in market
 let hireSlots = []; //where available monsters in market are
 let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
 let slots = []; //array for all draggable slots, with appropriate Ys
+let freezeSlot; //the slot to drag to freeze
 let sellSlot; //the slot to drag to sell
 let assetSize; //size to display monster pngs
 let r; //radius of image
@@ -251,11 +252,12 @@ function setup(){
   marketSlots = [6 * slotSize, 5 * slotSize, 4 * slotSize, 3 * slotSize, 2 * slotSize];
   hireSlots = [2 * slotSize, 3 * slotSize, 4 * slotSize, 5 * slotSize, 6 * slotSize, 7 * slotSize + spacing, 8 * slotSize + spacing]; //items have slight gap
   slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
-  sellSlot = {x: width/2, y: 7 * height / 8};
+  sellSlot = {x: width/2 + assetSize, y: 7 * height / 8};
+  freezeSlot = {x: width/2 - assetSize, y: 7 * height / 8};
 
   //make UI
-  refreshButt = createButton('REFRESH HIRES').position(width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
-  readyButt = createButton('READY UP').position(3 * width / 4, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party})}); //sends msg that we're ready to battle
+  refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
+  readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party, hires: hires})}); //sends msg that we're ready to battle
   readyButt.hide(); //hiding until there's a party to send to battle
 
   //assets after loadImage
@@ -355,6 +357,11 @@ function mouseReleased() {
           needsToReturn = false;
         }
       }
+    }
+    //check for freeze slot drop
+    if (dragged.party == hires && mouseX > freezeSlot.x - r && mouseX < freezeSlot.x + r && mouseY > freezeSlot.y - r && mouseY < freezeSlot.y + r) {
+      // hires[dragged.i].isFrozen = !hires[dragged.i].isFrozen; //toggle frozen or not
+      dragged.monster.isFrozen = !dragged.monster.isFrozen; //toggle frozen or not
     }
     //check for sell slot drop
     if (dragged.party == party && mouseX > sellSlot.x - r && mouseX < sellSlot.x + r && mouseY > sellSlot.y - r && mouseY < sellSlot.y + r) {
@@ -564,15 +571,30 @@ function showSlots(){
       rect(hireSlots[i], hireSlotY, assetSize);
       if (hires[i] !== null) {
         showHire(hires[i]);
+        if (hires[i].isFrozen){
+          push();
+          fill(100, 100, 255, 150); //transparent blue overlay
+          rect(hireSlots[i], hireSlotY, assetSize);
+          pop();
+        }
       }
     }
     for (let i = 1; i < 3; i++){ //items, same array as hires -- don't like it, but that's how SAP looks
       rect(hireSlots[hireSlots.length - i], hireSlotY, assetSize);
     }
 
+    //freeze slot
+    stroke(0, 0, 200);
+    rect(freezeSlot.x, freezeSlot.y, assetSize);
+    textSize(assetSize/5);
+    fill(0);
+    text("FREEZE", freezeSlot.x, freezeSlot.y);
+
     //sell slot
+    fill(230, 150);
+    stroke(249,224,50);
     rect(sellSlot.x, sellSlot.y, assetSize);
-    textSize(assetSize /4);
+    textSize(assetSize/5);
     fill(0);
     text("SELL", sellSlot.x, sellSlot.y);
 
