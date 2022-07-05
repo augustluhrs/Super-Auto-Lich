@@ -106,12 +106,24 @@ socket.on("startBattle", (data) => {
   for (let client of data){
     if (client.id != socket.id){
       enemyParty = client.party;
-      console.log("enemyParty");
-      console.log(enemyParty);
+      for (let i = 0; i < enemyParty.length; i++){
+        //need to add x, y, step now
+        enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
+        enemyParty[i].y = battleSlotY;
+        enemyParty[i].s = 0;
+        enemyParty[i].t = stepSpeed;
+        enemyParty[i].isMyParty = false;
+      }
     } else {
-      party = client.party;
-      console.log("party");
-      console.log(party);
+      battleParty = client.party;
+      for (let i = 0; i < battleParty.length; i++){
+        //need to add x, y, step now
+        battleParty[i].x = battleSlots[i];
+        battleParty[i].y = battleSlotY;
+        battleParty[i].s = 0;
+        battleParty[i].t = stepSpeed;
+        battleParty[i].isMyParty = true;
+      }
     }
   }
   state = "battle";
@@ -125,13 +137,30 @@ socket.on("startBattle", (data) => {
 socket.on('battleAftermath', (data) => {
   console.log('battle step over');
   for (let client of data){ //just sending battle array
-    if (client.id == socket.id){
-      party = client.party;
-    } else {
+    if (client.id != socket.id) {
       enemyParty = client.party;
+      for (let i = 0; i < enemyParty.length; i++){
+        //need to add x, y, step now
+        enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
+        enemyParty[i].y = battleSlotY;
+        enemyParty[i].s = 0;
+        enemyParty[i].t = stepSpeed;
+        enemyParty[i].isMyParty = false;
+      }
+    } else {
+      battleParty = client.party;
+      for (let i = 0; i < battleParty.length; i++){
+        //need to add x, y, step now
+        battleParty[i].x = battleSlots[i];
+        battleParty[i].y = battleSlotY;
+        battleParty[i].s = 0;
+        battleParty[i].t = stepSpeed;
+        battleParty[i].isMyParty = true;
+      }
+    
     }
   }
-  showEverything();
+  // showEverything();
 });
 
 // end battle message
@@ -139,7 +168,8 @@ socket.on('battleOver', (data) => {
   console.log('battle finished: ' + data.result);
   for (let client of data.battle){
     if (client.id == socket.id){
-      party = client.party;
+      // party = client.party;
+      battleParty = client.party;
     } else {
       enemyParty = client.party;
     }
@@ -200,6 +230,7 @@ let doneSetup = false;
 
 // player stuff
 let party = [null, null, null, null, null];
+let battleParty = []; //going to use this for now to prevent any messes... TODO remove
 let gold, hp, turn;
 let partyName;
 let enemyParty = [];
@@ -224,6 +255,8 @@ let waitingForBattle = false; //when ready but opponent isn't
 let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleased
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
 let hoverCheckTime = 70; //timer before hover triggers
+let speedSlots = []; //for speed UI in battle
+let stepSpeed = 2000; //amount of time each animation step takes
 
 //
 //  MAIN
@@ -300,6 +333,8 @@ function draw(){
     if (!isHovering){
       hoverTimer = 0;
     }
+  } else if (state == "battle"){
+    showEverything();
   }
 }
 
@@ -448,6 +483,14 @@ function showEverything(){
     }
   } else if (state == "battle") {
     translate(width/2, 0); //only translating in battle to make flip easier
+    for (let i = 0; i < battleParty.length; i++){
+      showMonster(battleParty[i]);
+    }
+    for (let i = 0; i < enemyParty.length; i++){
+      showMonster(enemyParty[i]);
+    }
+    /*
+    translate(width/2, 0); //only translating in battle to make flip easier
     for (let i = 0; i < party.length; i++){
       if (party[i] !== null){
         showParty(party[i], true);
@@ -458,6 +501,7 @@ function showEverything(){
         showParty(enemyParty[i], false);
       }
     }
+    */
   }
   pop();
 }
@@ -610,6 +654,71 @@ function showSlots(){
     }
   }
 
+  pop();
+}
+
+//new battle show to allow for animations
+function showMonster(monster){
+  push();
+  let x = monster.x;
+  let y = monster.y;
+  let size = assetSize;
+  let xOffset = (1 * size / 5);
+  let yOffset = (3 * size / 4);
+  let statSize = size / 3;
+
+  //annoying, need more elegant solution to flipping images and text
+  if (!monster.isMyParty) {
+      //x = -x;
+      push();
+      scale(-1, 1);
+      image(monsterAssets[monster.name], x, y, size, size);
+      pop();
+      x = -x; //so text flips
+  } else {
+      image(monsterAssets[monster.name], x, y, size, size);
+  }
+
+  let powerX = x - xOffset;
+  let hpX = x + xOffset;
+  let statY = y + yOffset;
+  let lvlX = x - xOffset;
+  let upgradeX = x;
+  let lvlY = y - yOffset;
+  let upgradeSize = xOffset/2;
+  //asset
+  strokeWeight(2);
+  stroke(0);
+  let statText = 5 * statSize / 6;
+  textSize(statText);
+  //power
+  fill(100);
+  rect(powerX, statY, statSize); 
+  fill(255);
+  text(monster.currentPower, powerX, statY + (statText / 12)); //weirdly not in center??
+  //hp
+  fill(200, 0, 0);
+  rect(hpX, statY, statSize);
+  fill(255);
+  text(monster.currentHP, hpX, statY + (statText / 12));
+  //level
+  fill(230,206,38);
+  textAlign(RIGHT, BOTTOM);
+  textSize(statText/2);
+  text("lvl.", lvlX, lvlY);
+  textSize(statText);
+  text(monster.level, lvlX + statText/2, lvlY + statText/4);
+  //upgrades
+  if (monster.level < 3){ //don't show xp if at max level
+    for (let i = 0; i < monster.nextLevel; i++){
+      if (monster.xp > i) {
+        fill(230,206,38);
+      } else {
+        fill(50);
+      }
+      rect(upgradeX + (upgradeSize * i), lvlY + statText/2, upgradeSize);
+    }
+  }
   pop();
 }
 

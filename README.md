@@ -59,6 +59,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] can't upgrade past lvl 3
   - [ ] abilities
     - [ ] hover to see name, level, and ability text
+    - [ ] ability stack (priority goes to power, tie if random)
     - [ ] timing
       - [ ] initial battle effect
       - [ ] before attack
@@ -92,10 +93,17 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] drag to sell
     - [X] sell location
     - [X] sell return by level
+  - Animations
+    - [ ] basic attack
+    - [ ] basic take damage
+    - [ ] basic dead
+    - [ ] basic scoot up party after death
+    - [ ] basic ability trigger
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
     - [X] fix bug with ready and battle spamming
     - [ ] server battle calculates and sends list of steps
+    - [X] battle display battleParty
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size
@@ -106,6 +114,14 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 - [ ] 0.0.3
   - [ ] items
   - [ ] freeze items
+  - [ ] no drag to freeze?
+  - [ ] assets
+   - [ ] better lvl 1s
+   - [ ] tier 2
+   - [ ] tier 3
+   - [ ] tier 4
+   - [ ] tier 5
+   - [ ] tier 6
 - [ ] Multiplayer
   - [ ] nedb database for login and stats tracking
   - [ ] start screen
@@ -121,6 +137,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] market background
   - [ ] battle background
   - [ ] end game background
+  - [ ] refresh button
+  - [ ] ready button
   - [ ] slots
     - [ ] asset
     - [ ] layout
@@ -143,19 +161,17 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] tier 5
     - [ ] tier 6
   - Animations
-    - [ ] basic attack
-    - [ ] basic take damage
-    - [ ] basic dead
-    - [ ] basic scoot up party after death
-    - [ ] basic ability trigger
+    - [ ] enter battle (approach and fade in)
+    - [ ] exit back to market fade out
     - [ ] tier 1
     - [ ] tier 2
     - [ ] tier 3
     - [ ] tier 4
     - [ ] tier 5
     - [ ] tier 6
-- [ ] QoL
+- [ ] Refactor / QoL
   - [ ] better scrollbar removal
+  - [ ] show/drag monsters/times with .x/.y instead of iterating through slots
 - [ ] Balancing
   - [ ] some sort of data gathering for what is picked and what wins?
 

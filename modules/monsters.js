@@ -1,10 +1,5 @@
 class Monster {
   constructor(stats){
-    // if (stats instanceof Monster){
-    //   this = s
-    // } else {
-      //this.asset = stats.asset; //p5 image variable
-      // this.assetSize = stats.assetSize || 80; //relative size, used for stat positioning
       this.name = stats.name; //monster name
       this.tier = stats.tier; //tier / challenge rating
       this.level = stats.level || 1; //monster level
@@ -19,8 +14,6 @@ class Monster {
       this.timing = stats.timing; //when does ability trigger
       this.index = stats.index; //unchanging index of party
       this.isFrozen = stats.isFrozen || false; //is frozen hire?
-      //this.slot = stats.slot; //its place in line (x,y val based on current index)   
-    // }
   }
 }
 
@@ -33,6 +26,8 @@ class Beholder extends Monster {
     this.hp = 3;
     this.currentPower = 5;
     this.currentHP = 3;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -45,6 +40,8 @@ class Bulette extends Monster {
     this.hp = 3;
     this.currentPower = 3;
     this.currentHP = 3;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -57,6 +54,8 @@ class Cavebear extends Monster {
     this.hp = 3;
     this.currentPower = 1;
     this.currentHP = 3;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -69,6 +68,8 @@ class Flumph extends Monster {
     this.hp = 1;
     this.currentPower = 0;
     this.currentHP = 1;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -81,6 +82,8 @@ class Gnoll extends Monster {
     this.hp = 1;
     this.currentPower = 3;
     this.currentHP = 1;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -93,6 +96,8 @@ class Goblin extends Monster {
     this.hp = 1;
     this.currentPower = 2;
     this.currentHP = 1;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -105,6 +110,8 @@ class Kobold extends Monster {
     this.hp = 1;
     this.currentPower = 1;
     this.currentHP = 1;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -117,6 +124,8 @@ class Mephit extends Monster {
     this.hp = 2;
     this.currentPower = 2;
     this.currentHP = 2;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -129,6 +138,8 @@ class Skeleton extends Monster {
     this.hp = 2;
     this.currentPower = 1;
     this.currentHP = 2;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -141,6 +152,8 @@ class Stirge extends Monster {
     this.hp = 2;
     this.currentPower = 1;
     this.currentHP = 2;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
@@ -153,6 +166,8 @@ class Vegepygmy extends Monster {
     this.hp = 1;
     this.currentPower = 1;
     this.currentHP = 1;
+    this.ability = null;
+    this.timing = null;
   }
 }
 
