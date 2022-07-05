@@ -173,10 +173,18 @@ inputs.on('connection', (socket) => {
 
         //start battle sequence
         let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
-        io.to(player.lobby).emit("startBattle", battle);
-        setTimeout(() => {
-          battleStep(battle, player.lobby);
-        }, battleStepTime);
+        let startParties = [];
+        for (let side of battle){
+          let partyCopy = [];
+          for (let i = 0; i < side.party.length; i++){
+            partyCopy.push(new Monster(side.party[i]));
+          }
+          startParties.push({id: side.id, party: partyCopy});
+        }
+        io.to(player.lobby).emit("startBattle", {startParties: startParties, battleSteps: getBattleSteps(battle)});
+        // setTimeout(() => {
+        //   battleStep(battle, player.lobby);
+        // }, battleStepTime);
       } else {
         socket.emit("waitingForBattle");
       }
@@ -222,6 +230,88 @@ inputs.on('connection', (socket) => {
 // FUNCTIONS
 //
 
+function getBattleSteps(battle){
+  let battleSteps = [];
+  battleSteps = battleStep(battle, battleSteps); //silly naming
+  console.log(battleSteps);
+  return battleSteps;
+}
+
+function battleStep(battle, battleSteps){
+  console.log("battleStep");
+  let party1 = battle[0].party;
+  let party2 = battle[1].party;
+
+  //apply damage
+  party1[0].currentHP -= party2[0].power;
+  party2[0].currentHP -= party1[0].power;
+
+  //check for death and move up party if so
+  if (party1[0].currentHP <= 0){
+    party1.splice(0, 1);
+    //reset indexes
+    for (let i = 0; i < party1.length; i++){
+      party1[i].index = i;
+    }
+  }
+  if (party2[0].currentHP <= 0){
+    party2.splice(0, 1);
+    //reset indexes
+    for (let i = 0; i < party2.length; i++){
+      party2[i].index = i;
+    }
+  }
+
+  battle[0].party = party1;
+  battle[1].party = party2;
+  let p1 = players[battle[0].id];
+  let p2 = players[battle[1].id];
+
+  //check for end, send next step or end event
+  if (party1.length == 0 && party2.length == 0) {
+    //send both tie
+    // io.to(lobby).emit("battleOver", {battle: battle, result: "tie"});
+    battleSteps.push({parties: battle, action: "tie"});
+    return battleSteps;
+  } else if (party1.length == 0){ //player1 loss
+    p1.hp -= p1.hpLoss;
+    if (p1.hp <= 0) {
+      // gameOver(p1, lobby);
+      io.to(p1.id).emit("gameOver", {result: "loss"});
+      io.to(p2.id).emit("gameOver", {result: "win"});
+      return battleSteps; //not needed but don't want errors
+    } else {
+      // io.to(p1.id).emit("battleOver", {battle: battle, hp: p1.hp, result: "loss"})
+      battleSteps.push({parties: battle, action: "battleOver"});
+      return battleSteps;
+    }
+    // io.to(p2.id).emit("battleOver", {battle: battle, result: "win"})
+  } else if (party2.length == 0){ //player2 loss
+    p2.hp -= p2.hpLoss;
+    if (p2.hp <= 0) {
+      // gameOver(p2, lobby);
+      io.to(p1.id).emit("gameOver", {result: "win"});
+      io.to(p2.id).emit("gameOver", {result: "loss"});
+      return battleSteps;
+    } else {
+      battleSteps.push({parties: battle, action: "battleOver"});
+      return battleSteps;
+    }
+    // io.to(p1.id).emit("battleOver", {battle: battle, result: "win"})
+  } else {
+    //add to steps and trigger again
+    battleSteps.push({parties: battle, action: "attack"});
+    return battleStep(battle, battleSteps);
+    //send both next step and trigger next step
+    // io.to(lobby).emit("battleAftermath", battle);
+    // setTimeout(() => {
+    //   battleStep(battle, lobby);
+    // }, battleStepTime);
+  }
+}
+
+// old battleStep
+/*
 function battleStep(battle, lobby){
   console.log("battleStep");
   let party1 = battle[0].party;
@@ -288,6 +378,7 @@ function battleStep(battle, lobby){
     }, battleStepTime);
   }
 }
+*/
 
 function refreshHires(tier, hires){
   for (let i = 0; i < hires.length; i++){

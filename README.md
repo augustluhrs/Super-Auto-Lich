@@ -163,6 +163,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - Animations
     - [ ] enter battle (approach and fade in)
     - [ ] exit back to market fade out
+    - [ ] player hp loss on loss
     - [ ] tier 1
     - [ ] tier 2
     - [ ] tier 3

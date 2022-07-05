@@ -47,10 +47,12 @@ function preload() {
 
 //open and connect the input socket
 let socket = io('/');
+let id;
 
 //listen for the confirmation of connection 
 socket.on('connect', () => {
   console.log('now connected to server');
+  id = socket.id;
 });
 
 // basic setup on connecting to server or after battle when going back to market
@@ -103,7 +105,7 @@ socket.on("waitingForBattle", () => {
 
 //start battle
 socket.on("startBattle", (data) => {
-  for (let client of data){
+  for (let client of data.startParties){
     if (client.id != socket.id){
       enemyParty = client.party;
       for (let i = 0; i < enemyParty.length; i++){
@@ -113,6 +115,7 @@ socket.on("startBattle", (data) => {
         enemyParty[i].s = 0;
         enemyParty[i].t = stepSpeed;
         enemyParty[i].isMyParty = false;
+        enemyParty[i].animate = () => {};
       }
     } else {
       battleParty = client.party;
@@ -123,17 +126,29 @@ socket.on("startBattle", (data) => {
         battleParty[i].s = 0;
         battleParty[i].t = stepSpeed;
         battleParty[i].isMyParty = true;
+        battleParty[i].animate = () => {};
       }
     }
   }
   state = "battle";
   waitingForBattle = false;
+  battleSteps = data.battleSteps;
+  console.log("battle start");
+  console.log(battleSteps);
   refreshButt.hide();
   readyButt.hide();
   showEverything();
 });
 
+//receive entire list of battle steps and result
+// socket.on('battleSteps', (data) => {
+//   console.log(data);
+//   battleSteps = data;
+//   // stepThroughBattle(data); //draw handling this
+// });
+
 // receive info from battle step
+/*
 socket.on('battleAftermath', (data) => {
   console.log('battle step over');
   for (let client of data){ //just sending battle array
@@ -162,8 +177,10 @@ socket.on('battleAftermath', (data) => {
   }
   // showEverything();
 });
+*/
 
 // end battle message
+/*
 socket.on('battleOver', (data) => {
   console.log('battle finished: ' + data.result);
   for (let client of data.battle){
@@ -199,6 +216,7 @@ socket.on('battleOver', (data) => {
     socket.emit("goToMarket")
   }, 3000);
 });
+*/
 
 // game end message
 socket.on('gameOver', (data) => {
@@ -256,7 +274,9 @@ let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleas
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
 let hoverCheckTime = 70; //timer before hover triggers
 let speedSlots = []; //for speed UI in battle
-let stepSpeed = 2000; //amount of time each animation step takes
+let stepSpeed = 200; //amount of time each animation step takes
+let stepTimer = 0;
+let animationRange; //standard distance to animate
 
 //
 //  MAIN
@@ -278,6 +298,8 @@ function setup(){
   assetSize = width / 11; //size of slots and images
   r = assetSize / 2; //radius of image, for checking interaction range
   tierSize = assetSize/3; //size of dice for hires
+  animationRange = assetSize * 0.75; //standard distance to animate
+
   let slotBuffer = assetSize / 20; //space between slots
   let slotSize = assetSize + slotBuffer; //total X size of slot + space
   let spacing = slotSize / 3; // to prevent battle positions from going offscreen
@@ -334,11 +356,24 @@ function draw(){
       hoverTimer = 0;
     }
   } else if (state == "battle"){
+    //check animation timing
+    if (stepTimer >= stepSpeed){
+      console.log("newStep");
+      stepTimer = 0;
+      stepThroughBattle(battleSteps);
+    } else {
+      stepTimer++;
+      if (stepTimer%50 == 0) {console.log(stepTimer)};
+      updateAnimations();
+    }
     showEverything();
   }
 }
 
-//drag functions
+//
+//  DRAG FUNCTIONS
+//
+
 function mouseDragged(){ //just for pickup now
   //only pick up in market before readying
   if (state == "market" && !waitingForBattle && !pickedUpSomething) {
@@ -760,6 +795,101 @@ function showHire(monster){
   pop();
 }
 
+//
+//  MISC FUNCTIONS
+//
+
+//goes through each battle step and animates, draw handles timing
+function stepThroughBattle(battleSteps){
+  let step = battleSteps[0];
+  //reset and update stepSpeed if changed
+  for (let client of step.parties){ //have to copy party at each server battle step... TODO
+    if (client.id == id){
+      battleParty = client.party;
+    } else {
+      enemyParty = client.party;
+    }
+  }
+  //seems redundant but TODO refactor
+  for (let i = 0; i < enemyParty.length; i++){
+    enemyParty[i].x = battleSlots[i];
+    enemyParty[i].y = battleSlotY;
+    enemyParty[i].s = 0;
+    enemyParty[i].t = stepSpeed;
+    enemyParty[i].isMyParty = false;
+    enemyParty[i].animate = () => {};
+  }
+  for (let i = 0; i < battleParty.length; i++){
+    battleParty[i].x = battleSlots[i];
+    battleParty[i].y = battleSlotY;
+    battleParty[i].s = 0;
+    battleParty[i].t = stepSpeed;
+    battleParty[i].isMyParty = true;
+    battleParty[i].animate = () => {};
+  }
+
+  //now check for animations
+  if (step.action == "attack"){
+    battleParty[0].animate = () => {
+      let stepSize = animationRange / (2 * this.stepSpeed / 5); //how can I not do this every frame? TODO
+      if (this.s > 3 * this.stepSpeed / 5){ //move forward
+        this.x += stepSize;
+      } else if (this.s > this.stepSpeed / 5) { //then move back
+        this.x -= stepSize;
+      } //buffer at end with no movement
+    }
+    enemyParty[0].animate = () => {
+      let stepSize = animationRange / (2 * this.stepSpeed / 5);
+      if (this.s > 3 * this.stepSpeed / 5){ //move forward
+        this.x += stepSize;
+      } else if (this.s > this.stepSpeed / 5) { //then move back
+        this.x -= stepSize;
+      } //buffer at end with no movement
+    }
+  } else if (step.action == "tie"){
+    push();
+    textSize(80);
+    showEverything();
+    fill(230);
+    text("TIE", width / 2, 3 * height / 6);
+    pop();
+
+    //set timer for going back to market
+    setTimeout(() => {
+      socket.emit("goToMarket")
+    }, 3000);
+  } else if (step.action == "battleOver"){
+    if (battleParty.length == 0){
+      // hp -= ; //TODO hp loss animation
+      showEverything();
+      fill(200, 0, 0);
+      text("LOSS", width / 2, 3 * height / 6);
+    } else {
+      showEverything();
+      fill(0, 250, 50);
+      text("WIN", width / 2, 3 * height / 6);
+    }
+
+    //set timer for going back to market
+    setTimeout(() => {
+      socket.emit("goToMarket")
+    }, 3000);
+  }
+
+  //get rid of the step
+  battleSteps.splice(0,1);
+  
+}
+
+//updates position/rotation based on animations assigned in stepThroughBattle()
+function updateAnimations(){
+  for (let i = 0; i < enemyParty.length; i++){
+    enemyParty[i].animate();
+  }
+  for (let i = 0; i < battleParty.length; i++){
+    battleParty[i].animate();
+  }
+}
 //upgrades monster after dropping to combine, TODO: should be on server
 function upgradeMonster(index, draggedUpgrades){
   let m = party[index];
