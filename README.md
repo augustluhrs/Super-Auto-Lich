@@ -102,8 +102,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
     - [X] fix bug with ready and battle spamming
-    - [ ] server battle calculates and sends list of steps
+    - [X] server battle calculates and sends list of steps
     - [X] battle display battleParty
+    - [ ] redo battle display and battle result text colors for draw
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size

@@ -7,8 +7,8 @@ class Monster {
       this.xp = stats.xp || 0; //num of upgrades done so far
       this.power = stats.power; //attack power
       this.hp = stats.hp; //hit points
-      this.currentPower = stats.power; //adjusted during battle
-      this.currentHP = stats.hp; //adjusted during battle
+      this.currentPower = stats.currentPower; //adjusted during battle
+      this.currentHP = stats.currentHP; //adjusted during battle
       this.item = stats.item || "nothing"; //item it is using
       this.ability = stats.ability; //ability
       this.timing = stats.timing; //when does ability trigger

@@ -182,9 +182,6 @@ inputs.on('connection', (socket) => {
           startParties.push({id: side.id, party: partyCopy});
         }
         io.to(player.lobby).emit("startBattle", {startParties: startParties, battleSteps: getBattleSteps(battle)});
-        // setTimeout(() => {
-        //   battleStep(battle, player.lobby);
-        // }, battleStepTime);
       } else {
         socket.emit("waitingForBattle");
       }
@@ -231,14 +228,15 @@ inputs.on('connection', (socket) => {
 //
 
 function getBattleSteps(battle){
-  let battleSteps = [];
-  battleSteps = battleStep(battle, battleSteps); //silly naming
-  console.log(battleSteps);
+  let battleSteps = battleStep(battle, []); //silly naming
+  console.log("battleSteps");
+  console.log(JSON.stringify(battleSteps));
   return battleSteps;
 }
 
 function battleStep(battle, battleSteps){
   console.log("battleStep");
+
   let party1 = battle[0].party;
   let party2 = battle[1].party;
 
@@ -262,16 +260,30 @@ function battleStep(battle, battleSteps){
     }
   }
 
-  battle[0].party = party1;
+  battle[0].party = party1; //is this redundant b/c references? TODO
   battle[1].party = party2;
   let p1 = players[battle[0].id];
   let p2 = players[battle[1].id];
+
+  //make copy and store in array for client display
+  let copyParties = [];
+  for (let side of battle){
+    let partyCopy = [];
+    for (let i = 0; i < side.party.length; i++){
+      partyCopy.push(new Monster(side.party[i]));
+    }
+    copyParties.push({id: side.id, party: partyCopy});
+  }
+  console.log('battle first');
+  console.log(battle[0].party[0]);
+  console.log('copyParties');
+  console.log(copyParties[0].party[0]);
 
   //check for end, send next step or end event
   if (party1.length == 0 && party2.length == 0) {
     //send both tie
     // io.to(lobby).emit("battleOver", {battle: battle, result: "tie"});
-    battleSteps.push({parties: battle, action: "tie"});
+    battleSteps.push({parties: copyParties, action: "tie"});
     return battleSteps;
   } else if (party1.length == 0){ //player1 loss
     p1.hp -= p1.hpLoss;
@@ -282,7 +294,7 @@ function battleStep(battle, battleSteps){
       return battleSteps; //not needed but don't want errors
     } else {
       // io.to(p1.id).emit("battleOver", {battle: battle, hp: p1.hp, result: "loss"})
-      battleSteps.push({parties: battle, action: "battleOver"});
+      battleSteps.push({parties: copyParties, action: "battleOver"});
       return battleSteps;
     }
     // io.to(p2.id).emit("battleOver", {battle: battle, result: "win"})
@@ -294,13 +306,13 @@ function battleStep(battle, battleSteps){
       io.to(p2.id).emit("gameOver", {result: "loss"});
       return battleSteps;
     } else {
-      battleSteps.push({parties: battle, action: "battleOver"});
+      battleSteps.push({parties: copyParties, action: "battleOver"});
       return battleSteps;
     }
     // io.to(p1.id).emit("battleOver", {battle: battle, result: "win"})
   } else {
     //add to steps and trigger again
-    battleSteps.push({parties: battle, action: "attack"});
+    battleSteps.push({parties: copyParties, action: "attack"});
     return battleStep(battle, battleSteps);
     //send both next step and trigger next step
     // io.to(lobby).emit("battleAftermath", battle);

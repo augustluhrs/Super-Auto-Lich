@@ -59,6 +59,7 @@ socket.on('connect', () => {
 socket.on('goToMarket', (data) => {
   console.log('going to market');
   state = "market";
+  isBattleOver = false;
   gold = data.gold;
   hp = data.hp;
   turn = data.turn;
@@ -274,9 +275,12 @@ let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleas
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
 let hoverCheckTime = 70; //timer before hover triggers
 let speedSlots = []; //for speed UI in battle
-let stepSpeed = 200; //amount of time each animation step takes
+let stepSpeed = 100; //amount of time each animation step takes
 let stepTimer = 0;
 let animationRange; //standard distance to animate
+let isBattleOver = false; //just for displaying result text
+let battleResult = ""; //text to display at end of battle
+let battleResultColors = {}; //colors for battle text display
 
 //
 //  MAIN
@@ -309,6 +313,8 @@ function setup(){
   slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
   sellSlot = {x: width/2 + assetSize, y: 7 * height / 8};
   freezeSlot = {x: width/2 - assetSize, y: 7 * height / 8};
+
+  battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
@@ -366,7 +372,17 @@ function draw(){
       if (stepTimer%50 == 0) {console.log(stepTimer)};
       updateAnimations();
     }
+    if (isBattleOver){ //text not showing b/c getting overwritten
+      push();
+      textSize(80);
+      showEverything();
+      fill(battleResultColors[battleResult]);
+      text(battleResult, width / 2, 3 * height / 6);
+      pop();
+    } else {
     showEverything();
+      
+    }
   }
 }
 
@@ -801,84 +817,79 @@ function showHire(monster){
 
 //goes through each battle step and animates, draw handles timing
 function stepThroughBattle(battleSteps){
-  let step = battleSteps[0];
-  //reset and update stepSpeed if changed
-  for (let client of step.parties){ //have to copy party at each server battle step... TODO
-    if (client.id == id){
-      battleParty = client.party;
-    } else {
-      enemyParty = client.party;
+  console.log(JSON.stringify(battleSteps));
+  if (battleSteps.length > 0){ //preventing from trying to do this while waiting for market at the end
+    let step = battleSteps[0];
+    //reset and update stepSpeed if changed
+    for (let client of step.parties){ //have to copy party at each server battle step... TODO
+      if (client.id == id){
+        battleParty = client.party;
+      } else {
+        enemyParty = client.party;
+      }
     }
-  }
-  //seems redundant but TODO refactor
-  for (let i = 0; i < enemyParty.length; i++){
-    enemyParty[i].x = battleSlots[i];
-    enemyParty[i].y = battleSlotY;
-    enemyParty[i].s = 0;
-    enemyParty[i].t = stepSpeed;
-    enemyParty[i].isMyParty = false;
-    enemyParty[i].animate = () => {};
-  }
-  for (let i = 0; i < battleParty.length; i++){
-    battleParty[i].x = battleSlots[i];
-    battleParty[i].y = battleSlotY;
-    battleParty[i].s = 0;
-    battleParty[i].t = stepSpeed;
-    battleParty[i].isMyParty = true;
-    battleParty[i].animate = () => {};
-  }
-
-  //now check for animations
-  if (step.action == "attack"){
-    battleParty[0].animate = () => {
-      let stepSize = animationRange / (2 * this.stepSpeed / 5); //how can I not do this every frame? TODO
-      if (this.s > 3 * this.stepSpeed / 5){ //move forward
-        this.x += stepSize;
-      } else if (this.s > this.stepSpeed / 5) { //then move back
-        this.x -= stepSize;
-      } //buffer at end with no movement
+    //seems redundant but TODO refactor
+    for (let i = 0; i < enemyParty.length; i++){
+      enemyParty[i].x = battleSlots[i];
+      enemyParty[i].y = battleSlotY;
+      enemyParty[i].s = 0;
+      enemyParty[i].t = stepSpeed;
+      enemyParty[i].isMyParty = false;
+      enemyParty[i].animate = () => {};
     }
-    enemyParty[0].animate = () => {
-      let stepSize = animationRange / (2 * this.stepSpeed / 5);
-      if (this.s > 3 * this.stepSpeed / 5){ //move forward
-        this.x += stepSize;
-      } else if (this.s > this.stepSpeed / 5) { //then move back
-        this.x -= stepSize;
-      } //buffer at end with no movement
-    }
-  } else if (step.action == "tie"){
-    push();
-    textSize(80);
-    showEverything();
-    fill(230);
-    text("TIE", width / 2, 3 * height / 6);
-    pop();
-
-    //set timer for going back to market
-    setTimeout(() => {
-      socket.emit("goToMarket")
-    }, 3000);
-  } else if (step.action == "battleOver"){
-    if (battleParty.length == 0){
-      // hp -= ; //TODO hp loss animation
-      showEverything();
-      fill(200, 0, 0);
-      text("LOSS", width / 2, 3 * height / 6);
-    } else {
-      showEverything();
-      fill(0, 250, 50);
-      text("WIN", width / 2, 3 * height / 6);
+    for (let i = 0; i < battleParty.length; i++){
+      battleParty[i].x = battleSlots[i];
+      battleParty[i].y = battleSlotY;
+      battleParty[i].s = 0;
+      battleParty[i].t = stepSpeed;
+      battleParty[i].isMyParty = true;
+      battleParty[i].animate = () => {};
     }
 
-    //set timer for going back to market
-    setTimeout(() => {
-      socket.emit("goToMarket")
-    }, 3000);
-  }
+    //now check for animations
+    if (step.action == "attack"){
+      battleParty[0].animate = () => {
+        let stepSize = animationRange / (2 * this.stepSpeed / 5); //how can I not do this every frame? TODO
+        if (this.s > 3 * this.stepSpeed / 5){ //move forward
+          this.x += stepSize;
+        } else if (this.s > this.stepSpeed / 5) { //then move back
+          this.x -= stepSize;
+        } //buffer at end with no movement
+      }
+      enemyParty[0].animate = () => {
+        let stepSize = animationRange / (2 * this.stepSpeed / 5);
+        if (this.s > 3 * this.stepSpeed / 5){ //move forward
+          this.x += stepSize;
+        } else if (this.s > this.stepSpeed / 5) { //then move back
+          this.x -= stepSize;
+        } //buffer at end with no movement
+      }
+    } else if (step.action == "tie"){
+      battleResult = "TIE";
+      isBattleOver = true;
+      //set timer for going back to market
+      setTimeout(() => {
+        socket.emit("goToMarket")
+      }, 3000);
+    } else if (step.action == "battleOver"){
+      if (battleParty.length == 0){
+        // hp -= ; //TODO hp loss animation
+        battleResult = "LOSS";
+        isBattleOver = true;
+      } else {
+        battleResult = "WIN";
+        isBattleOver = true;
+      }
 
-  //get rid of the step
-  battleSteps.splice(0,1);
-  
+      //set timer for going back to market
+      setTimeout(() => {
+        socket.emit("goToMarket")
+      }, 3000);
+    }
+
+    //get rid of the step
+    battleSteps.splice(0,1);
+  }
 }
 
 //updates position/rotation based on animations assigned in stepThroughBattle()
@@ -931,4 +942,4 @@ function loadMonsterAssets(){
   beholder: beholder,
   //tier6
   };
-}
+} 
