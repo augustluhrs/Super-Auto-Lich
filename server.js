@@ -228,7 +228,15 @@ inputs.on('connection', (socket) => {
 //
 
 function getBattleSteps(battle){
-  let battleSteps = battleStep(battle, []); //silly naming
+  let copyParties = [];
+  for (let side of battle){
+    let partyCopy = [];
+    for (let i = 0; i < side.party.length; i++){
+      partyCopy.push(new Monster(side.party[i]));
+    }
+    copyParties.push({id: side.id, party: partyCopy});
+  }
+  let battleSteps = battleStep(battle, [{parties: copyParties, action: "start"}]); //silly naming
   console.log("battleSteps");
   console.log(JSON.stringify(battleSteps));
   return battleSteps;

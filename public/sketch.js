@@ -333,6 +333,7 @@ function setup(){
 //
 //  FUNCTIONS
 //
+let test = {x: 0, y: 0};
 
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
@@ -371,6 +372,8 @@ function draw(){
       stepTimer++;
       if (stepTimer%50 == 0) {console.log(stepTimer)};
       updateAnimations();
+      test.x++;
+      test.y++;
     }
     if (isBattleOver){ //text not showing b/c getting overwritten
       push();
@@ -381,7 +384,8 @@ function draw(){
       pop();
     } else {
     showEverything();
-      
+    fill(0);
+    rect(test.x, test.y, assetSize);
     }
   }
 }
@@ -817,7 +821,7 @@ function showHire(monster){
 
 //goes through each battle step and animates, draw handles timing
 function stepThroughBattle(battleSteps){
-  console.log(JSON.stringify(battleSteps));
+  // console.log(JSON.stringify(battleSteps));
   if (battleSteps.length > 0){ //preventing from trying to do this while waiting for market at the end
     let step = battleSteps[0];
     //reset and update stepSpeed if changed
@@ -864,6 +868,8 @@ function stepThroughBattle(battleSteps){
           this.x -= stepSize;
         } //buffer at end with no movement
       }
+    } else if (step.action == "start") {
+        //TODO enter animation
     } else if (step.action == "tie"){
       battleResult = "TIE";
       isBattleOver = true;
