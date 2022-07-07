@@ -275,7 +275,10 @@ let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleas
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
 let hoverCheckTime = 70; //timer before hover triggers
 let speedSlots = []; //for speed UI in battle
+let speedSlotY; //Y height of speed UI
+let isPaused = false;
 let stepSpeed = 100; //amount of time each animation step takes
+let regularSpeed = 100; //default speed, /2 for fast forward
 let stepTimer = 0;
 let animationRange; //standard distance to animate
 let isBattleOver = false; //just for displaying result text
@@ -313,6 +316,8 @@ function setup(){
   slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
   sellSlot = {x: width/2 + assetSize, y: 7 * height / 8};
   freezeSlot = {x: width/2 - assetSize, y: 7 * height / 8};
+  speedSlots = [3 * width / 8, 4 * width / 8, 5 * width / 8];
+  speedSlotY = 2 * height / 8;
 
   battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
@@ -363,36 +368,59 @@ function draw(){
       hoverTimer = 0;
     }
   } else if (state == "battle"){
-    //check animation timing
-    if (stepTimer >= stepSpeed){
-      console.log("newStep");
-      stepTimer = 0;
-      stepThroughBattle(battleSteps);
-    } else {
-      stepTimer++;
-      if (stepTimer%50 == 0) {console.log(stepTimer)};
-      updateAnimations();
-      test.x++;
-      test.y++;
-    }
-    if (isBattleOver){ //text not showing b/c getting overwritten
-      push();
-      textSize(80);
-      showEverything();
-      fill(battleResultColors[battleResult]);
-      text(battleResult, width / 2, 3 * height / 6);
-      pop();
-    } else {
+    //speedUI
     showEverything();
-    fill(0);
-    rect(test.x, test.y, assetSize);
+    showSpeedUI();
+    //check animation timing
+    if (!isPaused){
+      if (stepTimer >= stepSpeed){
+        console.log("newStep");
+        stepTimer = 0;
+        stepThroughBattle(battleSteps);
+      } else {
+        stepTimer++;
+        if (stepTimer%50 == 0) {console.log(stepTimer)};
+        updateAnimations();
+        test.x++;
+        test.y++;
+      }
+      if (isBattleOver){ //text not showing b/c getting overwritten
+        push();
+        textSize(80);
+        showEverything();
+        fill(battleResultColors[battleResult]);
+        text(battleResult, width / 2, 3 * height / 6);
+        pop();
+      } else {
+      // showEverything();
+      fill(0);
+      rect(test.x, test.y, assetSize);
+      }
     }
   }
 }
 
 //
-//  DRAG FUNCTIONS
+//  MOUSE FUNCTIONS
 //
+
+// for clicking speed UI
+function mouseClicked(){
+  if (state == "battle"){
+    if (mouseX > speedSlots[0] - r && mouseX < speedSlots[0] + r && mouseY > speedSlotY - r && mouseY < speedSlotY + r){
+      //pause button
+      isPaused = !isPaused;
+    } else if (mouseX > speedSlots[1] - r && mouseX < speedSlots[1] + r && mouseY > speedSlotY - r && mouseY < speedSlotY + r){
+      //play button
+      isPaused = false;
+      stepSpeed = regularSpeed;
+    } else if (mouseX > speedSlots[2] - r && mouseX < speedSlots[2] + r && mouseY > speedSlotY - r && mouseY < speedSlotY + r){
+      //fast forward button
+      isPaused = false;
+      stepSpeed = regularSpeed / 2;
+    }
+  }
+}
 
 function mouseDragged(){ //just for pickup now
   //only pick up in market before readying
@@ -655,6 +683,44 @@ function showUI(){
     text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50);
   }
   
+  pop();
+}
+
+function showSpeedUI(){
+  push();
+  
+  //pause button
+  if(isPaused){
+    fill(204,166,230)
+    stroke(255);
+  } else {
+    fill(50);
+    stroke(0);
+  }
+  rect(speedSlots[0] - assetSize / 6, speedSlotY, assetSize / 4, assetSize / 2);
+  rect(speedSlots[0] + assetSize / 6, speedSlotY, assetSize / 4, assetSize / 2);
+
+  //play button
+  if(stepSpeed == regularSpeed && !isPaused){
+    fill(150, 255, 0);
+    stroke(255);
+  } else {
+    fill(50);
+    stroke(0);
+  }
+  triangle(speedSlots[1] - assetSize / 3, speedSlotY + assetSize / 3, speedSlots[1] + assetSize / 3, speedSlotY, speedSlots[1] - assetSize / 3, speedSlotY - assetSize / 3);
+
+  //fast forward button
+  if(stepSpeed == regularSpeed/2 && !isPaused){
+    fill(0, 150, 255);
+    stroke(255);
+  } else {
+    fill(50);
+    stroke(0);
+  }
+  let offset = assetSize / 3;
+  triangle(speedSlots[2] - assetSize / 3 - offset, speedSlotY + assetSize / 3, speedSlots[2] + assetSize / 3 - offset, speedSlotY, speedSlots[2] - assetSize / 3 - offset, speedSlotY - assetSize / 3);
+  triangle(speedSlots[2] - assetSize / 3 + offset, speedSlotY + assetSize / 3 , speedSlots[2] + assetSize / 3 + offset, speedSlotY, speedSlots[2] - assetSize / 3 + offset, speedSlotY - assetSize / 3);
   pop();
 }
 

@@ -237,8 +237,8 @@ function getBattleSteps(battle){
     copyParties.push({id: side.id, party: partyCopy});
   }
   let battleSteps = battleStep(battle, [{parties: copyParties, action: "start"}]); //silly naming
-  console.log("battleSteps");
-  console.log(JSON.stringify(battleSteps));
+  // console.log("battleSteps");
+  // console.log(JSON.stringify(battleSteps));
   return battleSteps;
 }
 

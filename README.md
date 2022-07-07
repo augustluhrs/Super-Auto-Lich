@@ -72,9 +72,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] on level up
       - [ ] end of market
       - [ ] start of battle
-  - [ ] battle speed
-    - [ ] UI (pause, play, fast)
-    - [ ] client goes through list of animation steps
+  - [X] battle speed
+    - [X] UI (pause, play, fast)
+    - [X] client goes through list of animation steps
   - [ ] CR (tiers)
     - [X] dice assets
     - [X] dice UI above hires
