@@ -94,7 +94,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] sell location
     - [X] sell return by level
   - Animations
-    - [ ] basic attack
+    - [X] basic attack
     - [ ] basic take damage
     - [ ] basic dead
     - [ ] basic scoot up party after death
@@ -112,6 +112,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] cleanup comments from 0.0.1
     - [X] fix hp display on battle end
     - [ ] bigger/better top stat UI
+    - [ ] need a failsafe end battle if both sides end with flumph
 
 - [ ] 0.0.3
   - [ ] items

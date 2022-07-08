@@ -245,6 +245,16 @@ function getBattleSteps(battle){
 function battleStep(battle, battleSteps){
   console.log("battleStep");
 
+  //make copy and store in array for client display -- moving before so showing monster before effects not after
+  let copyParties = [];
+  for (let side of battle){
+    let partyCopy = [];
+    for (let i = 0; i < side.party.length; i++){
+      partyCopy.push(new Monster(side.party[i]));
+    }
+    copyParties.push({id: side.id, party: partyCopy});
+  }
+
   let party1 = battle[0].party;
   let party2 = battle[1].party;
 
@@ -273,6 +283,7 @@ function battleStep(battle, battleSteps){
   let p1 = players[battle[0].id];
   let p2 = players[battle[1].id];
 
+  /*
   //make copy and store in array for client display
   let copyParties = [];
   for (let side of battle){
@@ -282,51 +293,67 @@ function battleStep(battle, battleSteps){
     }
     copyParties.push({id: side.id, party: partyCopy});
   }
-  console.log('battle first');
-  console.log(battle[0].party[0]);
-  console.log('copyParties');
-  console.log(copyParties[0].party[0]);
+  */
 
   //check for end, send next step or end event
   if (party1.length == 0 && party2.length == 0) {
     //send both tie
-    // io.to(lobby).emit("battleOver", {battle: battle, result: "tie"});
-    battleSteps.push({parties: copyParties, action: "tie"});
+    battleSteps.push({parties: copyParties, action: "attack"});
+    //need a separate step and copy here to not cut battle off at last attack
+    let finalParties = [];
+    for (let side of battle){
+      let finalCopy = [];
+      for (let i = 0; i < side.party.length; i++){
+        finalCopy.push(new Monster(side.party[i]));
+      }
+      finalParties.push({id: side.id, party: finalCopy});
+    }
+    battleSteps.push({parties: finalParties, action: "tie"});
     return battleSteps;
   } else if (party1.length == 0){ //player1 loss
     p1.hp -= p1.hpLoss;
     if (p1.hp <= 0) {
-      // gameOver(p1, lobby);
       io.to(p1.id).emit("gameOver", {result: "loss"});
       io.to(p2.id).emit("gameOver", {result: "win"});
       return battleSteps; //not needed but don't want errors
     } else {
-      // io.to(p1.id).emit("battleOver", {battle: battle, hp: p1.hp, result: "loss"})
-      battleSteps.push({parties: copyParties, action: "battleOver"});
+      battleSteps.push({parties: copyParties, action: "attack"});
+      //need a separate step and copy here to not cut battle off at last attack
+      let finalParties = [];
+      for (let side of battle){
+        let finalCopy = [];
+        for (let i = 0; i < side.party.length; i++){
+          finalCopy.push(new Monster(side.party[i]));
+        }
+        finalParties.push({id: side.id, party: finalCopy});
+      }
+      battleSteps.push({parties: finalParties, action: "battleOver"});
       return battleSteps;
     }
-    // io.to(p2.id).emit("battleOver", {battle: battle, result: "win"})
   } else if (party2.length == 0){ //player2 loss
     p2.hp -= p2.hpLoss;
     if (p2.hp <= 0) {
-      // gameOver(p2, lobby);
       io.to(p1.id).emit("gameOver", {result: "win"});
       io.to(p2.id).emit("gameOver", {result: "loss"});
       return battleSteps;
     } else {
-      battleSteps.push({parties: copyParties, action: "battleOver"});
+      battleSteps.push({parties: copyParties, action: "attack"});
+      //need a separate step and copy here to not cut battle off at last attack
+      let finalParties = [];
+      for (let side of battle){
+        let finalCopy = [];
+        for (let i = 0; i < side.party.length; i++){
+          finalCopy.push(new Monster(side.party[i]));
+        }
+        finalParties.push({id: side.id, party: finalCopy});
+      }
+      battleSteps.push({parties: finalParties, action: "battleOver"});
       return battleSteps;
     }
-    // io.to(p1.id).emit("battleOver", {battle: battle, result: "win"})
   } else {
     //add to steps and trigger again
     battleSteps.push({parties: copyParties, action: "attack"});
     return battleStep(battle, battleSteps);
-    //send both next step and trigger next step
-    // io.to(lobby).emit("battleAftermath", battle);
-    // setTimeout(() => {
-    //   battleStep(battle, lobby);
-    // }, battleStepTime);
   }
 }
 
@@ -411,7 +438,3 @@ function refreshHires(tier, hires){
   }
   return hires;
 }
-
-// function gameOver(player, lobby, result){
-//   io.to(player.id).emit("gameOver", {result: result});
-// }

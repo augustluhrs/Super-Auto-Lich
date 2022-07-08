@@ -106,36 +106,38 @@ socket.on("waitingForBattle", () => {
 
 //start battle
 socket.on("startBattle", (data) => {
-  for (let client of data.startParties){
-    if (client.id != socket.id){
-      enemyParty = client.party;
-      for (let i = 0; i < enemyParty.length; i++){
-        //need to add x, y, step now
-        enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
-        enemyParty[i].y = battleSlotY;
-        enemyParty[i].s = 0;
-        enemyParty[i].t = stepSpeed;
-        enemyParty[i].isMyParty = false;
-        enemyParty[i].animate = () => {};
-      }
-    } else {
-      battleParty = client.party;
-      for (let i = 0; i < battleParty.length; i++){
-        //need to add x, y, step now
-        battleParty[i].x = battleSlots[i];
-        battleParty[i].y = battleSlotY;
-        battleParty[i].s = 0;
-        battleParty[i].t = stepSpeed;
-        battleParty[i].isMyParty = true;
-        battleParty[i].animate = () => {};
-      }
-    }
-  }
+  // for (let client of data.startParties){
+  //   if (client.id != socket.id){
+  //     enemyParty = client.party;
+  //     for (let i = 0; i < enemyParty.length; i++){
+  //       //need to add x, y, step now
+  //       enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
+  //       enemyParty[i].y = battleSlotY;
+  //       enemyParty[i].s = 0;
+  //       enemyParty[i].stepSpeed = stepSpeed;
+  //       enemyParty[i].isMyParty = false;
+  //       enemyParty[i].animate = () => {};
+  //     }
+  //   } else {
+  //     battleParty = client.party;
+  //     for (let i = 0; i < battleParty.length; i++){
+  //       //need to add x, y, step now
+  //       battleParty[i].x = battleSlots[i];
+  //       battleParty[i].y = battleSlotY;
+  //       battleParty[i].s = 0;
+  //       battleParty[i].stepSpeed = stepSpeed;
+  //       battleParty[i].isMyParty = true;
+  //       battleParty[i].animate = () => {};
+  //     }
+  //   }
+  // }
   state = "battle";
   waitingForBattle = false;
   battleSteps = data.battleSteps;
   console.log("battle start");
   console.log(battleSteps);
+  stepThroughBattle(battleSteps);
+
   refreshButt.hide();
   readyButt.hide();
   showEverything();
@@ -160,7 +162,7 @@ socket.on('battleAftermath', (data) => {
         enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
         enemyParty[i].y = battleSlotY;
         enemyParty[i].s = 0;
-        enemyParty[i].t = stepSpeed;
+        enemyParty[i].stepSpeed = stepSpeed;
         enemyParty[i].isMyParty = false;
       }
     } else {
@@ -170,7 +172,7 @@ socket.on('battleAftermath', (data) => {
         battleParty[i].x = battleSlots[i];
         battleParty[i].y = battleSlotY;
         battleParty[i].s = 0;
-        battleParty[i].t = stepSpeed;
+        battleParty[i].stepSpeed = stepSpeed;
         battleParty[i].isMyParty = true;
       }
     
@@ -305,7 +307,7 @@ function setup(){
   assetSize = width / 11; //size of slots and images
   r = assetSize / 2; //radius of image, for checking interaction range
   tierSize = assetSize/3; //size of dice for hires
-  animationRange = assetSize * 0.75; //standard distance to animate
+  animationRange = assetSize * 0.5; //standard distance to animate
 
   let slotBuffer = assetSize / 20; //space between slots
   let slotSize = assetSize + slotBuffer; //total X size of slot + space
@@ -338,7 +340,6 @@ function setup(){
 //
 //  FUNCTIONS
 //
-let test = {x: 0, y: 0};
 
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
@@ -381,8 +382,6 @@ function draw(){
         stepTimer++;
         if (stepTimer%50 == 0) {console.log(stepTimer)};
         updateAnimations();
-        test.x++;
-        test.y++;
       }
       if (isBattleOver){ //text not showing b/c getting overwritten
         push();
@@ -393,8 +392,7 @@ function draw(){
         pop();
       } else {
       // showEverything();
-      fill(0);
-      rect(test.x, test.y, assetSize);
+
       }
     }
   }
@@ -572,24 +570,11 @@ function showEverything(){
     for (let i = 0; i < enemyParty.length; i++){
       showMonster(enemyParty[i]);
     }
-    /*
-    translate(width/2, 0); //only translating in battle to make flip easier
-    for (let i = 0; i < party.length; i++){
-      if (party[i] !== null){
-        showParty(party[i], true);
-      }
-    }
-    for (let i = 0; i < enemyParty.length; i++){
-      if (party[i] !== null){
-        showParty(enemyParty[i], false);
-      }
-    }
-    */
   }
   pop();
 }
 
-//shows party whether in market or battle
+//shows party whether in market or battle -- TODO cleanup, now just battle
 function showParty(monster, isMyParty){
   push();
   let x, y;
@@ -890,6 +875,7 @@ function stepThroughBattle(battleSteps){
   // console.log(JSON.stringify(battleSteps));
   if (battleSteps.length > 0){ //preventing from trying to do this while waiting for market at the end
     let step = battleSteps[0];
+    console.log(step.action);
     //reset and update stepSpeed if changed
     for (let client of step.parties){ //have to copy party at each server battle step... TODO
       if (client.id == id){
@@ -903,7 +889,7 @@ function stepThroughBattle(battleSteps){
       enemyParty[i].x = battleSlots[i];
       enemyParty[i].y = battleSlotY;
       enemyParty[i].s = 0;
-      enemyParty[i].t = stepSpeed;
+      enemyParty[i].stepSpeed = stepSpeed;
       enemyParty[i].isMyParty = false;
       enemyParty[i].animate = () => {};
     }
@@ -911,29 +897,15 @@ function stepThroughBattle(battleSteps){
       battleParty[i].x = battleSlots[i];
       battleParty[i].y = battleSlotY;
       battleParty[i].s = 0;
-      battleParty[i].t = stepSpeed;
+      battleParty[i].stepSpeed = stepSpeed;
       battleParty[i].isMyParty = true;
       battleParty[i].animate = () => {};
     }
 
     //now check for animations
     if (step.action == "attack"){
-      battleParty[0].animate = () => {
-        let stepSize = animationRange / (2 * this.stepSpeed / 5); //how can I not do this every frame? TODO
-        if (this.s > 3 * this.stepSpeed / 5){ //move forward
-          this.x += stepSize;
-        } else if (this.s > this.stepSpeed / 5) { //then move back
-          this.x -= stepSize;
-        } //buffer at end with no movement
-      }
-      enemyParty[0].animate = () => {
-        let stepSize = animationRange / (2 * this.stepSpeed / 5);
-        if (this.s > 3 * this.stepSpeed / 5){ //move forward
-          this.x += stepSize;
-        } else if (this.s > this.stepSpeed / 5) { //then move back
-          this.x -= stepSize;
-        } //buffer at end with no movement
-      }
+      battleParty[0].animate = animateAttack.bind(battleParty[0]);
+      enemyParty[0].animate = animateAttack.bind(enemyParty[0]);
     } else if (step.action == "start") {
         //TODO enter animation
     } else if (step.action == "tie"){
@@ -964,15 +936,7 @@ function stepThroughBattle(battleSteps){
   }
 }
 
-//updates position/rotation based on animations assigned in stepThroughBattle()
-function updateAnimations(){
-  for (let i = 0; i < enemyParty.length; i++){
-    enemyParty[i].animate();
-  }
-  for (let i = 0; i < battleParty.length; i++){
-    battleParty[i].animate();
-  }
-}
+
 //upgrades monster after dropping to combine, TODO: should be on server
 function upgradeMonster(index, draggedUpgrades){
   let m = party[index];
@@ -1015,3 +979,30 @@ function loadMonsterAssets(){
   //tier6
   };
 } 
+
+///
+/// ANIMATIONS
+///
+
+//updates position/rotation based on animations assigned in stepThroughBattle()
+function updateAnimations(){
+  for (let i = 0; i < enemyParty.length; i++){
+    enemyParty[i].s++;
+    enemyParty[i].animate();
+  }
+  for (let i = 0; i < battleParty.length; i++){
+    battleParty[i].s++;
+    battleParty[i].animate();
+  }
+}
+
+//thanks to https://www.javascripttutorial.net/javascript-bind/ for solving my "this" issue
+//basic attack
+function animateAttack(){
+  let stepSize = animationRange / (2 * this.stepSpeed / 5); //how can I not do this every frame? TODO
+  if (this.s < 2 * this.stepSpeed / 5){ //move forward
+    this.x += stepSize;
+  } else if (this.s < 4 * this.stepSpeed / 5) { //then move back
+    this.x -= stepSize;
+  } //buffer at end with no movement
+}
