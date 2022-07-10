@@ -106,120 +106,16 @@ socket.on("waitingForBattle", () => {
 
 //start battle
 socket.on("startBattle", (data) => {
-  // for (let client of data.startParties){
-  //   if (client.id != socket.id){
-  //     enemyParty = client.party;
-  //     for (let i = 0; i < enemyParty.length; i++){
-  //       //need to add x, y, step now
-  //       enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
-  //       enemyParty[i].y = battleSlotY;
-  //       enemyParty[i].s = 0;
-  //       enemyParty[i].stepSpeed = stepSpeed;
-  //       enemyParty[i].isMyParty = false;
-  //       enemyParty[i].animate = () => {};
-  //     }
-  //   } else {
-  //     battleParty = client.party;
-  //     for (let i = 0; i < battleParty.length; i++){
-  //       //need to add x, y, step now
-  //       battleParty[i].x = battleSlots[i];
-  //       battleParty[i].y = battleSlotY;
-  //       battleParty[i].s = 0;
-  //       battleParty[i].stepSpeed = stepSpeed;
-  //       battleParty[i].isMyParty = true;
-  //       battleParty[i].animate = () => {};
-  //     }
-  //   }
-  // }
   state = "battle";
   waitingForBattle = false;
   battleSteps = data.battleSteps;
   console.log("battle start");
   console.log(battleSteps);
   stepThroughBattle(battleSteps);
-
   refreshButt.hide();
   readyButt.hide();
   showEverything();
 });
-
-//receive entire list of battle steps and result
-// socket.on('battleSteps', (data) => {
-//   console.log(data);
-//   battleSteps = data;
-//   // stepThroughBattle(data); //draw handling this
-// });
-
-// receive info from battle step
-/*
-socket.on('battleAftermath', (data) => {
-  console.log('battle step over');
-  for (let client of data){ //just sending battle array
-    if (client.id != socket.id) {
-      enemyParty = client.party;
-      for (let i = 0; i < enemyParty.length; i++){
-        //need to add x, y, step now
-        enemyParty[i].x = battleSlots[i]; //could add width/2 in reverse slot order here?
-        enemyParty[i].y = battleSlotY;
-        enemyParty[i].s = 0;
-        enemyParty[i].stepSpeed = stepSpeed;
-        enemyParty[i].isMyParty = false;
-      }
-    } else {
-      battleParty = client.party;
-      for (let i = 0; i < battleParty.length; i++){
-        //need to add x, y, step now
-        battleParty[i].x = battleSlots[i];
-        battleParty[i].y = battleSlotY;
-        battleParty[i].s = 0;
-        battleParty[i].stepSpeed = stepSpeed;
-        battleParty[i].isMyParty = true;
-      }
-    
-    }
-  }
-  // showEverything();
-});
-*/
-
-// end battle message
-/*
-socket.on('battleOver', (data) => {
-  console.log('battle finished: ' + data.result);
-  for (let client of data.battle){
-    if (client.id == socket.id){
-      // party = client.party;
-      battleParty = client.party;
-    } else {
-      enemyParty = client.party;
-    }
-  }
-  // showEverything();
-  push();
-  textSize(80);
-  if (data.result == "win") {
-    showEverything();
-    fill(0, 250, 50);
-    text("WIN", width / 2, 3 * height / 6);
-  } else if (data.result == "loss") {
-    hp = data.hp;
-    // showUI();
-    showEverything();
-    fill(200, 0, 0);
-    text("LOSS", width / 2, 3 * height / 6);
-  } else {
-    showEverything();
-    fill(230);
-    text("TIE", width / 2, 3 * height / 6);
-  }
-  pop();
-
-  //set timer for going back to market
-  setTimeout(() => {
-    socket.emit("goToMarket")
-  }, 3000);
-});
-*/
 
 // game end message
 socket.on('gameOver', (data) => {
@@ -278,8 +174,8 @@ let hoverCheckTime = 70; //timer before hover triggers
 let speedSlots = []; //for speed UI in battle
 let speedSlotY; //Y height of speed UI
 let isPaused = false;
-let stepSpeed = 100; //amount of time each animation step takes
-let regularSpeed = 100; //default speed, /2 for fast forward
+let stepSpeed = 50; //amount of time each animation step takes
+let regularSpeed = 50; //default speed, /2 for fast forward
 let stepTimer = 0;
 let animationRange; //standard distance to animate
 let isBattleOver = false; //just for displaying result text
@@ -299,6 +195,7 @@ function setup(){
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
+  angleMode(RADIANS);
   battleSlotY = 6 * height / 8; //y position of party in battle
   marketSlotY = 3 * height / 8; //y position of party in market
   hireSlotY = 5 * height / 8; //y position of hires and items
@@ -573,7 +470,7 @@ function showEverything(){
   pop();
 }
 
-//shows party whether in market or battle -- TODO cleanup, now just battle
+//shows party whether in market or battle -- TODO cleanup, now just market
 function showParty(monster, isMyParty){
   push();
   let x, y;
@@ -772,17 +669,22 @@ function showMonster(monster){
   let yOffset = (3 * size / 4);
   let statSize = size / 3;
 
+  push();
   //annoying, need more elegant solution to flipping images and text
   if (!monster.isMyParty) {
-      //x = -x;
-      push();
-      scale(-1, 1);
-      image(monsterAssets[monster.name], x, y, size, size);
-      pop();
-      x = -x; //so text flips
+    push();
+    translate(-monster.x, monster.y);
+    rotate(-monster.rotation);
+    scale(-1, 1);
+    image(monsterAssets[monster.name], 0, 0, size, size);
+    pop();
+    x = -x; //so text flips
   } else {
-      image(monsterAssets[monster.name], x, y, size, size);
+    translate(monster.x, monster.y);
+    rotate(monster.rotation);
+    image(monsterAssets[monster.name], 0, 0, size, size);
   }
+  pop();
 
   let powerX = x - xOffset;
   let hpX = x + xOffset;
@@ -887,6 +789,7 @@ function stepThroughBattle(battleSteps){
     for (let i = 0; i < enemyParty.length; i++){
       enemyParty[i].x = battleSlots[i];
       enemyParty[i].y = battleSlotY;
+      enemyParty[i].rotation = 0;
       enemyParty[i].s = 0;
       enemyParty[i].stepSpeed = stepSpeed;
       enemyParty[i].isMyParty = false;
@@ -895,6 +798,7 @@ function stepThroughBattle(battleSteps){
     for (let i = 0; i < battleParty.length; i++){
       battleParty[i].x = battleSlots[i];
       battleParty[i].y = battleSlotY;
+      battleParty[i].rotation = 0;
       battleParty[i].s = 0;
       battleParty[i].stepSpeed = stepSpeed;
       battleParty[i].isMyParty = true;
@@ -916,7 +820,20 @@ function stepThroughBattle(battleSteps){
       battleParty[0].animate = animateAttack.bind(battleParty[0]);
       enemyParty[0].animate = animateAttack.bind(enemyParty[0]);
     } else if (step.action == "damage") {
-      
+      for (let i = 0; i < enemyParty.length; i++){
+        if (enemyParty[i].isDamaged){
+          enemyParty[i].animate = takeDamage.bind(enemyParty[i]);
+        } else if (enemyParty[i].isDead){
+          enemyParty[i].animate = fallDead.bind(enemyParty[i]);
+        }
+      }
+      for (let i = 0; i < battleParty.length; i++){
+        if (battleParty[i].isDamaged){
+          battleParty[i].animate = takeDamage.bind(battleParty[i]);
+        } else if (battleParty[i].isDead){
+          battleParty[i].animate = fallDead.bind(battleParty[i]);
+        }
+      }
     } else if (step.action == "move"){ //move up on death
       if (enemyParty[0].isDead){
         enemyParty[0].x = 10000; //hacky TODO actually hide
@@ -1031,6 +948,16 @@ function animateAttack(){
   } //buffer at end with no movement
 }
 
+//basic ability
+function useAbility(){
+  let stepSize = animationRange / (2 * this.stepSpeed / 5);
+  if (this.s < this.stepSpeed / 5){ //move up
+    this.y += stepSize * 2;
+  } else if (this.s < 4 * this.stepSpeed / 5) { //then move back
+    this.y -= stepSize * .6; //idk if this is exact, TODO check
+  } //buffer at end with no movement
+}
+
 //basic move up
 function moveUp(){
   if (this.s < 4 * this.stepSpeed / 5) {
@@ -1038,5 +965,31 @@ function moveUp(){
     this.x += stepSize;
     let sinY = map(this.s, 0, 2 * this.stepSpeed / 5, PI, TWO_PI);
     this.y += sin(sinY) * slotSize / (2 * this.stepSpeed / 5);
+  }
+}
+
+//basic damage
+function takeDamage(){
+  let stepSize = (PI / 8) / (this.stepSpeed / 5);
+  if (this.s < this.stepSpeed / 5) {
+    this.rotation -= stepSize;
+  } else if (this.s < 2 * this.stepSpeed / 5) { 
+    this.rotation += stepSize;
+  } else if (this.s < 3 * this.stepSpeed / 5) { 
+    this.rotation -= stepSize;
+  } else if (this.s < 4 * this.stepSpeed / 5) { 
+    this.rotation += stepSize;
+  }
+}
+
+//basic death
+function fallDead(){
+  let stepSize = (PI / 4) / (this.stepSpeed / 5); //45
+  if (this.s < 2 * this.stepSpeed / 5) { 
+    this.rotation -= stepSize;
+  } else if (this.s < 3 * this.stepSpeed / 5) { 
+    this.rotation += stepSize;
+  } else if (this.s < 4 * this.stepSpeed / 5) { 
+    this.rotation -= stepSize;
   }
 }

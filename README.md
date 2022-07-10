@@ -75,13 +75,12 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [X] battle speed
     - [X] UI (pause, play, fast)
     - [X] client goes through list of animation steps
-  - [ ] CR (tiers)
+  - [X] CR (tiers)
     - [X] dice assets
     - [X] dice UI above hires
     - [X] only show hires from unlocked tiers
     - [X] hp loss by turn/tier
-    - [ ] increase tier every X turns
-  - [ ] assets
+  - [X] assets
     - [X] placeholder level 1s
   - [X] freeze hires
     - [X] send hire array as argument instead of tracking freezes on server
@@ -93,12 +92,12 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] drag to sell
     - [X] sell location
     - [X] sell return by level
-  - Animations
+  - [X] Animations
     - [X] basic attack
-    - [ ] basic take damage
-    - [ ] basic dead
+    - [X] basic take damage
+    - [X] basic dead
     - [X] basic scoot up party after death
-    - [ ] basic ability trigger
+    - [X] basic ability
     - [X] basic move into battle
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
@@ -126,6 +125,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
    - [ ] tier 4
    - [ ] tier 5
    - [ ] tier 6
+- [ ] increase tier every X turns
 - [ ] Multiplayer
   - [ ] nedb database for login and stats tracking
   - [ ] start screen
