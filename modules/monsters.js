@@ -14,6 +14,8 @@ class Monster {
       this.timing = stats.timing; //when does ability trigger
       this.index = stats.index; //unchanging index of party
       this.isFrozen = stats.isFrozen || false; //is frozen hire?
+      this.isDamaged = stats.isDamaged || false; //for damage animation
+      this.isDead = stats.isDead || false; //for death animation
   }
 }
 

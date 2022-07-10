@@ -255,14 +255,66 @@ function battleStep(battle, battleSteps){
     copyParties.push({id: side.id, party: partyCopy});
   }
 
+  battleSteps.push({parties: copyParties, action: "attack"}); //hmm this timing is problematic TODO
+
   let party1 = battle[0].party;
   let party2 = battle[1].party;
+  let p1ID = battle[0].id;
+  let p2ID = battle[1].id;
+
 
   //apply damage
   party1[0].currentHP -= party2[0].power;
   party2[0].currentHP -= party1[0].power;
+  party1[0].isDamaged = true;
+  party2[0].isDamaged = true;
 
-  //check for death and move up party if so
+  //check for death 
+  let hasBeenDeath = false;
+  if (party1[0].currentHP <= 0){
+    hasBeenDeath = true;
+    party1[0].isDead = true;
+    party1[0].isDamaged = false;
+  }
+  if (party2[0].currentHP <= 0){
+    hasBeenDeath = true;
+    party2[0].isDead = true;
+    party2[0].isDamaged = false;
+  }
+
+  //send parties after damage
+  let damageParties = [];
+  let partyDamage1 = [];
+  let partyDamage2 = [];
+  for (let i = 0; i < party1.length; i++){
+    partyDamage1.push(new Monster(party1[i]));
+  }
+  for (let i = 0; i < party2.length; i++){
+    partyDamage2.push(new Monster(party2[i]));
+  }
+  damageParties.push({id: p1ID, party: partyDamage1});
+  damageParties.push({id: p2ID, party: partyDamage2});
+
+  battleSteps.push({parties: damageParties, action: "damage"});
+
+  //move up animation before actual splice, if still fighting
+  if (party1.length != 0 && party2.length != 0 && hasBeenDeath){
+    let moveParties = [];
+    let partyMove1 = [];
+    let partyMove2 = [];
+    for (let i = 0; i < party1.length; i++){
+      partyMove1.push(new Monster(party1[i]));
+    }
+    for (let i = 0; i < party2.length; i++){
+      partyMove2.push(new Monster(party2[i]));
+    }
+    moveParties.push({id: p1ID, party: partyMove1});
+    moveParties.push({id: p2ID, party: partyMove2});
+  
+    battleSteps.push({parties: moveParties, action: "move"}); //going to have to hide first index...  
+  }
+  
+  //move up party if death
   if (party1[0].currentHP <= 0){
     party1.splice(0, 1);
     //reset indexes
@@ -278,27 +330,16 @@ function battleStep(battle, battleSteps){
     }
   }
 
+
   battle[0].party = party1; //is this redundant b/c references? TODO
   battle[1].party = party2;
   let p1 = players[battle[0].id];
   let p2 = players[battle[1].id];
 
-  /*
-  //make copy and store in array for client display
-  let copyParties = [];
-  for (let side of battle){
-    let partyCopy = [];
-    for (let i = 0; i < side.party.length; i++){
-      partyCopy.push(new Monster(side.party[i]));
-    }
-    copyParties.push({id: side.id, party: partyCopy});
-  }
-  */
-
   //check for end, send next step or end event
   if (party1.length == 0 && party2.length == 0) {
     //send both tie
-    battleSteps.push({parties: copyParties, action: "attack"});
+    // battleSteps.push({parties: copyParties, action: "attack"});
     //need a separate step and copy here to not cut battle off at last attack
     let finalParties = [];
     for (let side of battle){
@@ -317,7 +358,7 @@ function battleStep(battle, battleSteps){
       io.to(p2.id).emit("gameOver", {result: "win"});
       return battleSteps; //not needed but don't want errors
     } else {
-      battleSteps.push({parties: copyParties, action: "attack"});
+      // battleSteps.push({parties: copyParties, action: "attack"});
       //need a separate step and copy here to not cut battle off at last attack
       let finalParties = [];
       for (let side of battle){
@@ -337,7 +378,7 @@ function battleStep(battle, battleSteps){
       io.to(p2.id).emit("gameOver", {result: "loss"});
       return battleSteps;
     } else {
-      battleSteps.push({parties: copyParties, action: "attack"});
+      // battleSteps.push({parties: copyParties, action: "attack"});
       //need a separate step and copy here to not cut battle off at last attack
       let finalParties = [];
       for (let side of battle){
@@ -352,7 +393,7 @@ function battleStep(battle, battleSteps){
     }
   } else {
     //add to steps and trigger again
-    battleSteps.push({parties: copyParties, action: "attack"});
+    // battleSteps.push({parties: copyParties, action: "attack"});
     return battleStep(battle, battleSteps);
   }
 }

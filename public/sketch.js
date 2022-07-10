@@ -47,12 +47,12 @@ function preload() {
 
 //open and connect the input socket
 let socket = io('/');
-let id;
+let playerID;
 
 //listen for the confirmation of connection 
 socket.on('connect', () => {
   console.log('now connected to server');
-  id = socket.id;
+  playerID = socket.id;
 });
 
 // basic setup on connecting to server or after battle when going back to market
@@ -267,9 +267,8 @@ let freezeSlot; //the slot to drag to freeze
 let sellSlot; //the slot to drag to sell
 let assetSize; //size to display monster pngs
 let r; //radius of image
+let slotSize; // asset size + buffer gap
 let tierSize; //size of dice assets
-// let slotBuffer; //spacing between slots
-// let slotSize; //total X size of slot + space
 let playerStatY; //height of top stats
 let refreshButt, readyButt; // market buttons
 let waitingForBattle = false; //when ready but opponent isn't
@@ -310,7 +309,7 @@ function setup(){
   animationRange = assetSize * 0.5; //standard distance to animate
 
   let slotBuffer = assetSize / 20; //space between slots
-  let slotSize = assetSize + slotBuffer; //total X size of slot + space
+  slotSize = assetSize + slotBuffer; //total X size of slot + space
   let spacing = slotSize / 3; // to prevent battle positions from going offscreen
   battleSlots = [-(slotSize - spacing), -(2 * slotSize - spacing), -(3 * slotSize - spacing), -(4 * slotSize - spacing), -(5 * slotSize - spacing)]; // going to be translated to center and flipped
   marketSlots = [6 * slotSize, 5 * slotSize, 4 * slotSize, 3 * slotSize, 2 * slotSize];
@@ -878,7 +877,7 @@ function stepThroughBattle(battleSteps){
     console.log(step.action);
     //reset and update stepSpeed if changed
     for (let client of step.parties){ //have to copy party at each server battle step... TODO
-      if (client.id == id){
+      if (client.id == playerID){
         battleParty = client.party;
       } else {
         enemyParty = client.party;
@@ -903,11 +902,36 @@ function stepThroughBattle(battleSteps){
     }
 
     //now check for animations
-    if (step.action == "attack"){
+    if (step.action == "start") {
+      for (let i = 0; i < enemyParty.length; i++){
+        enemyParty[i].x -= slotSize;
+        enemyParty[i].animate = moveUp.bind(enemyParty[i]);
+      }
+      for (let i = 0; i < battleParty.length; i++){
+        battleParty[i].x -= slotSize;
+        battleParty[i].animate = moveUp.bind(battleParty[i]);
+      }
+    }
+    else if (step.action == "attack"){
       battleParty[0].animate = animateAttack.bind(battleParty[0]);
       enemyParty[0].animate = animateAttack.bind(enemyParty[0]);
-    } else if (step.action == "start") {
-        //TODO enter animation
+    } else if (step.action == "damage") {
+      
+    } else if (step.action == "move"){ //move up on death
+      if (enemyParty[0].isDead){
+        enemyParty[0].x = 10000; //hacky TODO actually hide
+        for (let i = 1; i < enemyParty.length; i++){
+          // enemyParty[i].x -= slotSize;
+          enemyParty[i].animate = moveUp.bind(enemyParty[i]);
+        }
+      }
+      if (battleParty[0].isDead){
+        battleParty[0].x = 10000;
+        for (let i = 1; i < battleParty.length; i++){
+          // battleParty[i].x -= slotSize;
+          battleParty[i].animate = moveUp.bind(battleParty[i]);
+        }
+      }
     } else if (step.action == "tie"){
       battleResult = "TIE";
       isBattleOver = true;
@@ -1000,9 +1024,19 @@ function updateAnimations(){
 //basic attack
 function animateAttack(){
   let stepSize = animationRange / (2 * this.stepSpeed / 5); //how can I not do this every frame? TODO
-  if (this.s < 2 * this.stepSpeed / 5){ //move forward
-    this.x += stepSize;
+  if (this.s < this.stepSpeed / 5){ //move forward
+    this.x += stepSize * 2;
   } else if (this.s < 4 * this.stepSpeed / 5) { //then move back
-    this.x -= stepSize;
+    this.x -= stepSize * .6; //idk if this is exact, TODO check
   } //buffer at end with no movement
+}
+
+//basic move up
+function moveUp(){
+  if (this.s < 4 * this.stepSpeed / 5) {
+    let stepSize = slotSize / (4 * this.stepSpeed / 5);
+    this.x += stepSize;
+    let sinY = map(this.s, 0, 2 * this.stepSpeed / 5, PI, TWO_PI);
+    this.y += sin(sinY) * slotSize / (2 * this.stepSpeed / 5);
+  }
 }

@@ -97,8 +97,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] basic attack
     - [ ] basic take damage
     - [ ] basic dead
-    - [ ] basic scoot up party after death
+    - [X] basic scoot up party after death
     - [ ] basic ability trigger
+    - [X] basic move into battle
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
     - [X] fix bug with ready and battle spamming
