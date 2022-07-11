@@ -16,6 +16,7 @@ class Monster {
       this.isFrozen = stats.isFrozen || false; //is frozen hire?
       this.isDamaged = stats.isDamaged || false; //for damage animation
       this.isDead = stats.isDead || false; //for death animation
+      this.lichID = stats.lichID || null;
   }
 }
 

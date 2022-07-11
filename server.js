@@ -89,14 +89,14 @@ inputs.on('connection', (socket) => {
     player.ready = true;
     player.hires = data.hires;
     player.party = data.party;
-    player.battleParty = []; //i still don't understand references...
-    for (let i = 0; i < data.party.length; i++){
-      if (data.party[i] == null){
-        player.battleParty[i] = null;
-      } else {
-        player.battleParty[i] = new Monster(data.party[i]);
-      }
-    }
+    player.battleParty = structuredClone(data.party);
+    // for (let i = 0; i < data.party.length; i++){
+    //   if (data.party[i] == null){
+    //     player.battleParty[i] = null;
+    //   } else {
+    //     player.battleParty[i] = new Monster(data.party[i]);
+    //   }
+    // }
 
     //join a lobby if not in one already
     // if (player.lobby == undefined){ 
@@ -172,15 +172,19 @@ inputs.on('connection', (socket) => {
         players[enemy.id].ready = false;
 
         //start battle sequence
+        let hasStartAbility = false;
         let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
-        let startParties = [];
-        for (let side of battle){
-          let partyCopy = [];
-          for (let i = 0; i < side.party.length; i++){
-            partyCopy.push(new Monster(side.party[i]));
-          }
-          startParties.push({id: side.id, party: partyCopy});
-        }
+        let startParties = structuredClone(battle);
+        // for (let side of battle) {
+        //   let partyCopy = [];
+        //   for (let i = 0; i < side.party.length; i++){
+        //     partyCopy.push(new Monster(side.party[i]));
+        //   }
+        //   startParties.push({id: side.id, party: partyCopy});
+        // }
+        //ABILITY TRIGGER: before start
+        
+
         io.to(player.lobby).emit("startBattle", {startParties: startParties, battleSteps: getBattleSteps(battle)});
       } else {
         socket.emit("waitingForBattle");
@@ -228,14 +232,14 @@ inputs.on('connection', (socket) => {
 //
 
 function getBattleSteps(battle){
-  let copyParties = [];
-  for (let side of battle){
-    let partyCopy = [];
-    for (let i = 0; i < side.party.length; i++){
-      partyCopy.push(new Monster(side.party[i]));
-    }
-    copyParties.push({id: side.id, party: partyCopy});
-  }
+  let copyParties = structuredClone(battle);
+  // for (let side of battle){
+  //   let partyCopy = [];
+  //   for (let i = 0; i < side.party.length; i++){
+  //     partyCopy.push(new Monster(side.party[i]));
+  //   }
+  //   copyParties.push({id: side.id, party: partyCopy});
+  // }
   let battleSteps = battleStep(battle, [{parties: copyParties, action: "start"}]); //silly naming
   // console.log("battleSteps");
   // console.log(JSON.stringify(battleSteps));
@@ -246,14 +250,14 @@ function battleStep(battle, battleSteps){
   console.log("battleStep");
 
   //make copy and store in array for client display -- moving before so showing monster before effects not after
-  let copyParties = [];
-  for (let side of battle){
-    let partyCopy = [];
-    for (let i = 0; i < side.party.length; i++){
-      partyCopy.push(new Monster(side.party[i]));
-    }
-    copyParties.push({id: side.id, party: partyCopy});
-  }
+  let copyParties = structuredClone(battle);
+  // for (let side of battle){
+  //   let partyCopy = [];
+  //   for (let i = 0; i < side.party.length; i++){
+  //     partyCopy.push(new Monster(side.party[i]));
+  //   }
+  //   copyParties.push({id: side.id, party: partyCopy});
+  // }
 
   battleSteps.push({parties: copyParties, action: "attack"}); //hmm this timing is problematic TODO
 
@@ -261,7 +265,6 @@ function battleStep(battle, battleSteps){
   let party2 = battle[1].party;
   let p1ID = battle[0].id;
   let p2ID = battle[1].id;
-
 
   //apply damage
   party1[0].currentHP -= party2[0].power;
@@ -283,35 +286,35 @@ function battleStep(battle, battleSteps){
   }
 
   //send parties after damage
-  let damageParties = [];
-  let partyDamage1 = [];
-  let partyDamage2 = [];
-  for (let i = 0; i < party1.length; i++){
-    partyDamage1.push(new Monster(party1[i]));
-  }
-  for (let i = 0; i < party2.length; i++){
-    partyDamage2.push(new Monster(party2[i]));
-  }
-  damageParties.push({id: p1ID, party: partyDamage1});
-  damageParties.push({id: p2ID, party: partyDamage2});
+  let damageParties = structuredClone(battle);
+  // let partyDamage1 = [];
+  // let partyDamage2 = [];
+  // for (let i = 0; i < party1.length; i++){
+  //   partyDamage1.push(new Monster(party1[i]));
+  // }
+  // for (let i = 0; i < party2.length; i++){
+  //   partyDamage2.push(new Monster(party2[i]));
+  // }
+  // damageParties.push({id: p1ID, party: partyDamage1});
+  // damageParties.push({id: p2ID, party: partyDamage2});
 
   battleSteps.push({parties: damageParties, action: "damage"});
 
   //move up animation before actual splice, if still fighting
   if (party1.length != 0 && party2.length != 0 && hasBeenDeath){
-    let moveParties = [];
-    let partyMove1 = [];
-    let partyMove2 = [];
-    for (let i = 0; i < party1.length; i++){
-      partyMove1.push(new Monster(party1[i]));
-    }
-    for (let i = 0; i < party2.length; i++){
-      partyMove2.push(new Monster(party2[i]));
-    }
-    moveParties.push({id: p1ID, party: partyMove1});
-    moveParties.push({id: p2ID, party: partyMove2});
+    // let moveParties = [];
+    // let partyMove1 = [];
+    // let partyMove2 = [];
+    // for (let i = 0; i < party1.length; i++){
+    //   partyMove1.push(new Monster(party1[i]));
+    // }
+    // for (let i = 0; i < party2.length; i++){
+    //   partyMove2.push(new Monster(party2[i]));
+    // }
+    // moveParties.push({id: p1ID, party: partyMove1});
+    // moveParties.push({id: p2ID, party: partyMove2});
   
-    battleSteps.push({parties: moveParties, action: "move"}); //going to have to hide first index...  
+    battleSteps.push({parties: damageParties, action: "move"}); //going to have to hide first index...  
   }
   
   //move up party if death
@@ -333,22 +336,22 @@ function battleStep(battle, battleSteps){
 
   battle[0].party = party1; //is this redundant b/c references? TODO
   battle[1].party = party2;
-  let p1 = players[battle[0].id];
+  let p1 = players[battle[0].id]; //TODO remove redundant p1ID
   let p2 = players[battle[1].id];
 
+  let finalParties = structuredClone(battle);
   //check for end, send next step or end event
   if (party1.length == 0 && party2.length == 0) {
     //send both tie
-    // battleSteps.push({parties: copyParties, action: "attack"});
     //need a separate step and copy here to not cut battle off at last attack
-    let finalParties = [];
-    for (let side of battle){
-      let finalCopy = [];
-      for (let i = 0; i < side.party.length; i++){
-        finalCopy.push(new Monster(side.party[i]));
-      }
-      finalParties.push({id: side.id, party: finalCopy});
-    }
+    // let finalParties = structuredClone(battle);
+    // for (let side of battle){
+    //   let finalCopy = [];
+    //   for (let i = 0; i < side.party.length; i++){
+    //     finalCopy.push(new Monster(side.party[i]));
+    //   }
+    //   finalParties.push({id: side.id, party: finalCopy});
+    // }
     battleSteps.push({parties: finalParties, action: "tie"});
     return battleSteps;
   } else if (party1.length == 0){ //player1 loss
@@ -360,14 +363,14 @@ function battleStep(battle, battleSteps){
     } else {
       // battleSteps.push({parties: copyParties, action: "attack"});
       //need a separate step and copy here to not cut battle off at last attack
-      let finalParties = [];
-      for (let side of battle){
-        let finalCopy = [];
-        for (let i = 0; i < side.party.length; i++){
-          finalCopy.push(new Monster(side.party[i]));
-        }
-        finalParties.push({id: side.id, party: finalCopy});
-      }
+      // let finalParties = structuredClone(battle);
+      // for (let side of battle){
+      //   let finalCopy = [];
+      //   for (let i = 0; i < side.party.length; i++){
+      //     finalCopy.push(new Monster(side.party[i]));
+      //   }
+      //   finalParties.push({id: side.id, party: finalCopy});
+      // }
       battleSteps.push({parties: finalParties, action: "battleOver"});
       return battleSteps;
     }
@@ -380,14 +383,14 @@ function battleStep(battle, battleSteps){
     } else {
       // battleSteps.push({parties: copyParties, action: "attack"});
       //need a separate step and copy here to not cut battle off at last attack
-      let finalParties = [];
-      for (let side of battle){
-        let finalCopy = [];
-        for (let i = 0; i < side.party.length; i++){
-          finalCopy.push(new Monster(side.party[i]));
-        }
-        finalParties.push({id: side.id, party: finalCopy});
-      }
+      // let finalParties = structuredClone(battle);
+      // for (let side of battle){
+      //   let finalCopy = [];
+      //   for (let i = 0; i < side.party.length; i++){
+      //     finalCopy.push(new Monster(side.party[i]));
+      //   }
+      //   finalParties.push({id: side.id, party: finalCopy});
+      // }
       battleSteps.push({parties: finalParties, action: "battleOver"});
       return battleSteps;
     }
@@ -397,76 +400,6 @@ function battleStep(battle, battleSteps){
     return battleStep(battle, battleSteps);
   }
 }
-
-// old battleStep
-/*
-function battleStep(battle, lobby){
-  console.log("battleStep");
-  let party1 = battle[0].party;
-  let party2 = battle[1].party;
-
-  //check for null
-
-  //apply damage
-  party1[0].currentHP -= party2[0].power;
-  party2[0].currentHP -= party1[0].power;
-
-  //check for death and move up party if so
-  if (party1[0].currentHP <= 0){
-    party1.splice(0, 1);
-    //reset indexes
-    for (let i = 0; i < party1.length; i++){
-      party1[i].index = i;
-    }
-  }
-  if (party2[0].currentHP <= 0){
-    party2.splice(0, 1);
-    //reset indexes
-    for (let i = 0; i < party2.length; i++){
-      party2[i].index = i;
-    }
-  }
-
-  battle[0].party = party1;
-  battle[1].party = party2;
-  let p1 = players[battle[0].id];
-  let p2 = players[battle[1].id];
-
-  //check for end, send next step or end event
-  if (party1.length == 0 && party2.length == 0) {
-    //send both tie
-    io.to(lobby).emit("battleOver", {battle: battle, result: "tie"})
-  } else if (party1.length == 0){ //player1 loss
-    p1.hp -= p1.hpLoss;
-    if (p1.hp <= 0) {
-      // gameOver(p1, lobby);
-      io.to(p1.id).emit("gameOver", {result: "loss"});
-      io.to(p2.id).emit("gameOver", {result: "win"});
-      return;
-    } else {
-      io.to(p1.id).emit("battleOver", {battle: battle, hp: p1.hp, result: "loss"})
-    }
-    io.to(p2.id).emit("battleOver", {battle: battle, result: "win"})
-  } else if (party2.length == 0){ //player2 loss
-    p2.hp -= p2.hpLoss;
-    if (p2.hp <= 0) {
-      // gameOver(p2, lobby);
-      io.to(p1.id).emit("gameOver", {result: "win"});
-      io.to(p2.id).emit("gameOver", {result: "loss"});
-      return;
-    } else {
-      io.to(p2.id).emit("battleOver", {battle: battle, hp: p2.hp, result: "loss"});
-    }
-    io.to(p1.id).emit("battleOver", {battle: battle, result: "win"})
-  } else {
-    //send both next step and trigger next step
-    io.to(lobby).emit("battleAftermath", battle);
-    setTimeout(() => {
-      battleStep(battle, lobby);
-    }, battleStepTime);
-  }
-}
-*/
 
 function refreshHires(tier, hires){
   for (let i = 0; i < hires.length; i++){
@@ -478,4 +411,35 @@ function refreshHires(tier, hires){
     }
   }
   return hires;
+}
+
+//ability function -- not trying to optimize yet, though TODO could have all abilities in one?
+function checkStartAbilities(parties, timing, battleSteps){ //needs parties, timing, and battleSteps array
+  let p1 = parties[0].id;
+  let p2 = parties[1].id;
+  let party1 = parties[0].party;
+  let party2 = parties[1].party;
+
+  //get copy before any changes
+  let copyParties = structuredClone(parties);
+
+  console.log()
+  //check for abilities that match the timing and make new array of monsters that need to act
+  let actingMonsters = [];
+  for (let i = 0; i < party1.length; i++){
+    if (party1[i].timing == timing){
+      party1[i].lichID = p1;
+      actingMonsters.push(party1[i]);
+    }
+  }
+  for (let i = 0; i < party2.length; i++){
+    party2[i].lichID = p2;
+    actingMonsters.push(party2[i]);
+  }
+
+  //sort array by strength, ties are random
+  let sortedMonsters = [];
+  
+
+  return battleSteps;
 }
