@@ -106,7 +106,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] battle display battleParty
     - [X] redo battle display and battle result text colors for draw
     - [ ] cleanup
-    - [ ] omfg `structuredClone()` creates a deep copy.... wtf
+    - [X] omfg `structuredClone()` creates a deep copy.... wtf
+    - [X] Node v18
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size
