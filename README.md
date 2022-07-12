@@ -59,10 +59,10 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] can't upgrade past lvl 3
   - [ ] abilities
     - [ ] hover to see name, level, and ability text
-    - [ ] ability stack (priority goes to power, tie if random)
+    - [X] ability stack (priority goes to power, tie if random)
     - [ ] timing
-      - [ ] initial battle effect
-      - [ ] before attack
+      - [X] before battle starts
+      - [X] before attack
       - [ ] on attack
       - [ ] on damage
       - [ ] on death
@@ -71,7 +71,6 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] on getting an item
       - [ ] on level up
       - [ ] end of market
-      - [ ] start of battle
   - [X] battle speed
     - [X] UI (pause, play, fast)
     - [X] client goes through list of animation steps
@@ -110,6 +109,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] Node v18
     - [ ] parties/ids/indexes code smell
     - [ ] common but different name for cloned arrays
+    - [X] fix end of game display
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size

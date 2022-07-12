@@ -118,22 +118,22 @@ socket.on("startBattle", (data) => {
 });
 
 // game end message
-socket.on('gameOver', (data) => {
-  console.log('gameOver: ' + data.result);
-  push();
-  textSize(80);
-  background(20);
-  if (data.result == "win") {
-    fill(0, 250, 50);
-    text("YOU WIN", width / 2, 3 * height / 6);
-  } else if (data.result == "loss") {
-    // hp = data.hp;
-    // showUI();
-    fill(200, 0, 0);
-    text("YOU LOST", width / 2, 3 * height / 6);
-  }
-  pop();
-});
+// socket.on('gameOver', (data) => {
+//   console.log('gameOver: ' + data.result);
+//   push();
+//   textSize(80);
+//   background(20);
+//   if (data.result == "win") {
+//     fill(0, 250, 50);
+//     text("YOU WIN", width / 2, 3 * height / 6);
+//   } else if (data.result == "loss") {
+//     // hp = data.hp;
+//     // showUI();
+//     fill(200, 0, 0);
+//     text("YOU LOST", width / 2, 3 * height / 6);
+//   }
+//   pop();
+// });
 
 //
 //  VARIABLES
@@ -264,6 +264,15 @@ function draw(){
     if (!isHovering){
       hoverTimer = 0;
     }
+  } else if (state == "gameOver") {
+    background(20);
+    textSize(80);
+    if (battleResult == "YOU WON") {
+      fill(0, 250, 80);
+    } else if (battleResult == "YOU LOST") {
+      fill(200, 0, 0);
+    }
+    text(battleResult, width / 2, 3 * height / 6);
   } else if (state == "battle"){
     //speedUI
     showEverything();
@@ -279,16 +288,13 @@ function draw(){
         if (stepTimer%50 == 0) {console.log(stepTimer)};
         updateAnimations();
       }
-      if (isBattleOver){ //text not showing b/c getting overwritten
+      if (isBattleOver) { //text not showing b/c getting overwritten
         push();
         textSize(80);
         showEverything();
         fill(battleResultColors[battleResult]);
         text(battleResult, width / 2, 3 * height / 6);
         pop();
-      } else {
-      // showEverything();
-
       }
     }
   }
@@ -871,6 +877,13 @@ function stepThroughBattle(battleSteps){
       setTimeout(() => {
         socket.emit("goToMarket")
       }, 3000);
+    } else if (step.action == "gameOver"){
+      state = "gameOver";
+      if (step.winner == playerID){
+        battleResult = "YOU WON";
+      } else {
+        battleResult = "YOU LOST";
+      }
     } else if (step.action == "battleOver"){
       if (battleParty.length == 0){
         // hp -= ; //TODO hp loss animation
