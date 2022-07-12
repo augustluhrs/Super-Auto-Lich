@@ -1,3 +1,7 @@
+function generate_ID() { //grabbed from https://gist.github.com/gordonbrander/2230317 -- thanks!
+  return '_' + Math.random().toString(36).substr(2, 9);
+}
+
 class Monster {
   constructor(stats){
       this.name = stats.name; //monster name
@@ -16,8 +20,11 @@ class Monster {
       this.isFrozen = stats.isFrozen || false; //is frozen hire?
       this.isDamaged = stats.isDamaged || false; //for damage animation
       this.isDead = stats.isDead || false; //for death animation
-      this.lichID = stats.lichID || null;
-  }
+      this.id = stats.id || generate_ID(); //to find specific monsters...
+      this.lichID = stats.lichID || null; //stores owner's socket.id in case it gets separated
+      this.isNullified = stats.isNullified || false; //for now, tracking if flumph cancels ability TODO, just remove .ability?
+      this.isSleeping = stats.isSleeping || false; //for hibernating or any effect that prevents attack?
+    }
 }
 
 class Beholder extends Monster {
@@ -58,7 +65,7 @@ class Cavebear extends Monster {
     this.currentPower = 1;
     this.currentHP = 3;
     this.ability = null;
-    this.timing = null;
+    this.timing = "before start";
   }
 }
 
@@ -114,7 +121,7 @@ class Kobold extends Monster {
     this.currentPower = 1;
     this.currentHP = 1;
     this.ability = null;
-    this.timing = null;
+    this.timing = "before start";
   }
 }
 

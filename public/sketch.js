@@ -815,10 +815,25 @@ function stepThroughBattle(battleSteps){
         battleParty[i].x -= slotSize;
         battleParty[i].animate = moveUp.bind(battleParty[i]);
       }
-    }
-    else if (step.action == "attack"){
-      battleParty[0].animate = animateAttack.bind(battleParty[0]);
-      enemyParty[0].animate = animateAttack.bind(enemyParty[0]);
+    } else if (step.action == "attack"){
+      if (!battleParty[0].isSleeping){
+        battleParty[0].animate = animateAttack.bind(battleParty[0]);
+      }
+      if (!enemyParty[0].isSleeping){
+        enemyParty[0].animate = animateAttack.bind(enemyParty[0]);
+      }
+    } else if (step.action == "ability") {
+      //only step with a monster target... getting sloppy
+      for (let i = 0; i < enemyParty.length; i++){
+        if (enemyParty[i].id == step.monster.id){
+          enemyParty[i].animate = useAbility.bind(enemyParty[i]);
+        }
+      }
+      for (let i = 0; i < battleParty.length; i++){
+        if (battleParty[i].id == step.monster.id){
+          battleParty[i].animate = useAbility.bind(battleParty[i]);
+        }
+      }
     } else if (step.action == "damage") {
       for (let i = 0; i < enemyParty.length; i++){
         if (enemyParty[i].isDamaged){
@@ -952,9 +967,9 @@ function animateAttack(){
 function useAbility(){
   let stepSize = animationRange / (2 * this.stepSpeed / 5);
   if (this.s < this.stepSpeed / 5){ //move up
-    this.y += stepSize * 2;
+    this.y -= stepSize * 2;
   } else if (this.s < 4 * this.stepSpeed / 5) { //then move back
-    this.y -= stepSize * .6; //idk if this is exact, TODO check
+    this.y += stepSize * .6; //idk if this is exact, TODO check
   } //buffer at end with no movement
 }
 

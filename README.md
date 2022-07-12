@@ -108,6 +108,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] cleanup
     - [X] omfg `structuredClone()` creates a deep copy.... wtf
     - [X] Node v18
+    - [ ] parties/ids/indexes code smell
+    - [ ] common but different name for cloned arrays
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size

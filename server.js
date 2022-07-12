@@ -172,9 +172,10 @@ inputs.on('connection', (socket) => {
         players[enemy.id].ready = false;
 
         //start battle sequence
-        let hasStartAbility = false;
+        // let hasStartAbility = false;
         let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
         let startParties = structuredClone(battle);
+        // let battleSteps = [];
         // for (let side of battle) {
         //   let partyCopy = [];
         //   for (let i = 0; i < side.party.length; i++){
@@ -232,7 +233,6 @@ inputs.on('connection', (socket) => {
 //
 
 function getBattleSteps(battle){
-  let copyParties = structuredClone(battle);
   // for (let side of battle){
   //   let partyCopy = [];
   //   for (let i = 0; i < side.party.length; i++){
@@ -240,9 +240,12 @@ function getBattleSteps(battle){
   //   }
   //   copyParties.push({id: side.id, party: partyCopy});
   // }
-  let battleSteps = battleStep(battle, [{parties: copyParties, action: "start"}]); //silly naming
-  // console.log("battleSteps");
-  // console.log(JSON.stringify(battleSteps));
+  let copyParties = structuredClone(battle); //TODO need better names for these parties I keep making
+  let startParties = structuredClone(battle);
+  let battleSteps = [{parties: copyParties, action: "start"}]; //confusing because abilites are "before start", but start is always first TODO
+  battleSteps = checkStartAbilities(startParties, "before start", battleSteps);
+  battleSteps = battleStep(startParties, battleSteps); //silly naming
+
   return battleSteps;
 }
 
@@ -266,11 +269,19 @@ function battleStep(battle, battleSteps){
   let p1ID = battle[0].id;
   let p2ID = battle[1].id;
 
-  //apply damage
-  party1[0].currentHP -= party2[0].power;
-  party2[0].currentHP -= party1[0].power;
-  party1[0].isDamaged = true;
-  party2[0].isDamaged = true;
+  //apply damage, or wake up if sleeping
+  if (!party1[0].isSleeping){
+    party2[0].currentHP -= party1[0].currentPower; 
+    party2[0].isDamaged = true;
+  } else {
+    party1[0].isSleeping = false;
+  }
+  if (!party2[0].isSleeping){
+    party1[0].currentHP -= party2[0].currentPower;
+    party1[0].isDamaged = true;
+  } else {
+    party2[0].isSleeping = false;
+  }
 
   //check for death 
   let hasBeenDeath = false;
@@ -420,26 +431,99 @@ function checkStartAbilities(parties, timing, battleSteps){ //needs parties, tim
   let party1 = parties[0].party;
   let party2 = parties[1].party;
 
-  //get copy before any changes
+  //get deep copy before any changes
   let copyParties = structuredClone(parties);
 
   console.log()
   //check for abilities that match the timing and make new array of monsters that need to act
   let actingMonsters = [];
+  let maxPower = 0;
   for (let i = 0; i < party1.length; i++){
     if (party1[i].timing == timing){
       party1[i].lichID = p1;
+      if (party1[i].currentPower > maxPower){
+        maxPower = party1[i].currentPower;
+      }
       actingMonsters.push(party1[i]);
     }
   }
   for (let i = 0; i < party2.length; i++){
     party2[i].lichID = p2;
+    if (party2[i].currentPower > maxPower){
+      maxPower = party2[i].currentPower;
+    }
     actingMonsters.push(party2[i]);
   }
 
   //sort array by strength, ties are random
   let sortedMonsters = [];
-  
+  //prob an existing sorting algorithm for this but w/e
+  for (let i = maxPower; i >= 0; i--){ //TODO this won't work if there are effects that bring a monster to negative power
+    let powerArray = [];
+    for (let monster of actingMonsters){ //code smell TODO -- something about ids, parties, indexes
+      if (monster.currentPower == i) {
+        powerArray.push(monster);
+      }
+    }
+    sortedMonsters.push(powerArray);
+  }
+  for (let powerArray of sortedMonsters){
+    if (powerArray.length > 1){
+      shuffleArray(powerArray);
+    }
+  }
+  //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
+
+  //need to do the abilities, then check for damage/death...
+  for (let powerArray of sortedMonsters) {
+    for (let monster of powerArray){
+      //would be nice to just call the .ability() method, but not sure how to abstract what gets returned for all cases...
+      if (!monster.isNullified) { //have to check this here in case the flumph goes before in the array (even though this is only at start, for future)
+        if (monster.name == "cavebear") {
+          monster.isSleeping = true;
+          //increases stats by level (+50/100/150%, rounded down)
+          monster.currentPower += Math.floor(monster.currentPower * monster.level * 0.5);
+          monster.currentHP += Math.floor(monster.currentHP * monster.level * 0.5);
+          let partiesAtThisStage = structuredClone(parties);
+          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster}); //idk i don't like overloading the object like this, but w/e.... TODO
+        } else if (monster.name == "kobold") {
+          let party;
+          if (parties[0].id == monster.lichID){
+            party = parties[0].party;
+          } else {
+            party = parties[1].party;
+          }
+          console.log(party);
+
+          let numKobolds = 0;
+          // console.log(numKobolds);
+          for (let m of party){
+            if (m.name == "kobold"){
+              numKobolds++;
+            }
+          }
+          console.log(numKobolds);
+          if (numKobolds > 1){
+            monster.currentPower += numKobolds - 1; //TODO even with -1 this could be way OP
+            monster.currentHP += numKobolds - 1;
+            let partiesAtThisStage = structuredClone(parties);
+            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          }
+        }
+      }
+    }
+  }
 
   return battleSteps;
+}
+
+// Randomize array in-place using Durstenfeld shuffle algorithm
+// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffleArray(array) {
+  for (var i = array.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+  }
 }
