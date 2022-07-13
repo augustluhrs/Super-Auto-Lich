@@ -131,9 +131,10 @@ inputs.on('connection', (socket) => {
             party1.splice(i, 1);
           }
         }
-        //reset indexes
+        //reset indexes and add lichID
         for (let i = 0; i < party1.length; i++){
           party1[i].index = i;
+          party1[i].lichID = player.id;
         }
 
         let party2 = enemy.battleParty;
@@ -152,9 +153,10 @@ inputs.on('connection', (socket) => {
             party2.splice(i, 1);
           }
         }
-        //reset indexes
+        //reset indexes and add lichID
         for (let i = 0; i < party2.length; i++){
           party2[i].index = i;
+          party2[i].lichID = enemy.id;
         }
 
         //reset here since we only check when starting battle
@@ -253,26 +255,37 @@ function battleStep(battle, battleSteps){
 
   //check for death 
   let hasBeenDeath = false;
+  let deadMonsters = [];
   if (party1[0].currentHP <= 0){
     hasBeenDeath = true;
     party1[0].isDead = true;
     party1[0].isDamaged = false;
+    deadMonsters.push(party1[0]);
   }
   if (party2[0].currentHP <= 0){
     hasBeenDeath = true;
     party2[0].isDead = true;
     party2[0].isDamaged = false;
+    deadMonsters.push(party2[0]);
   }
 
   //send parties after damage
   let damageParties = structuredClone(battle);
   battleSteps.push({parties: damageParties, action: "damage"});
 
-  //move up animation before actual splice, if still fighting
-  if (party1.length != 0 && party2.length != 0 && hasBeenDeath){
-    battleSteps.push({parties: damageParties, action: "move"}); //going to have to hide first index...  
+  //check death abilities and move up animation before actual splice, if still fighting
+  if (hasBeenDeath){
+    [battle, battleSteps] = checkDeathAbilities(battle, "after death", battleSteps, deadMonsters);
+    let postDeathParties = structuredClone(battle);
+    battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...  
   }
   
+  console.log("battle");
+  console.log(battle[0].party);
+  console.log("party1");
+  console.log(party1);
+  console.log(battle[0].party == party1);
+
   //move up party if death
   if (party1[0].currentHP <= 0){
     party1.splice(0, 1);
@@ -289,10 +302,10 @@ function battleStep(battle, battleSteps){
     }
   }
 
-  battle[0].party = party1; //is this redundant b/c references? TODO
-  battle[1].party = party2;
-  let p1 = players[battle[0].id]; //TODO remove redundant p1ID
-  let p2 = players[battle[1].id];
+  // battle[0].party = party1; //is this redundant b/c references? TODO
+  // battle[1].party = party2;
+  let p1 = players[p1ID];
+  let p2 = players[p2ID];
 
   let finalParties = structuredClone(battle);
   //check for end, send next step or end event
@@ -438,20 +451,20 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
   let party2 = parties[1].party;
 
   //get deep copy before any changes
-  let copyParties = structuredClone(parties);
+  // let copyParties = structuredClone(parties);
 
   //check for abilities that match the timing and make new array of monsters that need to act
   let actingMonsters = [];
   let maxPower = 0;
 
   if (party1[0].timing == timing){
-    party1[0].lichID = p1ID;
+    // party1[0].lichID = p1ID;
     if (party1[0].currentPower > maxPower){
       maxPower = party1[0].currentPower;
     }
     actingMonsters.push(party1[0]);
   }
-  party2[0].lichID = p2ID;
+  // party2[0].lichID = p2ID;
   if (party2[0].currentPower > maxPower){
     maxPower = party2[0].currentPower;
   }
@@ -501,6 +514,81 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
   }
   return [structuredClone(parties), battleSteps];
 }
+
+//after death abilities
+function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
+  let p1ID = parties[0].id;
+  let p2ID = parties[1].id;
+  let party1 = parties[0].party;
+  let party2 = parties[1].party;
+
+  //check for abilities that match the timing and make new array of monsters that need to act
+  let actingMonsters = [];
+  let maxPower = 0;
+  for (let monster of deadMonsters){
+    if (monster.timing == timing){
+      if (monster.currentPower > maxPower){
+        maxPower = monster.currentPower;
+      }
+      actingMonsters.push(monster);
+    }
+  }
+
+  //sort array by strength, ties are random
+  let sortedMonsters = [];
+  //prob an existing sorting algorithm for this but w/e
+  for (let i = maxPower; i >= 0; i--){ //TODO this won't work if there are effects that bring a monster to negative power
+    let powerArray = [];
+    for (let monster of actingMonsters){ //code smell TODO -- something about ids, parties, indexes
+      if (monster.currentPower == i) {
+        powerArray.push(monster);
+      }
+    }
+    sortedMonsters.push(powerArray);
+  }
+  for (let powerArray of sortedMonsters){
+    if (powerArray.length > 1){
+      shuffleArray(powerArray);
+    }
+  }
+  //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
+
+  //need to do the abilities, then check for damage/death...
+  for (let powerArray of sortedMonsters) {
+    for (let monster of powerArray){
+      //would be nice to just call the .ability() method, but not sure how to abstract what gets returned for all cases...
+      if (!monster.isNullified) { //have to check this here in case the flumph goes before in the array (even though this is only at start, for future)
+        if (monster.name == "skeleton") {
+          //spawns x/x on death, with chance to come back after each death, higher chance with level (/2, /3, /4)?
+          //just going to replace stats rn so won't have to deal with adding to array
+          let skelly;
+          for (let i = 0; i < party1.length; i++){
+            if (party1[i].id == monster.id){
+              skelly = party1[i];
+            }
+          }
+          for (let i = 0; i < party2.length; i++){
+            if (party2[i].id == monster.id){
+              skelly = party2[i];
+            }
+          }
+          if (Math.random() < skelly.spawnChance) {
+            skelly.currentHP = skelly.level;
+            skelly.currentPower = skelly.level;
+            skelly.spawnChance -= skelly.spawnChance / (skelly.level + 1);
+            skelly.isDead = false;
+            let partiesAtThisStage = structuredClone(parties);
+            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: skelly});
+          }
+        }
+        //other death monsters TODO
+      }
+    }
+  }
+  // return [structuredClone(parties), battleSteps];
+  return [parties, battleSteps];
+}
+
 
 // Randomize array in-place using Durstenfeld shuffle algorithm
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array

@@ -79,7 +79,7 @@ class Flumph extends Monster {
     this.currentPower = 0;
     this.currentHP = 1;
     this.ability = null;
-    this.timing = null;
+    this.timing = "after attack";
   }
 }
 
@@ -93,7 +93,7 @@ class Gnoll extends Monster {
     this.currentPower = 3;
     this.currentHP = 1;
     this.ability = null;
-    this.timing = null;
+    this.timing = "after attack";
   }
 }
 
@@ -107,7 +107,7 @@ class Goblin extends Monster {
     this.currentPower = 2;
     this.currentHP = 1;
     this.ability = null;
-    this.timing = null;
+    this.timing = "before attack";
   }
 }
 
@@ -135,7 +135,7 @@ class Mephit extends Monster {
     this.currentPower = 2;
     this.currentHP = 2;
     this.ability = null;
-    this.timing = null;
+    this.timing = "after death";
   }
 }
 
@@ -149,7 +149,8 @@ class Skeleton extends Monster {
     this.currentPower = 1;
     this.currentHP = 2;
     this.ability = null;
-    this.timing = null;
+    this.timing = "after death";
+    this.spawnChance = 1;
   }
 }
 
@@ -163,7 +164,7 @@ class Stirge extends Monster {
     this.currentPower = 1;
     this.currentHP = 2;
     this.ability = null;
-    this.timing = null;
+    this.timing = "after attack";
   }
 }
 
@@ -177,7 +178,7 @@ class Vegepygmy extends Monster {
     this.currentPower = 1;
     this.currentHP = 1;
     this.ability = null;
-    this.timing = null;
+    this.timing = "after death";
   }
 }
 

@@ -186,6 +186,11 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
   ## Playtest Notes
 
+  ### 0.0.2
+
+  **Misc. Balance Thoughts**
+  - Bear too strong -- maybe just bumps HP?
+    - wow but 12 kobolds and 12 bears have the same sum total power + hp after abilities...
   ### 0.0.1
 
   **6/17/22**
