@@ -113,12 +113,13 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] cleanup comments from 0.0.1
     - [ ] bigger/better top stat UI
     - [ ] need a failsafe end battle if both sides end with flumph
-  - [ ] bugs
+  - [ ] bugs/issues
     - [X] fix end of game display
     - [X] fix hp display on battle end
     - [X] redo battle display and battle result text colors for draw
     - [X] fix bug with ready and battle spamming
     - [ ] first move display getting cut short
+    - [ ] move animations currently don't account for potential moving more than one slot or dying in middle
 
 - [ ] 0.0.3
   - [ ] items

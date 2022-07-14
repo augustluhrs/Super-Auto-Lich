@@ -856,14 +856,15 @@ function stepThroughBattle(battleSteps){
         }
       }
     } else if (step.action == "move"){ //move up on death
-      if (enemyParty[0].isDead){
+      //TODO account for multiple deaths and death in middle
+      if (enemyParty[0] != null && enemyParty[0].isDead){
         enemyParty[0].x = 10000; //hacky TODO actually hide
         for (let i = 1; i < enemyParty.length; i++){
           // enemyParty[i].x -= slotSize;
           enemyParty[i].animate = moveUp.bind(enemyParty[i]);
         }
       }
-      if (battleParty[0].isDead){
+      if (battleParty[0] != null && battleParty[0].isDead){
         battleParty[0].x = 10000;
         for (let i = 1; i < battleParty.length; i++){
           // battleParty[i].x -= slotSize;
