@@ -408,7 +408,7 @@ function checkStartAbilities(parties, timing, battleSteps){ //needs parties, tim
         if (monster.name == "cavebear") {
           monster.isSleeping = true;
           //increases stats by level (+50/100/150%, rounded down)
-          monster.currentPower += Math.floor(monster.currentPower * monster.level * 0.5);
+          // monster.currentPower += Math.floor(monster.currentPower * monster.level * 0.5); //nerf
           monster.currentHP += Math.floor(monster.currentHP * monster.level * 0.5);
           let partiesAtThisStage = structuredClone(parties);
           battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster}); //idk i don't like overloading the object like this, but w/e.... TODO
@@ -495,8 +495,8 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
       //would be nice to just call the .ability() method, but not sure how to abstract what gets returned for all cases...
       if (!monster.isNullified) { //have to check this here in case the flumph goes before in the array (even though this is only at start, for future)
         if (monster.name == "goblin") { //TODO should this stop attacking or negate damage??
-          //random chance to have opponent not attack (16%/32%/48%)
-          if (Math.random() < monster.level * 0.16){
+          //random chance to have opponent not attack (20%/40%/60%)
+          if (Math.random() < monster.level * 0.2){
             if (monster.lichID == p1ID) {
               party2[0].isSleeping = true; //TODO better name for not attacking
               let partiesAtThisStage = structuredClone(parties);

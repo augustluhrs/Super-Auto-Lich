@@ -100,23 +100,25 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] basic move into battle
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
-    - [X] fix bug with ready and battle spamming
     - [X] server battle calculates and sends list of steps
     - [X] battle display battleParty
-    - [X] redo battle display and battle result text colors for draw
     - [ ] cleanup
     - [X] omfg `structuredClone()` creates a deep copy.... wtf
     - [X] Node v18
     - [ ] parties/ids/indexes code smell
     - [ ] common but different name for cloned arrays
-    - [X] fix end of game display
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size
     - [X] cleanup comments from 0.0.1
-    - [X] fix hp display on battle end
     - [ ] bigger/better top stat UI
     - [ ] need a failsafe end battle if both sides end with flumph
+  - [ ] bugs
+    - [X] fix end of game display
+    - [X] fix hp display on battle end
+    - [X] redo battle display and battle result text colors for draw
+    - [X] fix bug with ready and battle spamming
+    - [ ] first move display getting cut short
 
 - [ ] 0.0.3
   - [ ] items
@@ -191,6 +193,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   **Misc. Balance Thoughts**
   - Bear too strong -- maybe just bumps HP?
     - wow but 12 kobolds and 12 bears have the same sum total power + hp after abilities...
+    - no still too strong. nerfing power
+  - goblins suck compared to skeletons, 16% chance at lvl 1 vs 100% chance + extra... maybe should bump to 20% base?
+
   ### 0.0.1
 
   **6/17/22**
