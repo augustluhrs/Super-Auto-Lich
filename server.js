@@ -275,7 +275,7 @@ function battleStep(battle, battleSteps){
 
   console.log(battleSteps);
   // console.log(deadMonsters);
-  console.log("dm");
+  // console.log("dm");
   // console.log(party1);
   // console.log(party2);
   // console.log(battle);
@@ -285,17 +285,19 @@ function battleStep(battle, battleSteps){
   if (hasBeenDeath){
     let preDeathParties = structuredClone(battle);
     [battle, battleSteps] = checkDeathAbilities(preDeathParties, "after death", battleSteps, deadMonsters);
-    let postDeathParties = structuredClone(battle);
-    battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...  
+    if (preDeathParties[0].party.length > battle[0].party.length || preDeathParties[1].party.length > battle[1].party.length){ //prevent from sending move if no one actually was removed
+      let postDeathParties = structuredClone(battle);
+      battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...
+    }
   }
 
   party1 = battle[0].party; //hmmmmmmmmmmmmmmmmmm
   party2 = battle[1].party;
   // console.log("battle\n\n\n\n\n\n\n\n");
   // console.log(battle[0].party);
-  console.log("party1");
-  console.log(party1);
-  console.log(battle[0].party == party1);
+  // console.log("party1");
+  // console.log(party1);
+  // console.log(battle[0].party == party1);
 
   //move up party if death
   for (let i = party1.length - 1; i >= 0; i--){
@@ -317,22 +319,6 @@ function battleStep(battle, battleSteps){
   for (let i = 0; i < party2.length; i++){
     party2[i].index = i;
   }
-  /*
-  if (party1[0].currentHP <= 0){
-    party1.splice(0, 1);
-    //reset indexes
-    for (let i = 0; i < party1.length; i++){
-      party1[i].index = i;
-    }
-  }
-  if (party2[0].currentHP <= 0){
-    party2.splice(0, 1);
-    //reset indexes
-    for (let i = 0; i < party2.length; i++){
-      party2[i].index = i;
-    }
-  }
-  */
 
   // battle[0].party = party1; //is this redundant b/c references? TODO
   // battle[1].party = party2;
@@ -524,7 +510,7 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
       if (!monster.isNullified) { //have to check this here in case the flumph goes before in the array (even though this is only at start, for future)
         if (monster.name == "goblin") { //TODO should this stop attacking or negate damage??
           //random chance to have opponent not attack (20%/40%/60%)
-          if (Math.random() < monster.level * 0.2){
+          if (Math.random() < monster.level * 0.2) {
             if (monster.lichID == p1ID) {
               party2[0].isSleeping = true; //TODO better name for not attacking
               let partiesAtThisStage = structuredClone(parties);
@@ -584,6 +570,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   //need to do the abilities, then check for damage/death...
   //moving dead monsters here, so will do all first dead monsters, then subsequent dead, instead of nested, skelly issue
   let deadMonsters2 = [];
+  let needsMove = false;
   for (let powerArray of sortedMonsters) {
     for (let monster of powerArray){
       //would be nice to just call the .ability() method, but not sure how to abstract what gets returned for all cases...
@@ -609,13 +596,15 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
             skelly.isDead = false;
             let partiesAtThisStage = structuredClone(parties);
             battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: skelly});
+          } else{
+            needsMove = true;
           }
         } else if (monster.name == "mephit"){
           //needs enemy to move up if dead? no... what if enemy is a mephit? hmm... splash damage
           //on death, deals damage to adjacent enemies (3/6/9?) -- ooh can backfire if sniped
+          needsMove = true;
           let mephitIndex = 0;
           let party, otherParty;
-          let deadMonsters2 = [];
           for (let i = 0; i < party1.length; i++){
             if (party1[i].id == monster.id){
               mephitIndex = i;
@@ -698,51 +687,6 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           if (hasDealtDamage){
             let damagedParties = structuredClone(parties);
             battleSteps.push({parties: damagedParties, action: "damage"});
-
-            //check for death
-            /*
-            if (hasKilledSomeone){
-              console.log("dm2");
-              console.log(deadMonsters2);
-              [parties, battleSteps] = checkDeathAbilities(parties, "after death", battleSteps, deadMonsters2);
-              // party1 = battle[0].party;
-              // party2 = battle[1].party;
-              //TODO code smell
-              party1 = parties[0].party;
-              party2 = parties[1].party;
-              console.log(party1);
-              console.log("asdfadf \n\n\n");
-              console.log(party2);
-              // parties[0].party = party1;
-              // parties[1].party = party2;
-
-              let postDeathParties = structuredClone(parties);
-              battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...  
-              //move animation will be off if jumping more than one slot... TODO
-
-              //fine b/c only happening once, no matter how many death abilities?
-              //move up party if death
-              for (let i = party1.length - 1; i >= 0; i--){
-                if (party1[i].isDead){
-                  party1.splice(i,1);
-                  console.log("splice");
-                }
-              }
-              //reset indexes
-              for (let i = 0; i < party1.length; i++){
-                party1[i].index = i;
-              }
-              for (let i = party2.length - 1; i >= 0; i--){
-                if (party2[i].isDead){
-                  party2.splice(i,1);
-                  console.log("splice");
-                }
-              }
-              for (let i = 0; i < party2.length; i++){
-                party2[i].index = i;
-              }
-              
-            }*/
           }
       
         }
@@ -757,9 +701,10 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     [parties, battleSteps] = checkDeathAbilities(parties, "after death", battleSteps, deadMonsters2);
     // party1 = battle[0].party;
     // party2 = battle[1].party;
+
     //TODO code smell
-    // party1 = parties[0].party;
-    // party2 = parties[1].party;
+    party1 = parties[0].party;
+    party2 = parties[1].party;
     // console.log(party1);
     // console.log("asdfadf \n\n\n");
     // console.log(party2);
@@ -767,9 +712,13 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     // parties[1].party = party2;
   }
 
-  let postDeathParties = structuredClone(parties);
-  battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...  
-  //move animation will be off if jumping more than one slot or death in middle... TODO
+  //this isnt' working -- all bunched up at end, eliminating for now TODO
+  // if (needsMove){
+  //   let postDeathParties = structuredClone(parties);
+  //   battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...  
+  //   //move animation will be off if jumping more than one slot or death in middle... TODO
+  // }
+  
 
   //fine b/c only happening once, no matter how many death abilities?
   //move up party if death

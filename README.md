@@ -120,6 +120,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] fix bug with ready and battle spamming
     - [ ] first move display getting cut short
     - [ ] move animations currently don't account for potential moving more than one slot or dying in middle
+    - [ ] remove move step if no one needs to
+    - [ ] mephit chain reaction not working? can't replicate
+    - [ ] skeleton resurrection can block mephit chain reaction
 
 - [ ] 0.0.3
   - [ ] items
