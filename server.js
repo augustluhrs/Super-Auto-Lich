@@ -241,13 +241,13 @@ function battleStep(battle, battleSteps){
 
   //apply damage, or wake up if sleeping
   if (!party1[0].isSleeping){
-    party2[0].currentHP -= party1[0].currentPower; 
+    party2[0].currentHP -= party1[0].currentPower + party2[0].vulnerability; 
     party2[0].isDamaged = true;
   } else {
     party1[0].isSleeping = false;
   }
   if (!party2[0].isSleeping){
-    party1[0].currentHP -= party2[0].currentPower;
+    party1[0].currentHP -= party2[0].currentPower + party1[0].vulnerability;
     party1[0].isDamaged = true;
   } else {
     party2[0].isSleeping = false;
@@ -273,7 +273,7 @@ function battleStep(battle, battleSteps){
   let damageParties = structuredClone(battle);
   battleSteps.push({parties: damageParties, action: "damage"});
 
-  console.log(battleSteps);
+  // console.log(battleSteps);
   // console.log(deadMonsters);
   // console.log("dm");
   // console.log(party1);
@@ -599,6 +599,37 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           } else{
             needsMove = true;
           }
+        } else if (monster.name == "vegepygmy") {
+          //makes alive enemy monsters vulnerable (+1 w/ each level)
+          //gotta be a better way to do this TODO
+          let otherParty;
+          for (let i = 0; i < party1.length; i++){
+            if (party1[i].id == monster.id){
+              otherParty = party2;
+            }
+          }
+          for (let i = 0; i < party2.length; i++){
+            if (party2[i].id == monster.id){
+              otherParty = party1;
+            }
+          }
+          let partiesAtThisStage = structuredClone(parties);
+          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          let numInfected = monster.level;
+          for (let i = 0; i < otherParty.length; i++){
+            // console.log(otherParty[i].name);
+            if (otherParty[i].isDead) {
+              continue;
+            } else {
+              // otherParty.isVulnerable = true;
+              otherParty[i].vulnerability = 3;
+              otherParty[i].currentItem = "spores";
+              numInfected --;
+              if (numInfected <= 0){
+                break;
+              }
+            }
+          }
         } else if (monster.name == "mephit"){
           //needs enemy to move up if dead? no... what if enemy is a mephit? hmm... splash damage
           //on death, deals damage to adjacent enemies (3/6/9?) -- ooh can backfire if sniped
@@ -623,14 +654,62 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
           //find adjacent monsters and deal them damage
           let hasDealtDamage = false;
-          // let hasKilledSomeone = false;
+          
+          //need to damage next in line in either direction, if 0, flip to other party
+          //left
+          for (let i = mephitIndex + 1; i < party.length; i++){
+            if (party[i] != null && !party[i].isDead) {
+              party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
+              if (party[i].currentHP <= 0){
+                party[i].isDead = true;
+                deadMonsters2.push(party[i]);
+              } else {
+                party[i].isDamaged = true;
+              }
+              hasDealtDamage = true;
+              break;
+            }
+          }
+          //right
+          let needsToFlip = true;
+          for (let i = mephitIndex - 1; i >= 0; i--) {
+            if (party[i] != null && !party[i].isDead) {
+              party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
+              if (party[i].currentHP <= 0){
+                party[i].isDead = true;
+                deadMonsters2.push(party[i]);
+              } else {
+                party[i].isDamaged = true;
+              }
+              hasDealtDamage = true;
+              needsToFlip = false;
+              break;
+            }
+          }
+          if (needsToFlip){
+            for (let i = 0; i < otherParty.length; i++) {
+              if (otherParty[i] != null && !otherParty[i].isDead) {
+                otherParty[i].currentHP -= (monster.level * 3) + otherParty[i].vulnerability;
+                if (otherParty[i].currentHP <= 0){
+                  otherParty[i].isDead = true;
+                  deadMonsters2.push(otherParty[i]);
+                } else {
+                  otherParty[i].isDamaged = true;
+                }
+                hasDealtDamage = true;
+                break;
+              }
+            }
+          }
+
+          //old way
+          /*
           if (mephitIndex == 0){
             for (let i = 1; i < party.length; i++){
               if (party[i] != null && !party[i].isDead){
-                party[i].currentHP -= monster.level * 3;
+                party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
                 if (party[i].currentHP <= 0){
                   party[i].isDead = true;
-                  // hasKilledSomeone = true;
                   deadMonsters2.push(party[i]);
                 } else {
                   party[i].isDamaged = true;
@@ -641,10 +720,9 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
             }
             for (let i = 0; i < otherParty.length; i++){
               if (otherParty[i] != null && !otherParty[i].isDead){
-                otherParty[i].currentHP -= monster.level * 3;
+                otherParty[i].currentHP -= (monster.level * 3) + otherParty[i].vulnerability;;
                 if (otherParty[i].currentHP <= 0){
                   otherParty[i].isDead = true;
-                  // hasKilledSomeone = true;
                   deadMonsters2.push(otherParty[i]);
                 } else {
                   otherParty[i].isDamaged = true;
@@ -656,10 +734,9 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           } else { //dealing damage to own party b/c died in middle
             for (let i = mephitIndex + 1; i < party.length; i++){
               if (party[i] != null && !party[i].isDead){
-                party[i].currentHP -= monster.level * 3;
+                party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
                 if (party[i].currentHP <= 0){
                   party[i].isDead = true;
-                  // hasKilledSomeone = true;
                   deadMonsters2.push(party[i]);
                 } else {
                   party[i].isDamaged = true;
@@ -670,10 +747,9 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
             }
             for (let i = mephitIndex - 1; i >= 0; i--){
               if (party[i] != null && !party[i].isDead){
-                party[i].currentHP -= monster.level * 3;
+                party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
                 if (party[i].currentHP <= 0){
                   party[i].isDead = true;
-                  // hasKilledSomeone = true;
                   deadMonsters2.push(otherParty[i]);
                 } else {
                   party[i].isDamaged = true;
@@ -682,8 +758,9 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
                 break;
               }
             }
-            
           }
+          */
+
           if (hasDealtDamage){
             let damagedParties = structuredClone(parties);
             battleSteps.push({parties: damagedParties, action: "damage"});
@@ -696,8 +773,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   }
 
   if (deadMonsters2.length > 0){
-    console.log("dm2");
-    console.log(deadMonsters2);
+    // console.log("dm2");
+    // console.log(deadMonsters2);
     [parties, battleSteps] = checkDeathAbilities(parties, "after death", battleSteps, deadMonsters2);
     // party1 = battle[0].party;
     // party2 = battle[1].party;
@@ -742,8 +819,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     party2[i].index = i;
   }
   // return [structuredClone(parties), battleSteps];
-  console.log("returning from death function");
-  console.log(battleSteps);
+  // console.log("returning from death function");
+  // console.log(battleSteps);
   return [parties, battleSteps];
 }
 

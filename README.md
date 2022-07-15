@@ -122,7 +122,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] move animations currently don't account for potential moving more than one slot or dying in middle
     - [ ] remove move step if no one needs to
     - [ ] mephit chain reaction not working? can't replicate
-    - [ ] skeleton resurrection can block mephit chain reaction
+    - [X] skeleton resurrection can block mephit chain reaction -- no, it's b/c of "die in middle"
 
 - [ ] 0.0.3
   - [ ] items
@@ -199,6 +199,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - wow but 12 kobolds and 12 bears have the same sum total power + hp after abilities...
     - no still too strong. nerfing power
   - goblins suck compared to skeletons, 16% chance at lvl 1 vs 100% chance + extra... maybe should bump to 20% base?
+  - skelly immune to spores atm, b/c they're "dead" -- kinda cool flavor
 
   ### 0.0.1
 

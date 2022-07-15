@@ -14,6 +14,7 @@ class Monster {
       this.currentPower = stats.currentPower; //adjusted during battle
       this.currentHP = stats.currentHP; //adjusted during battle
       this.item = stats.item || "nothing"; //item it is using
+      this.currentItem = stats.currentItem || "nothing"; //item it has in battle
       this.ability = stats.ability; //ability
       this.timing = stats.timing; //when does ability trigger
       this.index = stats.index; //unchanging index of party
@@ -24,6 +25,8 @@ class Monster {
       this.lichID = stats.lichID || null; //stores owner's socket.id in case it gets separated
       this.isNullified = stats.isNullified || false; //for now, tracking if flumph cancels ability TODO, just remove .ability?
       this.isSleeping = stats.isSleeping || false; //for hibernating or any effect that prevents attack?
+      // this.isVulnerable = stats.isVulnerable || false; //items and abilities can make it take more damage
+      this.vulnerability = stats.vulnerability || 0; //some abilities and items can make more vulnerable than others
     }
 }
 

@@ -182,6 +182,10 @@ let isBattleOver = false; //just for displaying result text
 let battleResult = ""; //text to display at end of battle
 let battleResultColors = {}; //colors for battle text display
 
+// ITEMS
+let randomSpots = [];
+let sporeNum = 8;
+
 //
 //  MAIN
 //
@@ -227,6 +231,13 @@ function setup(){
   //assets after loadImage
   loadMonsterAssets();
   diceAssets = [null, dice1, dice2, dice3, dice4, dice5, dice6];
+
+  //Items
+  for (let i = 0; i < sporeNum; i++){
+    let rX = random(-assetSize / 2, assetSize / 2);
+    let rY = random(-assetSize / 2, assetSize / 2);
+    randomSpots.push({rX: rX, rY: rY});
+  }
 
   //display
   doneSetup = true;
@@ -692,6 +703,8 @@ function showMonster(monster){
   }
   pop();
 
+  showMonsterItems(monster, x, y);
+
   let powerX = x - xOffset;
   let hpX = x + xOffset;
   let statY = y + yOffset;
@@ -733,6 +746,23 @@ function showMonster(monster){
     }
   }
   pop();
+}
+
+//show items on the monster (only battle TODO)
+function showMonsterItems(monster, x, y){ //x,y because of flip that happens in battle
+  let item = monster.currentItem;
+  if (item != "nothing"){
+    if (item == "spores"){
+      push();
+      fill(112,133,56);
+      noStroke();
+      for (let i = 0; i < sporeNum; i++){
+        ellipse(x + randomSpots[i].rX, y + randomSpots[i].rY, random(4, 12));
+        console.log(x, y);
+      }
+      pop();
+    }
+  }
 }
 
 //shows hires and stats
