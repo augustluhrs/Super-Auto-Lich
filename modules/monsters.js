@@ -82,7 +82,7 @@ class Flumph extends Monster {
     this.currentPower = 0;
     this.currentHP = 1;
     this.ability = null;
-    this.timing = "after attack";
+    this.timing = "after death";
   }
 }
 

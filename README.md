@@ -123,6 +123,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] remove move step if no one needs to
     - [ ] mephit chain reaction not working? can't replicate
     - [X] skeleton resurrection can block mephit chain reaction -- no, it's b/c of "die in middle"
+    - [ ] clear reference to last dragged when going back to market
 
 - [ ] 0.0.3
   - [ ] items

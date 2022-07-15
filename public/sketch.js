@@ -686,6 +686,14 @@ function showMonster(monster){
   let yOffset = (3 * size / 4);
   let statSize = size / 3;
 
+  //effects
+  if (monster.isSleeping){
+    tint(0, 153, 204);
+  }
+  if (monster.isNullified){
+    tint(204, 0, 153);
+  }
+  
   push();
   //annoying, need more elegant solution to flipping images and text
   if (!monster.isMyParty) {

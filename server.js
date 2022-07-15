@@ -547,7 +547,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
       actingMonsters.push(monster);
     }
   }
-
+  // console.log(deadMonsters);
   //sort array by strength, ties are random
   let sortedMonsters = [];
   //prob an existing sorting algorithm for this but w/e
@@ -566,7 +566,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     }
   }
   //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
-
+  // console.log(sortedMonsters);
   //need to do the abilities, then check for damage/death...
   //moving dead monsters here, so will do all first dead monsters, then subsequent dead, instead of nested, skelly issue
   let deadMonsters2 = [];
@@ -624,6 +624,35 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
               // otherParty.isVulnerable = true;
               otherParty[i].vulnerability = 3;
               otherParty[i].currentItem = "spores";
+              numInfected --;
+              if (numInfected <= 0){
+                break;
+              }
+            }
+          }
+        } else if (monster.name == "flumph") {
+          //cancels abilities of enemy monsters
+          let otherParty;
+          for (let i = 0; i < party1.length; i++){
+            if (party1[i].id == monster.id){
+              otherParty = party2;
+            }
+          }
+          for (let i = 0; i < party2.length; i++){
+            if (party2[i].id == monster.id){
+              otherParty = party1;
+            }
+          }
+          // console.log(otherParty);
+          let partiesAtThisStage = structuredClone(parties);
+          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          let numInfected = monster.level;
+          for (let i = 0; i < otherParty.length; i++){
+            if (otherParty[i].isDead) {
+              continue;
+            } else {
+              console.log(otherParty[i].name + " nullified");
+              otherParty[i].isNullified = true;
               numInfected --;
               if (numInfected <= 0){
                 break;
