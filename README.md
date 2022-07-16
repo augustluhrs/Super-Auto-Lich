@@ -63,9 +63,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] timing
       - [X] before battle starts
       - [X] before attack
-      - [ ] on attack
+      - [ ] after attack
       - [ ] on damage
-      - [ ] on death
+      - [X] on death
       - [ ] on buy
       - [ ] on sell
       - [ ] on getting an item
@@ -112,12 +112,12 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] bigger slots/assets and slot positions relative to size
     - [X] cleanup comments from 0.0.1
     - [ ] bigger/better top stat UI
-    - [ ] need a failsafe end battle if both sides end with flumph
   - [ ] bugs/issues
     - [X] fix end of game display
     - [X] fix hp display on battle end
     - [X] redo battle display and battle result text colors for draw
     - [X] fix bug with ready and battle spamming
+    - [X] need a failsafe end battle if both sides end with flumph or stirge (tie timer)
     - [ ] first move display getting cut short
     - [ ] move animations currently don't account for potential moving more than one slot or dying in middle
     - [ ] remove move step if no one needs to
@@ -201,6 +201,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - no still too strong. nerfing power
   - goblins suck compared to skeletons, 16% chance at lvl 1 vs 100% chance + extra... maybe should bump to 20% base?
   - skelly immune to spores atm, b/c they're "dead" -- kinda cool flavor
+  - damn stirge basically can't be killed by anything with 1 power, unless abilities (spores), ah can also get stuck in infinite loop. Should have tie timer
 
   ### 0.0.1
 

@@ -25,8 +25,9 @@ const Player = require("./modules/player").Player;
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
 let players = {}; // holds all current players, their parties, their stats, etc.
-let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
-
+// let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
+let tieTimer = 0;
+let tieTimerMax = 8; //TODO test/think about more
 let testLobby = "testLobby";
 
 //
@@ -218,17 +219,18 @@ function getBattleSteps(battle){
   let startParties = structuredClone(battle);
   let battleSteps = [{parties: copyParties, action: "start"}]; //confusing because abilites are "before start", but start is always first TODO
   battleSteps = checkStartAbilities(startParties, "before start", battleSteps);
-  battleSteps = battleStep(startParties, battleSteps); //silly naming
-
+  battleSteps = battleStep(startParties, battleSteps, tieTimer); //silly naming
   return battleSteps;
 }
 
-function battleStep(battle, battleSteps){
+function battleStep(battle, battleSteps, tieTimer){
   console.log("battleStep");
+  // let currentNumMonsters = battle[0].party.length + battle[1].party.length; //TODO there's a better way to check if should tick tie timer
+  let shouldTickTimer = true; //TODO there's a better way to check if should tick tie timer
 
   //check for before attack abilities
-  let abilityParties = structuredClone(battle);
-  [battle, battleSteps] = checkAttackAbilities(abilityParties, "before attack", battleSteps);
+  let beforeAttackParties = structuredClone(battle);
+  [battle, battleSteps] = checkAttackAbilities(beforeAttackParties, "before attack", battleSteps);
 
   //make copy and store in array for client display -- moving before so showing monster before effects not after
   let copyParties = structuredClone(battle);
@@ -239,16 +241,18 @@ function battleStep(battle, battleSteps){
   let p1ID = battle[0].id;
   let p2ID = battle[1].id;
 
-  //apply damage, or wake up if sleeping
+  //apply damage, confirm attacks for abilities, and wake up if sleeping
   if (!party1[0].isSleeping){
     party2[0].currentHP -= party1[0].currentPower + party2[0].vulnerability; 
     party2[0].isDamaged = true;
+    party1[0].hasAttacked = true;
   } else {
     party1[0].isSleeping = false;
   }
   if (!party2[0].isSleeping){
     party1[0].currentHP -= party2[0].currentPower + party1[0].vulnerability;
     party1[0].isDamaged = true;
+    party2[0].hasAttacked = true;
   } else {
     party2[0].isSleeping = false;
   }
@@ -260,18 +264,24 @@ function battleStep(battle, battleSteps){
     hasBeenDeath = true;
     party1[0].isDead = true;
     party1[0].isDamaged = false;
+    party2[0].hasKilled = true;
     deadMonsters.push(party1[0]);
   }
   if (party2[0].currentHP <= 0){
     hasBeenDeath = true;
     party2[0].isDead = true;
     party2[0].isDamaged = false;
+    party1[0].hasKilled = true;
     deadMonsters.push(party2[0]);
   }
 
   //send parties after damage
   let damageParties = structuredClone(battle);
   battleSteps.push({parties: damageParties, action: "damage"});
+
+  //check for after attack abilities
+  let afterAttackParties = structuredClone(battle);
+  [battle, battleSteps] = checkAttackAbilities(afterAttackParties, "after attack", battleSteps);
 
   // console.log(battleSteps);
   // console.log(deadMonsters);
@@ -303,7 +313,7 @@ function battleStep(battle, battleSteps){
   for (let i = party1.length - 1; i >= 0; i--){
     if (party1[i].isDead){
       party1.splice(i,1);
-      // console.log("splice");
+      shouldTickTimer = false;
     }
   }
   //reset indexes
@@ -313,7 +323,7 @@ function battleStep(battle, battleSteps){
   for (let i = party2.length - 1; i >= 0; i--){
     if (party2[i].isDead){
       party2.splice(i,1);
-      // console.log("splice");
+      shouldTickTimer = false;
     }
   }
   for (let i = 0; i < party2.length; i++){
@@ -325,9 +335,10 @@ function battleStep(battle, battleSteps){
   let p1 = players[p1ID];
   let p2 = players[p2ID];
 
+
   let finalParties = structuredClone(battle);
   //check for end, send next step or end event
-  if (party1.length == 0 && party2.length == 0) { //tie
+  if ((party1.length == 0 && party2.length == 0) || tieTimer >= tieTimerMax) { //tie or check for tie timer
     battleSteps.push({parties: finalParties, action: "tie"});
     return battleSteps;
   } else if (party1.length == 0){ //player1 loss
@@ -349,20 +360,12 @@ function battleStep(battle, battleSteps){
       return battleSteps;
     }
   } else {
-    return battleStep(battle, battleSteps);
-  }
-}
-
-function refreshHires(tier, hires){
-  for (let i = 0; i < hires.length; i++){
-    if (hires[i] == null || !hires[i].isFrozen) {
-      //select randomly from all unlocked tiers
-      let randomTier = Math.floor(Math.random()*tier); //monster array starts at 0 for tier 1, should be fine
-      let RandomMonster = monsters[randomTier][Math.floor(Math.random()*monsters[randomTier].length)];
-      hires[i] = new RandomMonster({index: i});
+    //check to see if a death has happened, if not, tick tieTimer (ugh this skelly...)
+    if (shouldTickTimer){
+      tieTimer++;
     }
+    return battleStep(battle, battleSteps, tieTimer);
   }
-  return hires;
 }
 
 //ability function -- not trying to optimize yet, though TODO could have all abilities in one?
@@ -521,8 +524,18 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
               battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
             }
           }
-        }
-        //other attack monsters TODO
+        } else if (monster.name == "stirge") {
+          //if stirge survives the attack, heals (1/2/3) HP
+          if(!monster.isDead && monster.hasAttacked){
+            monster.currentHP += monster.level;
+            monster.hasAttacked = false; //TODO not sure if this is necessary/right
+            let partiesAtThisStage = structuredClone(parties);
+            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          }
+        } else if (monster.name == "gnoll") {
+
+        } 
+        
       }
     }
   }
@@ -731,65 +744,6 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
             }
           }
 
-          //old way
-          /*
-          if (mephitIndex == 0){
-            for (let i = 1; i < party.length; i++){
-              if (party[i] != null && !party[i].isDead){
-                party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
-                if (party[i].currentHP <= 0){
-                  party[i].isDead = true;
-                  deadMonsters2.push(party[i]);
-                } else {
-                  party[i].isDamaged = true;
-                }
-                hasDealtDamage = true;
-                break;
-              }
-            }
-            for (let i = 0; i < otherParty.length; i++){
-              if (otherParty[i] != null && !otherParty[i].isDead){
-                otherParty[i].currentHP -= (monster.level * 3) + otherParty[i].vulnerability;;
-                if (otherParty[i].currentHP <= 0){
-                  otherParty[i].isDead = true;
-                  deadMonsters2.push(otherParty[i]);
-                } else {
-                  otherParty[i].isDamaged = true;
-                }
-                hasDealtDamage = true;
-                break;
-              }
-            }
-          } else { //dealing damage to own party b/c died in middle
-            for (let i = mephitIndex + 1; i < party.length; i++){
-              if (party[i] != null && !party[i].isDead){
-                party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
-                if (party[i].currentHP <= 0){
-                  party[i].isDead = true;
-                  deadMonsters2.push(party[i]);
-                } else {
-                  party[i].isDamaged = true;
-                }
-                hasDealtDamage = true;
-                break;
-              }
-            }
-            for (let i = mephitIndex - 1; i >= 0; i--){
-              if (party[i] != null && !party[i].isDead){
-                party[i].currentHP -= (monster.level * 3) + party[i].vulnerability;
-                if (party[i].currentHP <= 0){
-                  party[i].isDead = true;
-                  deadMonsters2.push(otherParty[i]);
-                } else {
-                  party[i].isDamaged = true;
-                }
-                hasDealtDamage = true;
-                break;
-              }
-            }
-          }
-          */
-
           if (hasDealtDamage){
             let damagedParties = structuredClone(parties);
             battleSteps.push({parties: damagedParties, action: "damage"});
@@ -834,9 +788,11 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
       console.log("splice");
     }
   }
-  //reset indexes
+  //reset indexes and TODO attack/kill bools -- not sure if this is where this should go
   for (let i = 0; i < party1.length; i++){
     party1[i].index = i;
+    party1[i].hasAttacked = false;
+    party1[i].hasKilled = false;
   }
   for (let i = party2.length - 1; i >= 0; i--){
     if (party2[i].isDead){
@@ -846,6 +802,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   }
   for (let i = 0; i < party2.length; i++){
     party2[i].index = i;
+    party2[i].hasAttacked = false;
+    party2[i].hasKilled = false;
   }
   // return [structuredClone(parties), battleSteps];
   // console.log("returning from death function");
@@ -853,6 +811,17 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   return [parties, battleSteps];
 }
 
+function refreshHires(tier, hires){
+  for (let i = 0; i < hires.length; i++){
+    if (hires[i] == null || !hires[i].isFrozen) {
+      //select randomly from all unlocked tiers
+      let randomTier = Math.floor(Math.random()*tier); //monster array starts at 0 for tier 1, should be fine
+      let RandomMonster = monsters[randomTier][Math.floor(Math.random()*monsters[randomTier].length)];
+      hires[i] = new RandomMonster({index: i});
+    }
+  }
+  return hires;
+}
 
 // Randomize array in-place using Durstenfeld shuffle algorithm
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array

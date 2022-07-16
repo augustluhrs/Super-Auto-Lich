@@ -25,8 +25,9 @@ class Monster {
       this.lichID = stats.lichID || null; //stores owner's socket.id in case it gets separated
       this.isNullified = stats.isNullified || false; //for now, tracking if flumph cancels ability TODO, just remove .ability?
       this.isSleeping = stats.isSleeping || false; //for hibernating or any effect that prevents attack?
-      // this.isVulnerable = stats.isVulnerable || false; //items and abilities can make it take more damage
       this.vulnerability = stats.vulnerability || 0; //some abilities and items can make more vulnerable than others
+      this.hasAttacked = stats.hasAttacked || false; //to confirm attacks for abilities triggering off attack
+      this.hasKilled = stats.hasKilled || false; //to confirm deaths for abilities triggering off kills
     }
 }
 
