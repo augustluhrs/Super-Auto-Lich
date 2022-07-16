@@ -63,7 +63,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] timing
       - [X] before battle starts
       - [X] before attack
-      - [ ] after attack
+      - [X] after attack
       - [ ] on damage
       - [X] on death
       - [ ] on buy
@@ -107,6 +107,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] Node v18
     - [ ] parties/ids/indexes code smell
     - [ ] common but different name for cloned arrays
+    - [ ] "battle" vs "parties"
+    - [ ] need to clone at all? or change up what battleSteps sends...
+    - [X] isDamaged reset
   - [ ] Misc. QoL
     - [ ] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size

@@ -278,6 +278,7 @@ function battleStep(battle, battleSteps, tieTimer){
   //send parties after damage
   let damageParties = structuredClone(battle);
   battleSteps.push({parties: damageParties, action: "damage"});
+  battle = resetMonsters(battle);
 
   //check for after attack abilities
   let afterAttackParties = structuredClone(battle);
@@ -364,6 +365,7 @@ function battleStep(battle, battleSteps, tieTimer){
     if (shouldTickTimer){
       tieTimer++;
     }
+    battle = resetMonsters(battle);
     return battleStep(battle, battleSteps, tieTimer);
   }
 }
@@ -533,7 +535,72 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
             battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
           }
         } else if (monster.name == "gnoll") {
+          if(!monster.isDead && monster.hasKilled){
+            let party, otherParty;
+            for (let i = 0; i < party1.length; i++){
+              if (party1[i].id == monster.id){
+                party = party1;
+                otherParty = party2;
+              }
+            }
+            for (let i = 0; i < party2.length; i++){
+              if (party2[i].id == monster.id){
+                party = party2;
+                otherParty = party1;
+              }
+            }
+            let partiesAtThisStage = structuredClone(parties);
+            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
 
+            //if gnoll kills, makes (1/2/3) attacks and each has a 25% chance of hitting ally (what if at end? fine, b/c enemy may not have enough to make it worth)
+            for (let i = 0; i < monster.level; i++){
+              //options are, determine if bloodBlind, if bloodBlind, check for ally, if no ally, miss
+              //or if not ally, auto hit
+              if (party.length == 1){ //has no allies to target
+                for (let j = 0; j < otherParty.length; j++){
+                  if (!otherParty[j].isDead){
+                    otherParty[j].currentHP -= monster.currentPower;
+                    if (otherParty[j].currentHP <= 0){
+                      otherParty[j].isDead = true;
+                    } else {
+                      otherParty[j].isDamaged = true;
+                    }
+                    break;
+                  }
+                }
+              } else { //chance of hitting ally
+                if (Math.random() < 0.20) { //blood blind, hits ally
+                  for (let j = monster.index - 1; j < party.length; j++){
+                    if (!party[j].isDead){
+                      party[j].currentHP -= monster.currentPower;
+                      if (party[j].currentHP <= 0){
+                        party[j].isDead = true;
+                      } else {
+                        party[j].isDamaged = true;
+                      }
+                      break;
+                    }
+                  }
+                } else { //attacks next enemy in line that's healthy
+                  for (let j = 0; j < otherParty.length; j++){
+                    if (!otherParty[j].isDead){
+                      otherParty[j].currentHP -= monster.currentPower;
+                      if (otherParty[j].currentHP <= 0){
+                        otherParty[j].isDead = true;
+                      } else {
+                        otherParty[j].isDamaged = true;
+                      }
+                      break;
+                    }
+                  }
+                }
+              }
+              
+            }
+            let rampagedParties = structuredClone(parties);
+            battleSteps.push({parties: rampagedParties, action: "damage"});
+            parties = resetMonsters(parties);
+          }
         } 
         
       }
@@ -747,6 +814,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           if (hasDealtDamage){
             let damagedParties = structuredClone(parties);
             battleSteps.push({parties: damagedParties, action: "damage"});
+            parties = resetMonsters(parties); //TODO check if this is okay time to do this
           }
       
         }
@@ -809,6 +877,17 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   // console.log("returning from death function");
   // console.log(battleSteps);
   return [parties, battleSteps];
+}
+
+//hmm TODO resets monster properties that should refresh after certain steps...
+function resetMonsters(parties){
+  for (let monster of parties[0].party){
+    monster.isDamaged = false;
+  }
+  for (let monster of parties[1].party){
+    monster.isDamaged = false;
+  }
+  return parties;
 }
 
 function refreshHires(tier, hires){
