@@ -112,28 +112,13 @@ socket.on("startBattle", (data) => {
   console.log("battle start");
   console.log(battleSteps);
   stepThroughBattle(battleSteps);
+
+  //remove market stuff
+  dragged = {};
   refreshButt.hide();
   readyButt.hide();
   showEverything();
 });
-
-// game end message
-// socket.on('gameOver', (data) => {
-//   console.log('gameOver: ' + data.result);
-//   push();
-//   textSize(80);
-//   background(20);
-//   if (data.result == "win") {
-//     fill(0, 250, 50);
-//     text("YOU WIN", width / 2, 3 * height / 6);
-//   } else if (data.result == "loss") {
-//     // hp = data.hp;
-//     // showUI();
-//     fill(200, 0, 0);
-//     text("YOU LOST", width / 2, 3 * height / 6);
-//   }
-//   pop();
-// });
 
 //
 //  VARIABLES
@@ -170,6 +155,7 @@ let refreshButt, readyButt; // market buttons
 let waitingForBattle = false; //when ready but opponent isn't
 let pickedUpSomething = false; //to trigger between mouseDragged and mouseReleased
 let dragged = {}; //image asset to show on mouseDragged + original party and index for return
+let hoverTimer = 0; //to tick up to check against checkTime
 let hoverCheckTime = 70; //timer before hover triggers
 let speedSlots = []; //for speed UI in battle
 let speedSlotY; //Y height of speed UI
@@ -181,6 +167,9 @@ let animationRange; //standard distance to animate
 let isBattleOver = false; //just for displaying result text
 let battleResult = ""; //text to display at end of battle
 let battleResultColors = {}; //colors for battle text display
+let shouldShowMonsterInfo = false;
+let infoBox = {name: "", abilityText: "", x: 0, y: 0, width: 0, height: 0, textSize: 25};
+// let abilityText = "";
 
 // ITEMS
 let randomSpots = [];
@@ -223,6 +212,10 @@ function setup(){
 
   battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
+  infoBox.width = width/6;
+  infoBox.height = height/8;
+  infoBox.textSize = width/75;
+  
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
   readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party, hires: hires})}); //sends msg that we're ready to battle
@@ -250,30 +243,61 @@ function setup(){
 
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
-  if (pickedUpSomething) {
-    //show dragged image
-    showEverything();
-    image(dragged.image, mouseX, mouseY, assetSize, assetSize);
-    //check for hover over party slot, reset timer if not, check timer if so
-    let s = slots[0];
-    let isHovering = false;
-    for (let [i, slotX] of s.sX.entries()){
-      if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
-        isHovering = true;
-        hoverTimer++;
-        //if over slot and timesUp and underlying exists then move underlying
-        if (hoverTimer > hoverCheckTime){
-          //if spot isn't empty, try to move left, if can't, move right
-          if(s.m[i] !== null){
-            console.log("trying to push");
-            pushParty(s.m, i);
+  if (state == "market"){
+    if (pickedUpSomething) {
+      //show dragged image
+      showEverything();
+      image(dragged.image, mouseX, mouseY, assetSize, assetSize);
+      //check for hover over party slot, reset timer if not, check timer if so
+      let s = slots[0];
+      let isHovering = false;
+      for (let [i, slotX] of s.sX.entries()){
+        if (mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+          isHovering = true;
+          hoverTimer++;
+          //if over slot and timesUp and underlying exists then move underlying
+          if (hoverTimer > hoverCheckTime){
+            //if spot isn't empty, try to move left, if can't, move right
+            if(s.m[i] !== null){
+              console.log("trying to push");
+              pushParty(s.m, i);
+            }
           }
         }
       }
-    }
-    //reset timer if not hovering
-    if (!isHovering){
-      hoverTimer = 0;
+      //reset timer if not hovering
+      if (!isHovering){
+        hoverTimer = 0;
+      }
+    } else{
+      showEverything();
+      //check for hovering over monsters/items for info
+      let isHovering = false;
+      for (let s of slots){
+        for (let [i, slotX] of s.sX.entries()){
+          if (s.m[i] != null && mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+            isHovering = true;
+            hoverTimer++;
+            if (hoverTimer > hoverCheckTime - 20){
+              // shouldShowMonsterInfo = true;
+              infoBox.x = mouseX;
+              infoBox.y = mouseY;
+              infoBox.name = s.m[i].name;
+              infoBox.abilityText = s.m[i].abilityText;
+              //show infoBox
+              showInfoBox();
+
+            }
+          }
+        }
+      }
+      //reset timer if not hovering
+      if (!isHovering){
+        hoverTimer = 0;
+        // shouldShowMonsterInfo = false;
+        infoBox.name = "";
+        infoBox.ability = "";
+      }
     }
   } else if (state == "gameOver") {
     background(20);
@@ -693,7 +717,7 @@ function showMonster(monster){
   if (monster.isNullified){
     tint(204, 0, 153);
   }
-  
+
   push();
   //annoying, need more elegant solution to flipping images and text
   if (!monster.isMyParty) {
@@ -808,6 +832,24 @@ function showHire(monster){
   text(monster.currentHP, hpX, statY + (statText / 12));
   //tier
   image(diceAssets[monster.tier], tierX, tierY, tierSize, tierSize);
+  pop();
+}
+
+//show info box
+function showInfoBox(){
+  push();
+  rectMode(CENTER);
+  textAlign(CENTER, TOP);
+  textSize(infoBox.textSize);
+  stroke(0);
+  strokeWeight(4);
+  fill(124,203,198);
+  rect(infoBox.x, infoBox.y - infoBox.height / 2, infoBox.width, infoBox.height);
+  fill(0);
+  noStroke();
+  text(infoBox.name, infoBox.x, infoBox.y - infoBox.height / 1.1);
+  textSize(infoBox.textSize / 1.95);
+  text(infoBox.abilityText, infoBox.x, infoBox.y - infoBox.height / 1.6);
   pop();
 }
 

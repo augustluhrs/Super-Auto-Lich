@@ -58,19 +58,13 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] drag to upgrade, combine correctly
     - [X] can't upgrade past lvl 3
   - [ ] abilities
-    - [ ] hover to see name, level, and ability text
+    - [ ] hover to see name and ability text
     - [X] ability stack (priority goes to power, tie if random)
-    - [ ] timing
+    - [X] timing
       - [X] before battle starts
       - [X] before attack
       - [X] after attack
-      - [ ] on damage
       - [X] on death
-      - [ ] on buy
-      - [ ] on sell
-      - [ ] on getting an item
-      - [ ] on level up
-      - [ ] end of market
   - [X] battle speed
     - [X] UI (pause, play, fast)
     - [X] client goes through list of animation steps
@@ -115,6 +109,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] bigger slots/assets and slot positions relative to size
     - [X] cleanup comments from 0.0.1
     - [ ] bigger/better top stat UI
+    - [ ] figure out how to scale ability text and wrap/justify
   - [ ] bugs/issues
     - [X] fix end of game display
     - [X] fix hp display on battle end
@@ -126,7 +121,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] remove move step if no one needs to
     - [ ] mephit chain reaction not working? can't replicate
     - [X] skeleton resurrection can block mephit chain reaction -- no, it's b/c of "die in middle"
-    - [ ] clear reference to last dragged when going back to market
+    - [X] clear reference to last dragged when going back to market
+    - [ ] sleeping wears off if creature takes damage
 
 - [ ] 0.0.3
   - [ ] items
@@ -140,6 +136,14 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
    - [ ] tier 5
    - [ ] tier 6
 - [ ] increase tier every X turns
+- [ ] battle step overhaul
+- [ ] ability timing
+  - [ ] on damage
+  - [ ] on buy
+  - [ ] on sell
+  - [ ] on getting an item
+  - [ ] on level up
+  - [ ] end of market
 - [ ] Multiplayer
   - [ ] nedb database for login and stats tracking
   - [ ] start screen

@@ -16,6 +16,7 @@ class Monster {
       this.item = stats.item || "nothing"; //item it is using
       this.currentItem = stats.currentItem || "nothing"; //item it has in battle
       this.ability = stats.ability; //ability
+      this.abilityText = stats.abilityText; //ability text for hover display
       this.timing = stats.timing; //when does ability trigger
       this.index = stats.index; //unchanging index of party
       this.isFrozen = stats.isFrozen || false; //is frozen hire?
@@ -42,6 +43,7 @@ class Beholder extends Monster {
     this.currentHP = 3;
     this.ability = null;
     this.timing = null;
+    this.abilityText = "";
   }
 }
 
@@ -56,6 +58,7 @@ class Bulette extends Monster {
     this.currentHP = 3;
     this.ability = null;
     this.timing = null;
+    this.abilityText = "";
   }
 }
 
@@ -70,6 +73,7 @@ class Cavebear extends Monster {
     this.currentHP = 3;
     this.ability = null;
     this.timing = "before start";
+    this.abilityText = "Hibernation: At the start of combat, goes to \nsleep and increases its HP by (50%/100%,150%). \nCannot attack while asleep, but wakes up after \nsleeping through one attack round or taking damage.";
   }
 }
 
@@ -84,6 +88,7 @@ class Flumph extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "after death";
+    this.abilityText = "Telepathic Shroud: On death, nullfies \nthe abilites of the next (1/2/3) \nlive monsters in the enemy party.";
   }
 }
 
@@ -98,6 +103,7 @@ class Gnoll extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "after attack";
+    this.abilityText = "Rampage: After attack, if the attacked \nenemy dies, the gnoll immediately attacks \n(1/2/3) more times, with each attack \ntargeting the first live enemy monster in line.";
   }
 }
 
@@ -112,6 +118,7 @@ class Goblin extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "before attack";
+    this.abilityText = "Nimbleness: Before attack, has a \n(20%/40%/60%) chance to dodge the enemy's \nattack and get a free attack.";
   }
 }
 
@@ -126,6 +133,7 @@ class Kobold extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "before start";
+    this.abilityText = "Pack Tactics: At the beginning of combat, \ngains (+X/+X*2/+X*3) power and HP, where X \nis the number of other kobolds in your party.";
   }
 }
 
@@ -140,6 +148,7 @@ class Mephit extends Monster {
     this.currentHP = 2;
     this.ability = null;
     this.timing = "after death";
+    this.abilityText = "Death Burst: On death, deals (2/4/6) \ndamage to the two live monsters to \nthe left and right of it.";
   }
 }
 
@@ -155,6 +164,7 @@ class Skeleton extends Monster {
     this.ability = null;
     this.timing = "after death";
     this.spawnChance = 1;
+    this.abilityText = "Undead Fortitude: On death, has a chance \nto come back as a (1/1, 2/2, 3/3). Has a \n100% chance the first resurrection, chance \ndecreases by (50%/33%/25%) each successful \nresurrection.";
   }
 }
 
@@ -169,6 +179,7 @@ class Stirge extends Monster {
     this.currentHP = 2;
     this.ability = null;
     this.timing = "after attack";
+    this.abilityText = "Blood Drain: On attack, if the stirge \nsurvives, it heals (1/2/3) points of HP.";
   }
 }
 
@@ -183,6 +194,7 @@ class Vegepygmy extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "after death";
+    this.abilityText = "Spores: On death, infects the next live \nenemy monster with spores that replace the \nmonster's item and make it take more damage \nfrom subsequent attacks (+3/+5/+7 damage).";
   }
 }
 

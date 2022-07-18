@@ -278,6 +278,9 @@ function battleStep(battle, battleSteps, tieTimer){
   //send parties after damage
   let damageParties = structuredClone(battle);
   battleSteps.push({parties: damageParties, action: "damage"});
+  //if damaged, wake up TODO
+
+  //reset .isDamaged
   battle = resetMonsters(battle);
 
   //check for after attack abilities
