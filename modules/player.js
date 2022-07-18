@@ -2,7 +2,7 @@ class Player {
     constructor(stats){
         this.userName = stats.userName || "player"; //user name
         this.tier = stats.tier || 1; //tier / challenge rating
-        this.teamName = stats.teamName || "team";
+        this.partyName = stats.partyName || "";
         this.id = stats.id || "noid";
         this.lobby = stats.lobby || this.id;
         this.gold = stats.gold || 10;

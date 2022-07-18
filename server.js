@@ -24,6 +24,7 @@ let io = require('socket.io')(server);
 const Player = require("./modules/player").Player;
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
+const Names = require("./modules/names").Names;
 let players = {}; // holds all current players, their parties, their stats, etc.
 // let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
 let tieTimer = 0;
@@ -46,6 +47,12 @@ inputs.on('connection', (socket) => {
   //send starting data
   socket.emit('goToMarket', players[socket.id]);
   socket.join(players[socket.id].lobby); //TODO placeholder just for testing
+
+  //send possible team names
+  socket.on("getPartyNames", () => {
+    let [adjectives, nouns] = generatePartyNames();
+    socket.emit("setPartyName", {nouns: nouns, adjectives: adjectives});
+  });
 
   //if gold left, replaces hires with random hires
   socket.on("refreshHires", (data) => {
@@ -88,6 +95,7 @@ inputs.on('connection', (socket) => {
     player.hires = data.hires;
     player.party = data.party;
     player.battleParty = structuredClone(data.party);
+    player.partyName = data.partyName;
 
     //join a lobby if not in one already
     // if (player.lobby == undefined){ 
@@ -903,6 +911,24 @@ function refreshHires(tier, hires){
     }
   }
   return hires;
+}
+
+//generate party names
+function generatePartyNames(){
+  let nouns = [];
+  let adjectives = [];
+  let names = structuredClone(Names);
+  for (let i = 0; i < 3; i++){
+    let n = Math.floor(Math.random() * names.nouns.length);
+    nouns.push(names.nouns[n]);
+    names.nouns.splice(n, 1); //will this delete the reference??
+    let a = Math.floor(Math.random() * names.adjectives.length);
+    adjectives.push(names.adjectives[a]);
+    names.adjectives.splice(a, 1);
+  }
+  console.log(nouns);
+  console.log(adjectives);
+  return [nouns, adjectives];
 }
 
 // Randomize array in-place using Durstenfeld shuffle algorithm

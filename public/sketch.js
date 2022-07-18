@@ -98,6 +98,13 @@ socket.on('updateGold', (data) => {
   readyButt.show();
 });
 
+//on first ready, get prompt to set up team name
+socket.on("setPartyName", (data) => {
+    adjectives = data.adjectives;
+    nouns = data.nouns;
+    state = "party name";
+});
+
 //if other player isn't ready for battle, show waiting
 socket.on("waitingForBattle", () => {
   waitingForBattle = true;
@@ -134,8 +141,12 @@ let doneSetup = false;
 let party = [null, null, null, null, null];
 let battleParty = []; //going to use this for now to prevent any messes... TODO remove
 let gold, hp, turn;
-let partyName;
 let enemyParty = [];
+
+// party name stuff
+let partyName = "";
+let adjectives = [];
+let nouns = [];
 
 // UI + Layout
 let stepButt, updateButt; //just for slowing down debug, will eventually trigger automatically
@@ -218,7 +229,13 @@ function setup(){
   
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
-  readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("readyUp", {party: party, hires: hires})}); //sends msg that we're ready to battle
+  readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{
+    if (partyName == "") {
+      socket.emit("getPartyNames");
+    } else {
+      socket.emit("readyUp", {party: party, hires: hires, partyName: partyName}); //sends msg that we're ready to battle
+    }
+  });
   readyButt.hide(); //hiding until there's a party to send to battle
 
   //assets after loadImage
