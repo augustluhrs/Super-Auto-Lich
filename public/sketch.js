@@ -100,8 +100,10 @@ socket.on('updateGold', (data) => {
 
 //on first ready, get prompt to set up team name
 socket.on("setPartyName", (data) => {
-    adjectives = data.adjectives;
-    nouns = data.nouns;
+    names.adjectives = data.adjectives;
+    names.nouns = data.nouns;
+    partyNoun = data.nouns[0];
+    partyAdjective = data.adjectives[0];
     state = "party name";
 });
 
@@ -119,6 +121,12 @@ socket.on("startBattle", (data) => {
   console.log("battle start");
   console.log(battleSteps);
   stepThroughBattle(battleSteps);
+
+  for (let p of data.startParties){
+    if (p.id != playerID){
+      enemyName = p.partyName;
+    }
+  }
 
   //remove market stuff
   dragged = {};
@@ -145,14 +153,17 @@ let enemyParty = [];
 
 // party name stuff
 let partyName = "";
-let adjectives = [];
-let nouns = [];
+let names = {adjectives: [], nouns: []};
+let partyAdjective = "";
+let partyNoun = "";
+let enemyName;
 
 // UI + Layout
 let stepButt, updateButt; //just for slowing down debug, will eventually trigger automatically
 let battleSlots = []; //where party is in battle, translated to center, flipped for enemy
 let marketSlots = []; //where party is in market
 let hireSlots = []; //where available monsters in market are
+let nameSlots = [ ]; //where name options are during party naming
 let battleSlotY, marketSlotY, hireSlotY; //center height of monsters
 let slots = []; //array for all draggable slots, with appropriate Ys
 let freezeSlot; //the slot to drag to freeze
@@ -220,6 +231,7 @@ function setup(){
   freezeSlot = {x: width/2 - assetSize, y: 7 * height / 8};
   speedSlots = [3 * width / 8, 4 * width / 8, 5 * width / 8];
   speedSlotY = 2 * height / 8;
+  nameSlots = {x: [width/4, width/2, 3 * width / 4], y: [height/3, 2 * height / 3]};
 
   battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
@@ -316,7 +328,10 @@ function draw(){
         infoBox.ability = "";
       }
     }
-  } else if (state == "gameOver") {
+  } else if (state == "party name") {
+    partyName = "The " + partyAdjective + " " + partyNoun;
+    showPartyNameOptions();
+  }else if (state == "gameOver") {
     background(20);
     textSize(80);
     if (battleResult == "YOU WON") {
@@ -371,6 +386,19 @@ function mouseClicked(){
       isPaused = false;
       stepSpeed = regularSpeed / 2;
     }
+  } else if (state == "party name"){
+    
+    for (let i = 0; i < 3; i++){
+      //top name buttons
+      if (mouseX > nameSlots.x[i] - slotSize && mouseX < nameSlots.x[i] + slotSize && mouseY > nameSlots.y[0] - slotSize && mouseY < nameSlots.y[0] + slotSize){
+        partyAdjective = names.adjectives[i];
+      }
+      //bottom name buttons
+      if (mouseX > nameSlots.x[i] - slotSize && mouseX < nameSlots.x[i] + slotSize && mouseY > nameSlots.y[1] - slotSize && mouseY < nameSlots.y[1] + slotSize){
+        partyNoun = names.nouns[i];
+      }
+    }
+    
   }
 }
 
@@ -516,6 +544,12 @@ function showEverything(){
         showParty(party[i], true);
       }
     }
+    //show party name
+    push();
+    textAlign(LEFT, CENTER);
+    textSize(width/30);
+    text(partyName, width / 8, height/8);
+    pop();
   } else if (state == "battle") {
     translate(width/2, 0); //only translating in battle to make flip easier
     for (let i = 0; i < battleParty.length; i++){
@@ -524,6 +558,16 @@ function showEverything(){
     for (let i = 0; i < enemyParty.length; i++){
       showMonster(enemyParty[i]);
     }
+    //show party names -- translated
+    push();
+    textAlign(LEFT, CENTER);
+    textSize(width/36);
+    text(partyName, - 3 * width / 7, height/8);
+    textAlign(CENTER, CENTER);
+    text("vs", 0, height/8);
+    textAlign(RIGHT, CENTER);
+    text(enemyName, 4 * height / 7, height/8); //TODO why is right not in right spot?
+    pop();
   }
   pop();
 }
@@ -867,6 +911,45 @@ function showInfoBox(){
   text(infoBox.name, infoBox.x, infoBox.y - infoBox.height / 1.1);
   textSize(infoBox.textSize / 1.95);
   text(infoBox.abilityText, infoBox.x, infoBox.y - infoBox.height / 1.6);
+  pop();
+}
+
+//show party name options when picking names
+function showPartyNameOptions(){
+  push();
+  background(82,135,39);
+  strokeWeight(4);
+  textSize(width/30);
+  textAlign(LEFT, CENTER);
+  text("The " + partyAdjective + " " + partyNoun, width / 8, height / 8);
+  textAlign(CENTER, CENTER);
+  for (let i = 0; i < 3; i++){
+    stroke(0);
+    if (partyAdjective == names.adjectives[i]){
+      fill(241,203,60);
+    } else {
+      fill(124,203,198);
+    }
+    rect(nameSlots.x[i], nameSlots.y[0], slotSize * 2, slotSize);
+    fill(0);
+    noStroke();
+    text(names.adjectives[i], nameSlots.x[i], nameSlots.y[0]);
+    stroke(0);
+    if (partyNoun == names.nouns[i]){
+      fill(241,203,60);
+    } else {
+      fill(124,203,198);
+    }
+    rect(nameSlots.x[i], nameSlots.y[1], slotSize * 2, slotSize);
+    fill(0);
+    noStroke();
+    text(names.nouns[i], nameSlots.x[i], nameSlots.y[1]);
+  }
+  //if waiting, show under button
+  if (waitingForBattle){
+    textSize(25);
+    text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50);
+  }
   pop();
 }
 

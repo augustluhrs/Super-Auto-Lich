@@ -173,7 +173,7 @@ inputs.on('connection', (socket) => {
         players[enemy.id].ready = false;
 
         //start battle sequence
-        let battle = [{id: player.id, party: party1}, {id: enemy.id, party: party2}];
+        let battle = [{id: player.id, partyName: player.partyName, party: party1}, {id: enemy.id, partyName: players[enemy.id].partyName, party: party2}];
         let startParties = structuredClone(battle);
 
         io.to(player.lobby).emit("startBattle", {startParties: startParties, battleSteps: getBattleSteps(battle)});
@@ -295,14 +295,6 @@ function battleStep(battle, battleSteps, tieTimer){
   let afterAttackParties = structuredClone(battle);
   [battle, battleSteps] = checkAttackAbilities(afterAttackParties, "after attack", battleSteps);
 
-  // console.log(battleSteps);
-  // console.log(deadMonsters);
-  // console.log("dm");
-  // console.log(party1);
-  // console.log(party2);
-  // console.log(battle);
-
-
   //check death abilities and move up animation before actual splice, if still fighting
   if (hasBeenDeath){
     let preDeathParties = structuredClone(battle);
@@ -315,11 +307,6 @@ function battleStep(battle, battleSteps, tieTimer){
 
   party1 = battle[0].party; //hmmmmmmmmmmmmmmmmmm
   party2 = battle[1].party;
-  // console.log("battle\n\n\n\n\n\n\n\n");
-  // console.log(battle[0].party);
-  // console.log("party1");
-  // console.log(party1);
-  // console.log(battle[0].party == party1);
 
   //move up party if death
   for (let i = party1.length - 1; i >= 0; i--){
@@ -928,7 +915,7 @@ function generatePartyNames(){
   }
   console.log(nouns);
   console.log(adjectives);
-  return [nouns, adjectives];
+  return [adjectives, nouns];
 }
 
 // Randomize array in-place using Durstenfeld shuffle algorithm

@@ -49,8 +49,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
 - [ ] 0.0.2
   - [ ] team names
-    - [ ] pool of adjectives and nouns
-    - [ ] generator
+    - [X] pool of adjectives and nouns
+    - [X] option generator function
     - [ ] choose team name on first ready up
     - [ ] team name display
   - [X] upgrade
