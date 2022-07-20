@@ -11,6 +11,7 @@
 let monsterAssets = {};
 let dice1, dice2, dice3, dice4, dice5, dice6;
 let diceAssets = [];
+let font;
 let cavebear, flumph, gnoll, goblin, kobold, mephit, skeleton, stirge, vegepygmy;
 let bulette;
 let beholder;
@@ -22,6 +23,8 @@ function preload() {
   dice4 = loadImage('assets/dice4.png');
   dice5 = loadImage('assets/dice5.png');
   dice6 = loadImage('assets/dice6.png');
+  //font
+  font = loadFont('assets/fonts/MochiyPopOne-Regular.ttf');
   //tier1
   cavebear = loadImage('assets/cavebear.png');
   flumph = loadImage('assets/flumph.png');
@@ -190,8 +193,9 @@ let isBattleOver = false; //just for displaying result text
 let battleResult = ""; //text to display at end of battle
 let battleResultColors = {}; //colors for battle text display
 let shouldShowMonsterInfo = false;
-let infoBox = {name: "", abilityText: "", x: 0, y: 0, width: 0, height: 0, textSize: 25};
-// let abilityText = "";
+let infoBox = {name: "", abilityText: "", x: 0, y: 0, width: 0, height: 0, textSize: 0};
+let nameSlotWidth;
+let textSizeUI, textSizeOver, textSizePartyName;
 
 // ITEMS
 let randomSpots = [];
@@ -203,14 +207,14 @@ let sporeNum = 8;
 
 function setup(){
   createCanvas(windowWidth - 5, windowHeight - 5); //TODO better way of ensuring scrollbars don't show up
-  // createCanvas(1920, 1080);
   background(82,135,39);
 
   //layout
   rectMode(CENTER);
   imageMode(CENTER);
-  textAlign(CENTER, CENTER);
   angleMode(RADIANS);
+  textFont(font);
+  textAlign(CENTER, CENTER);
   battleSlotY = 6 * height / 8; //y position of party in battle
   marketSlotY = 3 * height / 8; //y position of party in market
   hireSlotY = 5 * height / 8; //y position of hires and items
@@ -230,8 +234,13 @@ function setup(){
   sellSlot = {x: width/2 + assetSize, y: 7 * height / 8};
   freezeSlot = {x: width/2 - assetSize, y: 7 * height / 8};
   speedSlots = [3 * width / 8, 4 * width / 8, 5 * width / 8];
-  speedSlotY = 2 * height / 8;
-  nameSlots = {x: [width/4, width/2, 3 * width / 4], y: [height/3, 2 * height / 3]};
+  speedSlotY = 2 * height / 12;
+  nameSlotWidth = width / 28;
+  nameSlots = {x: [5 * nameSlotWidth, 14 * nameSlotWidth, 23 * nameSlotWidth], y: [height/3, 2 * height / 3]};
+  textSizeUI = width / 20;
+  textSizeOver = width / 8;
+  textSizePartyName = 4 * nameSlotWidth / 5;
+
 
   battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
@@ -333,7 +342,7 @@ function draw(){
     showPartyNameOptions();
   }else if (state == "gameOver") {
     background(20);
-    textSize(80);
+    textSize(textSizeOver);
     if (battleResult == "YOU WON") {
       fill(0, 250, 80);
     } else if (battleResult == "YOU LOST") {
@@ -357,7 +366,7 @@ function draw(){
       }
       if (isBattleOver) { //text not showing b/c getting overwritten
         push();
-        textSize(80);
+        textSize(textSizeOver);
         showEverything();
         fill(battleResultColors[battleResult]);
         text(battleResult, width / 2, 3 * height / 6);
@@ -390,11 +399,11 @@ function mouseClicked(){
     
     for (let i = 0; i < 3; i++){
       //top name buttons
-      if (mouseX > nameSlots.x[i] - slotSize && mouseX < nameSlots.x[i] + slotSize && mouseY > nameSlots.y[0] - slotSize && mouseY < nameSlots.y[0] + slotSize){
+      if (mouseX > nameSlots.x[i] - 4 * nameSlotWidth && mouseX < nameSlots.x[i] + 4 * nameSlotWidth && mouseY > nameSlots.y[0] - 2 * nameSlotWidth && mouseY < nameSlots.y[0] + 2 * nameSlotWidth){
         partyAdjective = names.adjectives[i];
       }
       //bottom name buttons
-      if (mouseX > nameSlots.x[i] - slotSize && mouseX < nameSlots.x[i] + slotSize && mouseY > nameSlots.y[1] - slotSize && mouseY < nameSlots.y[1] + slotSize){
+      if (mouseX > nameSlots.x[i] - 4 * nameSlotWidth && mouseX < nameSlots.x[i] + 4 * nameSlotWidth && mouseY > nameSlots.y[1] - 2 * nameSlotWidth && mouseY < nameSlots.y[1] + 2 * nameSlotWidth){
         partyNoun = names.nouns[i];
       }
     }
@@ -547,7 +556,7 @@ function showEverything(){
     //show party name
     push();
     textAlign(LEFT, CENTER);
-    textSize(width/30);
+    textSize(textSizePartyName);
     text(partyName, width / 8, height/8);
     pop();
   } else if (state == "battle") {
@@ -561,12 +570,12 @@ function showEverything(){
     //show party names -- translated
     push();
     textAlign(LEFT, CENTER);
-    textSize(width/36);
-    text(partyName, - 3 * width / 7, height/8);
+    textSize(textSizePartyName);
+    text(partyName, - 3 * width / 7, 4 * height/12);
     textAlign(CENTER, CENTER);
-    text("vs", 0, height/8);
+    text("vs", 0, 5 *  height/12);
     textAlign(RIGHT, CENTER);
-    text(enemyName, 4 * height / 7, height/8); //TODO why is right not in right spot?
+    text(enemyName, 3 * width / 7, 6 * height/12); //TODO why is right not in right spot?
     pop();
   }
   pop();
@@ -604,7 +613,8 @@ function showParty(monster, isMyParty){
   let hpX = x + xOffset;
   let statY = y + yOffset;
   let lvlX = x - xOffset;
-  let upgradeX = x;
+  // let upgradeX = x;
+  let upgradeX = lvlX + xOffset/2;
   let lvlY = y - yOffset;
   let upgradeSize = xOffset/2;
   //asset
@@ -616,19 +626,19 @@ function showParty(monster, isMyParty){
   fill(100);
   rect(powerX, statY, statSize); 
   fill(255);
-  text(monster.currentPower, powerX, statY + (statText / 12)); //weirdly not in center??
+  text(monster.currentPower, powerX, statY - (statText / 6)); //weirdly not in center??
   //hp
   fill(200, 0, 0);
   rect(hpX, statY, statSize);
   fill(255);
-  text(monster.currentHP, hpX, statY + (statText / 12));
+  text(monster.currentHP, hpX, statY - (statText / 6));
   //level
   fill(230,206,38);
   textAlign(RIGHT, BOTTOM);
   textSize(statText/2);
   text("lvl.", lvlX, lvlY);
   textSize(statText);
-  text(monster.level, lvlX + statText/2, lvlY + statText/4);
+  text(monster.level, lvlX + statText, lvlY + statText/4);
   //upgrades
   if (monster.level < 3){ //don't show xp if at max level
     for (let i = 0; i < monster.nextLevel; i++){
@@ -645,27 +655,39 @@ function showParty(monster, isMyParty){
 
 function showUI(){
   push();
-
   //upper left stats
-  textSize(40);
+  textSize(textSizeUI);
+  let statX = width / 7;
+  let emojiGap = statX / 4;
+
+  textFont("arial");
+  text("💰", statX - emojiGap, playerStatY);
+  textFont(font);
   fill(249,224,50);
-  text(gold, width / 10, playerStatY);
+  text(gold, statX + emojiGap, playerStatY);
+
+  textFont("arial");
+  text("❤️", 2 * statX - emojiGap, playerStatY);
+  textFont(font);
   fill(217,65,60);
-  text(hp, 2 * width / 10, playerStatY);
+  text(hp, 2 * statX + emojiGap, playerStatY);
+
+  textFont("arial");
+  text("⏲️", 3 * statX - emojiGap, playerStatY);
+  textFont(font);
   fill(30,161,202);
-  text(turn, 3 * width / 10, playerStatY);
+  text(turn, 3 * statX + emojiGap, playerStatY);
 
   //show current state in top right corner
-  textSize(50);
   fill(0);
+  textAlign(RIGHT, CENTER);
   text(state, width - (width / 10), playerStatY);
 
   //if waiting, show under button
   if (waitingForBattle){
-    textSize(25);
-    text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50);
+    textSize(width/40);
+    text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50, width / 4);
   }
-  
   pop();
 }
 
@@ -736,7 +758,7 @@ function showSlots(){
     //freeze slot
     stroke(0, 0, 200);
     rect(freezeSlot.x, freezeSlot.y, assetSize);
-    textSize(assetSize/5);
+    textSize(assetSize/6);
     fill(0);
     text("FREEZE", freezeSlot.x, freezeSlot.y);
 
@@ -744,7 +766,7 @@ function showSlots(){
     fill(230, 150);
     stroke(249,224,50);
     rect(sellSlot.x, sellSlot.y, assetSize);
-    textSize(assetSize/5);
+    textSize(assetSize/6);
     fill(0);
     text("SELL", sellSlot.x, sellSlot.y);
 
@@ -802,7 +824,8 @@ function showMonster(monster){
   let hpX = x + xOffset;
   let statY = y + yOffset;
   let lvlX = x - xOffset;
-  let upgradeX = x;
+  // let upgradeX = x;
+  let upgradeX = lvlX + xOffset/2;
   let lvlY = y - yOffset;
   let upgradeSize = xOffset/2;
   //asset
@@ -814,19 +837,19 @@ function showMonster(monster){
   fill(100);
   rect(powerX, statY, statSize); 
   fill(255);
-  text(monster.currentPower, powerX, statY + (statText / 12)); //weirdly not in center??
+  text(monster.currentPower, powerX, statY - (statText / 6)); //weirdly not in center??
   //hp
   fill(200, 0, 0);
   rect(hpX, statY, statSize);
   fill(255);
-  text(monster.currentHP, hpX, statY + (statText / 12));
+  text(monster.currentHP, hpX, statY - (statText / 6));
   //level
   fill(230,206,38);
   textAlign(RIGHT, BOTTOM);
   textSize(statText/2);
   text("lvl.", lvlX, lvlY);
   textSize(statText);
-  text(monster.level, lvlX + statText/2, lvlY + statText/4);
+  text(monster.level, lvlX + statText, lvlY + statText/4);
   //upgrades
   if (monster.level < 3){ //don't show xp if at max level
     for (let i = 0; i < monster.nextLevel; i++){
@@ -885,12 +908,12 @@ function showHire(monster){
   fill(100);
   rect(powerX, statY, statSize); 
   fill(255);
-  text(monster.currentPower, powerX, statY + (statText / 12)); //weirdly not in center??
+  text(monster.currentPower, powerX, statY - (statText / 6)); //weirdly not in center??
   //hp
   fill(200, 0, 0);
   rect(hpX, statY, statSize);
   fill(255);
-  text(monster.currentHP, hpX, statY + (statText / 12));
+  text(monster.currentHP, hpX, statY - (statText / 6));
   //tier
   image(diceAssets[monster.tier], tierX, tierY, tierSize, tierSize);
   pop();
@@ -910,7 +933,7 @@ function showInfoBox(){
   noStroke();
   text(infoBox.name, infoBox.x, infoBox.y - infoBox.height / 1.1);
   textSize(infoBox.textSize / 1.95);
-  text(infoBox.abilityText, infoBox.x, infoBox.y - infoBox.height / 1.6);
+  text(infoBox.abilityText, infoBox.x, infoBox.y - infoBox.height / 1.6, infoBox.width - 5); //adding max width now for wrap
   pop();
 }
 
@@ -919,9 +942,10 @@ function showPartyNameOptions(){
   push();
   background(82,135,39);
   strokeWeight(4);
-  textSize(width/30);
+  // textSize(width/30);
+  textSize(textSizePartyName);
   textAlign(LEFT, CENTER);
-  text("The " + partyAdjective + " " + partyNoun, width / 8, height / 8);
+  text("The " + partyAdjective + " " + partyNoun, width / 8, height / 10);
   textAlign(CENTER, CENTER);
   for (let i = 0; i < 3; i++){
     stroke(0);
@@ -930,25 +954,27 @@ function showPartyNameOptions(){
     } else {
       fill(124,203,198);
     }
-    rect(nameSlots.x[i], nameSlots.y[0], slotSize * 2, slotSize);
+    rect(nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth, 6 * nameSlotWidth);
     fill(0);
     noStroke();
-    text(names.adjectives[i], nameSlots.x[i], nameSlots.y[0]);
+    text(names.adjectives[i], nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth);
     stroke(0);
     if (partyNoun == names.nouns[i]){
       fill(241,203,60);
     } else {
       fill(124,203,198);
     }
-    rect(nameSlots.x[i], nameSlots.y[1], slotSize * 2, slotSize);
+    rect(nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth, 6 * nameSlotWidth);
     fill(0);
     noStroke();
-    text(names.nouns[i], nameSlots.x[i], nameSlots.y[1]);
+    text(names.nouns[i], nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth);
   }
   //if waiting, show under button
   if (waitingForBattle){
-    textSize(25);
-    text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50);
+    //TODO text align matching
+    // textSize(textSizeUI);
+    textSize(width/40);
+    text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50, width / 4);
   }
   pop();
 }

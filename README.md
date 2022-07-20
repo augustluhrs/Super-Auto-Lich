@@ -48,17 +48,17 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] server line 146 null (shouldn't happen...)
 
 - [ ] 0.0.2
-  - [ ] team names
+  - [X] team names
     - [X] pool of adjectives and nouns
     - [X] option generator function
-    - [ ] choose team name on first ready up
-    - [ ] team name display
+    - [X] choose team name on first ready up
+    - [X] team name display
   - [X] upgrade
     - [X] lvl and next lvl slots stat above
     - [X] drag to upgrade, combine correctly
     - [X] can't upgrade past lvl 3
-  - [ ] abilities
-    - [ ] hover to see name and ability text
+  - [X] abilities
+    - [X] hover to see name and ability text
     - [X] ability stack (priority goes to power, tie if random)
     - [X] timing
       - [X] before battle starts
@@ -92,6 +92,11 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] basic scoot up party after death
     - [X] basic ability
     - [X] basic move into battle
+  - [ ] Art
+    - [X] font
+    - [X] top stat icons/emojis
+    - [ ] background market
+    - [ ] background battle
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
     - [X] server battle calculates and sends list of steps
@@ -104,12 +109,12 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] "battle" vs "parties"
     - [ ] need to clone at all? or change up what battleSteps sends...
     - [X] isDamaged reset
-  - [ ] Misc. QoL
-    - [ ] relative text sizes
+  - [X] Misc. QoL
+    - [X] relative text sizes
     - [X] bigger slots/assets and slot positions relative to size
     - [X] cleanup comments from 0.0.1
-    - [ ] bigger/better top stat UI
-    - [ ] figure out how to scale ability text and wrap/justify
+    - [X] bigger/better top stat UI
+    - [X] figure out how to scale ability text and wrap/justify
   - [ ] bugs/issues
     - [X] fix end of game display
     - [X] fix hp display on battle end
@@ -123,6 +128,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] skeleton resurrection can block mephit chain reaction -- no, it's b/c of "die in middle"
     - [X] clear reference to last dragged when going back to market
     - [ ] sleeping wears off if creature takes damage
+    - [X] fix party name text overflow
+    - [ ] increase size of pop up text box
 
 - [ ] 0.0.3
   - [ ] items
@@ -135,27 +142,29 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
    - [ ] tier 4
    - [ ] tier 5
    - [ ] tier 6
-- [ ] increase tier every X turns
-- [ ] battle step overhaul
-- [ ] ability timing
-  - [ ] on damage
-  - [ ] on buy
-  - [ ] on sell
-  - [ ] on getting an item
-  - [ ] on level up
-  - [ ] end of market
-- [ ] Multiplayer
-  - [ ] nedb database for login and stats tracking
-  - [ ] start screen
-    - [ ] login
-    - [ ] join random lobby
-    - [ ] join arena lobby
-      - [ ] random pairings
-      - [ ] duplicate battles if odd number
-    - [ ] join lobby by id
+  - [ ] increase tier every X turns
+  - [ ] battle step overhaul
+  - [ ] ability timing
+    - [ ] on damage
+    - [ ] on buy
+    - [ ] on sell
+    - [ ] on getting an item
+    - [ ] on level up
+    - [ ] end of market
+  - [ ] Multiplayer
+    - [ ] nedb database for login and stats tracking
+    - [ ] start screen
+      - [ ] login
+      - [ ] join random lobby
+      - [ ] join arena lobby
+        - [ ] random pairings
+        - [ ] duplicate battles if odd number
+      - [ ] join lobby by id
+  - [ ] Misc QoL
+    - [ ] "The" party name fix for names like Xanathar's
 
 - [ ] Art
-  - [ ] font
+  - [X] font
   - [ ] market background
   - [ ] battle background
   - [ ] end game background
@@ -175,6 +184,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] layout
   - [ ] freezes
     - [ ] basic overlay for all monsters
+  - [ ] top stats
+    - [ ] icons
+    - [ ] background boxes
   - Assets 
     - [ ] tier 1
     - [ ] tier 2
@@ -195,6 +207,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 - [ ] Refactor / QoL
   - [ ] better scrollbar removal
   - [ ] show/drag monsters/times with .x/.y instead of iterating through slots
+  - [ ] might need to stop using relative coords and have set locations/sizes for different resolutions...
 - [ ] Balancing
   - [ ] some sort of data gathering for what is picked and what wins?
 

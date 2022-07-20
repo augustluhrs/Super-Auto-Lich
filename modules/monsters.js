@@ -73,7 +73,7 @@ class Cavebear extends Monster {
     this.currentHP = 3;
     this.ability = null;
     this.timing = "before start";
-    this.abilityText = "Hibernation: At the start of combat, goes to \nsleep and increases its HP by (50%/100%,150%). \nCannot attack while asleep, but wakes up after \nsleeping through one attack round or taking damage.";
+    this.abilityText = "Hibernation: At the start of combat, goes to sleep and increases its HP by (50%/100%,150%). Cannot attack while asleep, but wakes up after sleeping through one attack round or taking damage.";
   }
 }
 
@@ -88,7 +88,7 @@ class Flumph extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "after death";
-    this.abilityText = "Telepathic Shroud: On death, nullfies \nthe abilites of the next (1/2/3) \nlive monsters in the enemy party.";
+    this.abilityText = "Telepathic Shroud: On death, nullfies the abilites of the next (1/2/3) live monsters in the enemy party.";
   }
 }
 
@@ -103,7 +103,7 @@ class Gnoll extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "after attack";
-    this.abilityText = "Rampage: After attack, if the attacked \nenemy dies, the gnoll immediately attacks \n(1/2/3) more times, with each attack \ntargeting the first live enemy monster in line.";
+    this.abilityText = "Rampage: After attack, if the attacked enemy dies, the gnoll immediately attacks (1/2/3) more times, with each attack targeting the first live enemy monster in line.";
   }
 }
 
@@ -118,7 +118,7 @@ class Goblin extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "before attack";
-    this.abilityText = "Nimbleness: Before attack, has a \n(20%/40%/60%) chance to dodge the enemy's \nattack and get a free attack.";
+    this.abilityText = "Nimbleness: Before attack, has a (20%/40%/60%) chance to dodge the enemy's attack and get a free attack.";
   }
 }
 
@@ -133,7 +133,7 @@ class Kobold extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "before start";
-    this.abilityText = "Pack Tactics: At the beginning of combat, \ngains (+X/+X*2/+X*3) power and HP, where X \nis the number of other kobolds in your party.";
+    this.abilityText = "Pack Tactics: At the beginning of combat, gains (+X/+X*2/+X*3) power and HP, where X is the number of other kobolds in your party.";
   }
 }
 
@@ -148,7 +148,7 @@ class Mephit extends Monster {
     this.currentHP = 2;
     this.ability = null;
     this.timing = "after death";
-    this.abilityText = "Death Burst: On death, deals (2/4/6) \ndamage to the two live monsters to \nthe left and right of it.";
+    this.abilityText = "Death Burst: On death, deals (2/4/6) damage to the two live monsters to the left and right of it.";
   }
 }
 
@@ -164,7 +164,7 @@ class Skeleton extends Monster {
     this.ability = null;
     this.timing = "after death";
     this.spawnChance = 1;
-    this.abilityText = "Undead Fortitude: On death, has a chance \nto come back as a (1/1, 2/2, 3/3). Has a \n100% chance the first resurrection, chance \ndecreases by (50%/33%/25%) each successful \nresurrection.";
+    this.abilityText = "Undead Fortitude: On death, has a chance to come back as a (1/1, 2/2, 3/3). Has a 100% chance the first resurrection, chance decreases by (50%/33%/25%) each successful resurrection.";
   }
 }
 
@@ -179,7 +179,7 @@ class Stirge extends Monster {
     this.currentHP = 2;
     this.ability = null;
     this.timing = "after attack";
-    this.abilityText = "Blood Drain: On attack, if the stirge \nsurvives, it heals (1/2/3) points of HP.";
+    this.abilityText = "Blood Drain: On attack, if the stirge survives, it heals (1/2/3) points of HP.";
   }
 }
 
@@ -194,7 +194,7 @@ class Vegepygmy extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "after death";
-    this.abilityText = "Spores: On death, infects the next live \nenemy monster with spores that replace the \nmonster's item and make it take more damage \nfrom subsequent attacks (+3/+5/+7 damage).";
+    this.abilityText = "Spores: On death, infects the next live enemy monster with spores that replace the monster's item and make it take more damage from subsequent attacks (+3/+5/+7 damage).";
   }
 }
 
