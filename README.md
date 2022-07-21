@@ -95,8 +95,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] Art
     - [X] font
     - [X] top stat icons/emojis
-    - [ ] background market
-    - [ ] background battle
+    - [X] background market
+    - [X] background battle
   - [ ] Code Refactor
     - [X] player object and lookup by id instead of array
     - [X] server battle calculates and sends list of steps

@@ -12,6 +12,7 @@ let monsterAssets = {};
 let dice1, dice2, dice3, dice4, dice5, dice6;
 let diceAssets = [];
 let font;
+let forest, cave;
 let cavebear, flumph, gnoll, goblin, kobold, mephit, skeleton, stirge, vegepygmy;
 let bulette;
 let beholder;
@@ -25,6 +26,9 @@ function preload() {
   dice6 = loadImage('assets/dice6.png');
   //font
   font = loadFont('assets/fonts/MochiyPopOne-Regular.ttf');
+  //backgrounds
+  forest = loadImage('assets/backgrounds/forest.png');
+  cave = loadImage('assets/backgrounds/cave.png');
   //tier1
   cavebear = loadImage('assets/cavebear.png');
   flumph = loadImage('assets/flumph.png');
@@ -207,7 +211,8 @@ let sporeNum = 8;
 
 function setup(){
   createCanvas(windowWidth - 5, windowHeight - 5); //TODO better way of ensuring scrollbars don't show up
-  background(82,135,39);
+  // background(82,135,39);
+  image(forest, width/2, height/2, windowWidth, windowHeight);
 
   //layout
   rectMode(CENTER);
@@ -215,6 +220,8 @@ function setup(){
   angleMode(RADIANS);
   textFont(font);
   textAlign(CENTER, CENTER);
+  strokeWeight(2);
+
   battleSlotY = 6 * height / 8; //y position of party in battle
   marketSlotY = 3 * height / 8; //y position of party in market
   hireSlotY = 5 * height / 8; //y position of hires and items
@@ -244,9 +251,9 @@ function setup(){
 
   battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
-  infoBox.width = width/6;
-  infoBox.height = height/8;
-  infoBox.textSize = width/75;
+  infoBox.width = width/4;
+  infoBox.height = height/3;
+  infoBox.textSize = width/40;
   
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
@@ -369,6 +376,8 @@ function draw(){
         textSize(textSizeOver);
         showEverything();
         fill(battleResultColors[battleResult]);
+        stroke(255);
+        // strokeWeight(4);
         text(battleResult, width / 2, 3 * height / 6);
         pop();
       }
@@ -542,12 +551,12 @@ function checkPush(p, i, num, dir) {
 //
 
 function showEverything(){
-  background(82,135,39);
-  showUI();
-  showSlots();
-
+  // background(82,135,39);
   push();
   if (state == "market") {
+    image(forest, width/2, height/2, windowWidth, windowHeight);
+    showUI();
+    showSlots();
     for (let i = 0; i < party.length; i++){
       if (party[i] !== null){
         showParty(party[i], true);
@@ -557,9 +566,14 @@ function showEverything(){
     push();
     textAlign(LEFT, CENTER);
     textSize(textSizePartyName);
+    stroke(255);
+    // strokeWeight(4);
     text(partyName, width / 8, height/8);
     pop();
   } else if (state == "battle") {
+    image(cave, width/2, height/2, windowWidth, windowHeight);
+    showUI();
+    showSlots();
     translate(width/2, 0); //only translating in battle to make flip easier
     for (let i = 0; i < battleParty.length; i++){
       showMonster(battleParty[i]);
@@ -569,6 +583,7 @@ function showEverything(){
     }
     //show party names -- translated
     push();
+    stroke(255);
     textAlign(LEFT, CENTER);
     textSize(textSizePartyName);
     text(partyName, - 3 * width / 7, 4 * height/12);
@@ -656,6 +671,7 @@ function showParty(monster, isMyParty){
 function showUI(){
   push();
   //upper left stats
+  stroke(255);
   textSize(textSizeUI);
   let statX = width / 7;
   let emojiGap = statX / 4;
@@ -940,39 +956,43 @@ function showInfoBox(){
 //show party name options when picking names
 function showPartyNameOptions(){
   push();
-  background(82,135,39);
-  strokeWeight(4);
+  // background(82,135,39);
+  image(forest, width/2, height/2, windowWidth, windowHeight);
+
+  // strokeWeight(4);
   // textSize(width/30);
+  stroke(255);
   textSize(textSizePartyName);
   textAlign(LEFT, CENTER);
   text("The " + partyAdjective + " " + partyNoun, width / 8, height / 10);
   textAlign(CENTER, CENTER);
   for (let i = 0; i < 3; i++){
-    stroke(0);
+    // stroke(0);
     if (partyAdjective == names.adjectives[i]){
       fill(241,203,60);
     } else {
       fill(124,203,198);
     }
-    rect(nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth, 6 * nameSlotWidth);
+    rect(nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth, 5 * nameSlotWidth);
     fill(0);
-    noStroke();
+    // noStroke();
     text(names.adjectives[i], nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth);
-    stroke(0);
+    // stroke(0);
     if (partyNoun == names.nouns[i]){
       fill(241,203,60);
     } else {
       fill(124,203,198);
     }
-    rect(nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth, 6 * nameSlotWidth);
+    rect(nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth, 5 * nameSlotWidth);
     fill(0);
-    noStroke();
+    // noStroke();
     text(names.nouns[i], nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth);
   }
   //if waiting, show under button
   if (waitingForBattle){
     //TODO text align matching
     // textSize(textSizeUI);
+    stroke(255);
     textSize(width/40);
     text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50, width / 4);
   }
