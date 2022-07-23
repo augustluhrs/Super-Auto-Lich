@@ -92,7 +92,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] basic scoot up party after death
     - [X] basic ability
     - [X] basic move into battle
-  - [ ] Art
+  - [X] Art
     - [X] font
     - [X] top stat icons/emojis
     - [X] background market
@@ -104,10 +104,6 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] cleanup
     - [X] omfg `structuredClone()` creates a deep copy.... wtf
     - [X] Node v18
-    - [ ] parties/ids/indexes code smell
-    - [ ] common but different name for cloned arrays
-    - [ ] "battle" vs "parties"
-    - [ ] need to clone at all? or change up what battleSteps sends...
     - [X] isDamaged reset
   - [X] Misc. QoL
     - [X] relative text sizes
@@ -115,23 +111,51 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] cleanup comments from 0.0.1
     - [X] bigger/better top stat UI
     - [X] figure out how to scale ability text and wrap/justify
-  - [ ] bugs/issues
+  - [X] bugs/issues
     - [X] fix end of game display
     - [X] fix hp display on battle end
     - [X] redo battle display and battle result text colors for draw
     - [X] fix bug with ready and battle spamming
     - [X] need a failsafe end battle if both sides end with flumph or stirge (tie timer)
-    - [ ] first move display getting cut short
-    - [ ] move animations currently don't account for potential moving more than one slot or dying in middle
-    - [ ] remove move step if no one needs to
     - [ ] mephit chain reaction not working? can't replicate
     - [X] skeleton resurrection can block mephit chain reaction -- no, it's b/c of "die in middle"
     - [X] clear reference to last dragged when going back to market
-    - [ ] sleeping wears off if creature takes damage
     - [X] fix party name text overflow
-    - [ ] increase size of pop up text box
+    - [X] increase size of pop up text box
 
 - [ ] 0.0.3
+  - [ ] Multiplayer
+    - [ ] nedb database for login and stats tracking
+    - [ ] start screen
+      - [ ] login
+      - [ ] join random lobby
+      - [ ] join arena lobby
+        - [ ] random pairings
+        - [ ] duplicate battles if odd number
+      - [ ] join lobby by id
+  - [ ] code refactor
+    - [ ] fix the battle mess
+    - [ ] move animations currently don't account for potential moving more than one slot or dying
+    - [ ] parties/ids/indexes code smell
+    - [ ] figure out the battle party references stuff (server.js:300)
+    - [ ] common but different name for cloned arrays
+    - [ ] "battle" vs "parties"
+    - [ ] need to clone at all? or change up what battleSteps sends... in middle
+  - [ ] bugs/issues
+    - [ ] "The" party name fix for names like Xanathar's
+    - [ ] first move display getting cut short
+    - [ ] fix move steps and remove move step if no one needs to
+    - [ ] sleeping should wear off if creature takes damage
+    - [ ] ability sort by strength won't work if monsters somehow have negative power
+  - [ ] TODOs
+    - [ ] look up networking patterns
+    - [ ] look up game ability patterns
+    - [ ] think about tie timer being 8 -- what's another way?
+    - [ ] think about better way to do the party trimming/splicing for battle
+    - [ ] how can I do abilities by just calling a method?
+    - [ ] when to reset properties like damaged?
+
+- [ ] 0.0.4
   - [ ] items
   - [ ] freeze items
   - [ ] no drag to freeze?
@@ -151,17 +175,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] on getting an item
     - [ ] on level up
     - [ ] end of market
-  - [ ] Multiplayer
-    - [ ] nedb database for login and stats tracking
-    - [ ] start screen
-      - [ ] login
-      - [ ] join random lobby
-      - [ ] join arena lobby
-        - [ ] random pairings
-        - [ ] duplicate battles if odd number
-      - [ ] join lobby by id
   - [ ] Misc QoL
-    - [ ] "The" party name fix for names like Xanathar's
+    
 
 - [ ] Art
   - [X] font
@@ -214,6 +229,17 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   ## Playtest Notes
 
   ### 0.0.2
+
+  **7/22/22
+  - first instinct was to click on the monsters, had to be told to drag
+  - no indication when they don't have enough money to do something, and no warning if they want to ready up while they still have a lot of money
+  - info boxes were basically not read or sought after
+  - "stirge is OP"
+  - "ooh skeleton, cool art"
+  - mephits are very destructive and hard to strategize for first time players, not very clear what they do from animations
+  - running slow for some reason... too many monsters? something about when the images are tinted red?
+  - unclear how to move party members in line or that it was even a possibility
+  - "how could I have won?" general strategy unclear
 
   **Misc. Balance Thoughts**
   - Bear too strong -- maybe just bumps HP?

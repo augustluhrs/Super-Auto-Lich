@@ -21,12 +21,12 @@ let io = require('socket.io')(server);
 //
 // GAME VARIABLES
 //
+
 const Player = require("./modules/player").Player;
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
 const Names = require("./modules/names").Names;
 let players = {}; // holds all current players, their parties, their stats, etc.
-// let battleStepTime = 1000; //interval it takes each battle step to take -- TODO, client speed (array of events?)
 let tieTimer = 0;
 let tieTimerMax = 8; //TODO test/think about more
 let testLobby = "testLobby";
@@ -58,7 +58,6 @@ inputs.on('connection', (socket) => {
   socket.on("refreshHires", (data) => {
     let player = players[socket.id];
     if (player.gold > 0){ //get random monsters and send them to player's market
-      //TODO: allow for frozen hires
       player.hires = data;
       player.gold--;
       socket.emit("newHires", {gold: player.gold, hires: refreshHires(player.tier, player.hires)});
@@ -96,12 +95,6 @@ inputs.on('connection', (socket) => {
     player.party = data.party;
     player.battleParty = structuredClone(data.party);
     player.partyName = data.partyName;
-
-    //join a lobby if not in one already
-    // if (player.lobby == undefined){ 
-      // player.lobby = testLobby;
-    // socket.join(player.lobby);
-    // }
 
     // check to see if both are ready, if so, send to battle
     let lobby = io.sockets.adapter.rooms.get(player.lobby);
@@ -233,7 +226,6 @@ function getBattleSteps(battle){
 
 function battleStep(battle, battleSteps, tieTimer){
   console.log("battleStep");
-  // let currentNumMonsters = battle[0].party.length + battle[1].party.length; //TODO there's a better way to check if should tick tie timer
   let shouldTickTimer = true; //TODO there's a better way to check if should tick tie timer
 
   //check for before attack abilities
@@ -329,8 +321,6 @@ function battleStep(battle, battleSteps, tieTimer){
     party2[i].index = i;
   }
 
-  // battle[0].party = party1; //is this redundant b/c references? TODO
-  // battle[1].party = party2;
   let p1 = players[p1ID];
   let p2 = players[p2ID];
 
@@ -436,16 +426,14 @@ function checkStartAbilities(parties, timing, battleSteps){ //needs parties, tim
           } else {
             party = parties[1].party;
           }
-          // console.log(party);
 
           let numKobolds = 0;
-          // console.log(numKobolds);
           for (let m of party){
             if (m.name == "kobold"){
               numKobolds++;
             }
           }
-          // console.log(numKobolds);
+
           if (numKobolds > 1){
             monster.currentPower += numKobolds - 1; //TODO even with -1 this could be way OP
             monster.currentHP += numKobolds - 1;
@@ -467,21 +455,17 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
   let party1 = parties[0].party;
   let party2 = parties[1].party;
 
-  //get deep copy before any changes
-  // let copyParties = structuredClone(parties);
-
   //check for abilities that match the timing and make new array of monsters that need to act
   let actingMonsters = [];
   let maxPower = 0;
 
   if (party1[0].timing == timing){
-    // party1[0].lichID = p1ID;
     if (party1[0].currentPower > maxPower){
       maxPower = party1[0].currentPower;
     }
     actingMonsters.push(party1[0]);
   }
-  // party2[0].lichID = p2ID;
+
   if (party2[0].currentPower > maxPower){
     maxPower = party2[0].currentPower;
   }
@@ -625,7 +609,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
       actingMonsters.push(monster);
     }
   }
-  // console.log(deadMonsters);
+
   //sort array by strength, ties are random
   let sortedMonsters = [];
   //prob an existing sorting algorithm for this but w/e
@@ -644,7 +628,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     }
   }
   //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
-  // console.log(sortedMonsters);
+
   //need to do the abilities, then check for damage/death...
   //moving dead monsters here, so will do all first dead monsters, then subsequent dead, instead of nested, skelly issue
   let deadMonsters2 = [];
@@ -695,11 +679,9 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
           let numInfected = monster.level;
           for (let i = 0; i < otherParty.length; i++){
-            // console.log(otherParty[i].name);
             if (otherParty[i].isDead) {
               continue;
             } else {
-              // otherParty.isVulnerable = true;
               otherParty[i].vulnerability = 3;
               otherParty[i].currentItem = "spores";
               numInfected --;
@@ -721,7 +703,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
               otherParty = party1;
             }
           }
-          // console.log(otherParty);
+
           let partiesAtThisStage = structuredClone(parties);
           battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
           let numInfected = monster.level;
@@ -822,20 +804,11 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   }
 
   if (deadMonsters2.length > 0){
-    // console.log("dm2");
-    // console.log(deadMonsters2);
     [parties, battleSteps] = checkDeathAbilities(parties, "after death", battleSteps, deadMonsters2);
-    // party1 = battle[0].party;
-    // party2 = battle[1].party;
 
     //TODO code smell
     party1 = parties[0].party;
     party2 = parties[1].party;
-    // console.log(party1);
-    // console.log("asdfadf \n\n\n");
-    // console.log(party2);
-    // parties[0].party = party1;
-    // parties[1].party = party2;
   }
 
   //this isnt' working -- all bunched up at end, eliminating for now TODO
@@ -845,7 +818,6 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   //   //move animation will be off if jumping more than one slot or death in middle... TODO
   // }
   
-
   //fine b/c only happening once, no matter how many death abilities?
   //move up party if death
   for (let i = party1.length - 1; i >= 0; i--){
@@ -871,9 +843,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     party2[i].hasAttacked = false;
     party2[i].hasKilled = false;
   }
-  // return [structuredClone(parties), battleSteps];
-  // console.log("returning from death function");
-  // console.log(battleSteps);
+
   return [parties, battleSteps];
 }
 
