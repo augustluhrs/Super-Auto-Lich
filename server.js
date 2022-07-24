@@ -4,6 +4,9 @@
     ~ * ~ * ~ * 
 */
 
+// structured clone for node 16
+const structuredClone = require('realistic-structured-clone');
+
 //create server
 let port = process.env.PORT || 8000;
 let express = require('express');
