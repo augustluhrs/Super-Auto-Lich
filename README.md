@@ -135,6 +135,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] join lobby by id
   - [ ] code refactor
     - [ ] fix the battle mess
+    - [ ] get rid of the duplicate party display market vs battle
     - [ ] move animations currently don't account for potential moving more than one slot or dying
     - [ ] parties/ids/indexes code smell
     - [ ] figure out the battle party references stuff (server.js:300)
@@ -147,13 +148,18 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] fix move steps and remove move step if no one needs to
     - [ ] sleeping should wear off if creature takes damage
     - [ ] ability sort by strength won't work if monsters somehow have negative power
-  - [ ] TODOs
+    - [ ] waiting for battle different alignment on party name and market (sketch.js:985)
+  - [ ] TODOs/Things to think about
     - [ ] look up networking patterns
     - [ ] look up game ability patterns
     - [ ] think about tie timer being 8 -- what's another way?
     - [ ] think about better way to do the party trimming/splicing for battle
     - [ ] how can I do abilities by just calling a method?
     - [ ] when to reset properties like damaged?
+    - [ ] does normal upgrading always only bump stats by 1
+    - [ ] how to animate attacks better
+    - [ ] how to animate damage/death better (and faster?)
+    - [ ] still need animation buffer?
 
 - [ ] 0.0.4
   - [ ] items
