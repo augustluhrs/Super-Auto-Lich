@@ -268,11 +268,18 @@ function setup(){
   });
   readyButt.hide(); //hiding until there's a party to send to battle
   let startButtWidth = width/3 + "px";
-  arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  joinButt = createButton('Join Lobby').position(width / 2, 4 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  lobbyaButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+  let startButtWidthHalf = width/6 + "px";
+  let startButtHeight = height/8 + "px";
+  arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{});
+  joinButt = createButton('Join Lobby').position(width / 2, 4 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{});
+  lobbyButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{});
+  loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
+  settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
+  arenaButt.center("horizontal");
+  joinButt.center("horizontal");
+  lobbyButt.center("horizontal");
+  loginButt.style("margin-left", "-15%");
+  settingsButt.style("margin-right", "-25%");
 
 
 
