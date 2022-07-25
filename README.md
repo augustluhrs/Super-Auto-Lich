@@ -13,7 +13,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
 ## Roadmap
 
-- [X] 0.0.1 MVP Prototype
+- [X] 0.1 MVP Prototype
   - [X] set up project and repo
   - [X] asset test
   - [X] battle test
@@ -47,7 +47,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] refresh hires after battle (can't reproduce)
     - [X] server line 146 null (shouldn't happen...)
 
-- [ ] 0.0.2
+- [X] 0.2
   - [X] team names
     - [X] pool of adjectives and nouns
     - [X] option generator function
@@ -97,11 +97,11 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] top stat icons/emojis
     - [X] background market
     - [X] background battle
-  - [ ] Code Refactor
+  - [X] Code Refactor
     - [X] player object and lookup by id instead of array
     - [X] server battle calculates and sends list of steps
     - [X] battle display battleParty
-    - [ ] cleanup
+    - [X] cleanup
     - [X] omfg `structuredClone()` creates a deep copy.... wtf
     - [X] Node v18
     - [X] isDamaged reset
@@ -123,7 +123,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [X] fix party name text overflow
     - [X] increase size of pop up text box
 
-- [ ] 0.0.3
+- [ ] 0.3
   - [ ] Multiplayer
     - [ ] nedb database for login and stats tracking
     - [ ] start screen
@@ -134,7 +134,9 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
         - [ ] duplicate battles if odd number
       - [ ] join lobby by id
   - [ ] code refactor
+    - [ ] use realistic-structured-clone & node 16.x for glitch
     - [ ] fix the battle mess
+    - [ ] get rid of the duplicate party display market vs battle
     - [ ] move animations currently don't account for potential moving more than one slot or dying
     - [ ] parties/ids/indexes code smell
     - [ ] figure out the battle party references stuff (server.js:300)
@@ -147,15 +149,20 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] fix move steps and remove move step if no one needs to
     - [ ] sleeping should wear off if creature takes damage
     - [ ] ability sort by strength won't work if monsters somehow have negative power
-  - [ ] TODOs
+    - [ ] waiting for battle different alignment on party name and market (sketch.js:985)
+  - [ ] TODOs/Things to think about
     - [ ] look up networking patterns
     - [ ] look up game ability patterns
     - [ ] think about tie timer being 8 -- what's another way?
     - [ ] think about better way to do the party trimming/splicing for battle
     - [ ] how can I do abilities by just calling a method?
     - [ ] when to reset properties like damaged?
+    - [ ] does normal upgrading always only bump stats by 1
+    - [ ] how to animate attacks better
+    - [ ] how to animate damage/death better (and faster?)
+    - [ ] still need animation buffer?
 
-- [ ] 0.0.4
+- [ ] 0.4
   - [ ] items
   - [ ] freeze items
   - [ ] no drag to freeze?
@@ -228,7 +235,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
   ## Playtest Notes
 
-  ### 0.0.2
+  ### 0.2
 
   **7/22/22
   - first instinct was to click on the monsters, had to be told to drag
@@ -249,7 +256,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - skelly immune to spores atm, b/c they're "dead" -- kinda cool flavor
   - damn stirge basically can't be killed by anything with 1 power, unless abilities (spores), ah can also get stuck in infinite loop. Should have tie timer
 
-  ### 0.0.1
+  ### 0.1
 
   **6/17/22**
   - dupes party if you drag party slots after first battle

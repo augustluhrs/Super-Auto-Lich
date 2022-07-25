@@ -324,7 +324,6 @@ function draw(){
             isHovering = true;
             hoverTimer++;
             if (hoverTimer > hoverCheckTime - 20){
-              // shouldShowMonsterInfo = true;
               infoBox.x = mouseX;
               infoBox.y = mouseY;
               infoBox.name = s.m[i].name;
@@ -339,7 +338,6 @@ function draw(){
       //reset timer if not hovering
       if (!isHovering){
         hoverTimer = 0;
-        // shouldShowMonsterInfo = false;
         infoBox.name = "";
         infoBox.ability = "";
       }
@@ -377,7 +375,6 @@ function draw(){
         showEverything();
         fill(battleResultColors[battleResult]);
         stroke(255);
-        // strokeWeight(4);
         text(battleResult, width / 2, 3 * height / 6);
         pop();
       }
@@ -476,7 +473,6 @@ function mouseReleased() {
     }
     //check for freeze slot drop
     if (dragged.party == hires && mouseX > freezeSlot.x - r && mouseX < freezeSlot.x + r && mouseY > freezeSlot.y - r && mouseY < freezeSlot.y + r) {
-      // hires[dragged.i].isFrozen = !hires[dragged.i].isFrozen; //toggle frozen or not
       dragged.monster.isFrozen = !dragged.monster.isFrozen; //toggle frozen or not
     }
     //check for sell slot drop
@@ -488,7 +484,7 @@ function mouseReleased() {
         }
       }
       if (notLast) {
-        socket.emit("sellMonster", {party: party, level: dragged.monster.level}); //TODO sell amount equal to level?
+        socket.emit("sellMonster", {party: party, level: dragged.monster.level});
         needsToReturn = false;
       }
     }
@@ -551,7 +547,6 @@ function checkPush(p, i, num, dir) {
 //
 
 function showEverything(){
-  // background(82,135,39);
   push();
   if (state == "market") {
     image(forest, width/2, height/2, windowWidth, windowHeight);
@@ -567,7 +562,6 @@ function showEverything(){
     textAlign(LEFT, CENTER);
     textSize(textSizePartyName);
     stroke(255);
-    // strokeWeight(4);
     text(partyName, width / 8, height/8);
     pop();
   } else if (state == "battle") {
@@ -590,7 +584,7 @@ function showEverything(){
     textAlign(CENTER, CENTER);
     text("vs", 0, 5 *  height/12);
     textAlign(RIGHT, CENTER);
-    text(enemyName, 3 * width / 7, 6 * height/12); //TODO why is right not in right spot?
+    text(enemyName, 3 * width / 7, 6 * height/12);
     pop();
   }
   pop();
@@ -840,10 +834,10 @@ function showMonster(monster){
   let hpX = x + xOffset;
   let statY = y + yOffset;
   let lvlX = x - xOffset;
-  // let upgradeX = x;
   let upgradeX = lvlX + xOffset/2;
   let lvlY = y - yOffset;
   let upgradeSize = xOffset/2;
+
   //asset
   strokeWeight(2);
   stroke(0);
@@ -959,15 +953,12 @@ function showPartyNameOptions(){
   // background(82,135,39);
   image(forest, width/2, height/2, windowWidth, windowHeight);
 
-  // strokeWeight(4);
-  // textSize(width/30);
   stroke(255);
   textSize(textSizePartyName);
   textAlign(LEFT, CENTER);
   text("The " + partyAdjective + " " + partyNoun, width / 8, height / 10);
   textAlign(CENTER, CENTER);
   for (let i = 0; i < 3; i++){
-    // stroke(0);
     if (partyAdjective == names.adjectives[i]){
       fill(241,203,60);
     } else {
@@ -975,9 +966,8 @@ function showPartyNameOptions(){
     }
     rect(nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth, 5 * nameSlotWidth);
     fill(0);
-    // noStroke();
     text(names.adjectives[i], nameSlots.x[i], nameSlots.y[0], 8 * nameSlotWidth);
-    // stroke(0);
+
     if (partyNoun == names.nouns[i]){
       fill(241,203,60);
     } else {
@@ -985,13 +975,11 @@ function showPartyNameOptions(){
     }
     rect(nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth, 5 * nameSlotWidth);
     fill(0);
-    // noStroke();
     text(names.nouns[i], nameSlots.x[i], nameSlots.y[1], 8 * nameSlotWidth);
   }
   //if waiting, show under button
   if (waitingForBattle){
     //TODO text align matching
-    // textSize(textSizeUI);
     stroke(255);
     textSize(width/40);
     text("Waiting For Opponent", 3 * width / 4, (5 * height / 6) + 50, width / 4);
@@ -1005,12 +993,11 @@ function showPartyNameOptions(){
 
 //goes through each battle step and animates, draw handles timing
 function stepThroughBattle(battleSteps){
-  // console.log(JSON.stringify(battleSteps));
   if (battleSteps.length > 0){ //preventing from trying to do this while waiting for market at the end
     let step = battleSteps[0];
     console.log(step.action);
     //reset and update stepSpeed if changed
-    for (let client of step.parties){ //have to copy party at each server battle step... TODO
+    for (let client of step.parties){
       if (client.id == playerID){
         battleParty = client.party;
       } else {
@@ -1136,7 +1123,6 @@ function stepThroughBattle(battleSteps){
 //upgrades monster after dropping to combine, TODO: should be on server
 function upgradeMonster(index, draggedUpgrades){
   let m = party[index];
-  // m.xp++;
   //need to address if combining two monsters with existing upgrades
   m.xp += draggedUpgrades + 1;
   if (m.xp < m.nextLevel || m.level == 3){ //prevent from going up level, but still get bonus
