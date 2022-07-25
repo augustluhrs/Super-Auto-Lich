@@ -126,15 +126,36 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 - [ ] 0.3
   - [ ] Multiplayer
     - [ ] nedb database for login and stats tracking
+      - [ ] gitignore / how to store without visible on glitch?
+      - [ ] just username/pword so no email?
+      - [ ] encrypt password -- look up data privacy how to
     - [ ] start screen
+      - [ ] interface
+        - [ ] title
+        - [ ] play arena
+        - [ ] join lobby
+        - [ ] create lobby
+        - [ ] log in
+        - [ ] settings
+        - [ ] css for title buttons
       - [ ] login
-      - [ ] join random lobby
-      - [ ] join arena lobby
+        - [ ] how to have cookies keep login info? 
+      - [ ] join random arena
+        - [ ] random pairings
+        - [ ] bot teams if not enough players
+      - [ ] join lobby
+        - [ ] enter ID
+      - [ ] create lobby
+        - [ ] id
+        - [ ] num players
+      - [ ] lobby wait screen
+        - [ ] joined player names
+        - [ ] start button when ready
+      - [ ] settings/info/options
         - [ ] random pairings
         - [ ] duplicate battles if odd number
-      - [ ] join lobby by id
   - [ ] code refactor
-    - [ ] use realistic-structured-clone & node 16.x for glitch
+    - [X] use realistic-structured-clone & node 16.x for glitch
     - [ ] fix the battle mess
     - [ ] get rid of the duplicate party display market vs battle
     - [ ] move animations currently don't account for potential moving more than one slot or dying
@@ -161,6 +182,8 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] how to animate attacks better
     - [ ] how to animate damage/death better (and faster?)
     - [ ] still need animation buffer?
+  - [ ] Misc QoL
+    - [ ] css for market buttons
 
 - [ ] 0.4
   - [ ] items

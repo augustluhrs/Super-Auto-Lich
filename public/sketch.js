@@ -147,7 +147,7 @@ socket.on("startBattle", (data) => {
 //
 
 //overall game state
-let state = "market";
+let state = "start";
 // let availableHireNum = 3; //now just using hires
 let hires = [null, null, null]; //available monsters in market
 let doneSetup = false;
@@ -200,6 +200,7 @@ let shouldShowMonsterInfo = false;
 let infoBox = {name: "", abilityText: "", x: 0, y: 0, width: 0, height: 0, textSize: 0};
 let nameSlotWidth;
 let textSizeUI, textSizeOver, textSizePartyName;
+let arenaButt, joinButt, createButt, loginButt, settingsButt;
 
 // ITEMS
 let randomSpots = [];
@@ -212,7 +213,7 @@ let sporeNum = 8;
 function setup(){
   createCanvas(windowWidth - 5, windowHeight - 5); //TODO better way of ensuring scrollbars don't show up
   // background(82,135,39);
-  image(forest, width/2, height/2, windowWidth, windowHeight);
+  // image(forest, width/2, height/2, windowWidth, windowHeight);
 
   //layout
   rectMode(CENTER);
@@ -257,6 +258,7 @@ function setup(){
   
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
+  refreshButt.hide(); //not on start
   readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{
     if (partyName == "") {
       socket.emit("getPartyNames");
@@ -265,6 +267,14 @@ function setup(){
     }
   });
   readyButt.hide(); //hiding until there's a party to send to battle
+  let startButtWidth = width/3 + "px";
+  arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+  joinButt = createButton('Join Lobby').position(width / 2, 4 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+  lobbyaButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+  loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+  settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+
+
 
   //assets after loadImage
   loadMonsterAssets();
@@ -288,7 +298,17 @@ function setup(){
 
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
-  if (state == "market"){
+  if (state == "start") {
+    //title
+    push();
+    background(112,16,15);
+    textSize(width/10);
+    stroke(255);
+    strokeWeight(8);
+    fill(0);
+    text("Super Auto Lich", width/2, height/8);
+    //buttons
+  } else if (state == "market"){
     if (pickedUpSomething) {
       //show dragged image
       showEverything();

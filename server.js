@@ -48,8 +48,8 @@ inputs.on('connection', (socket) => {
   players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null]), lobby: testLobby});
 
   //send starting data
-  socket.emit('goToMarket', players[socket.id]);
-  socket.join(players[socket.id].lobby); //TODO placeholder just for testing
+  // socket.emit('goToMarket', players[socket.id]);
+  // socket.join(players[socket.id].lobby); //TODO placeholder just for testing
 
   //send possible team names
   socket.on("getPartyNames", () => {
