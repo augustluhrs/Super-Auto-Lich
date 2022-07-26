@@ -154,6 +154,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] settings/info/options
         - [ ] random pairings
         - [ ] duplicate battles if odd number
+      - [X] monster animation
   - [ ] code refactor
     - [X] use realistic-structured-clone & node 16.x for glitch
     - [ ] fix the battle mess
