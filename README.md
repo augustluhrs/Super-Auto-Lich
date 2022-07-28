@@ -130,31 +130,34 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] just username/pword so no email?
       - [ ] encrypt password -- look up data privacy how to
     - [ ] start screen
-      - [ ] interface
-        - [ ] title
-        - [ ] play arena
-        - [ ] join lobby
-        - [ ] create lobby
-        - [ ] log in
-        - [ ] settings
-        - [ ] css for title buttons
+      - [X] interface
+        - [X] title
+        - [X] play arena
+        - [X] join lobby
+        - [X] create lobby
+        - [X] log in
+        - [X] settings
+        - [X] css for title buttons
       - [ ] login
         - [ ] how to have cookies keep login info? 
       - [ ] join random arena
         - [ ] random pairings
         - [ ] bot teams if not enough players
       - [ ] join lobby
-        - [ ] enter ID
+        - [X] enter name
+        - [ ] error if not valid name
       - [ ] create lobby
-        - [ ] id
-        - [ ] num players
+        - [X] id
+        - [X] num players
+        - [ ] error if num players isn't a valid number
       - [ ] lobby wait screen
-        - [ ] joined player names
+        - [X] joined player names
         - [ ] start button when ready
       - [ ] settings/info/options
         - [ ] random pairings
         - [ ] duplicate battles if odd number
       - [X] monster animation
+      - [ ] fix ready for multiple fighters (server.js:137)
   - [ ] code refactor
     - [X] use realistic-structured-clone & node 16.x for glitch
     - [ ] fix the battle mess

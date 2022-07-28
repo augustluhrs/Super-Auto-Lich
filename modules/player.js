@@ -4,7 +4,7 @@ class Player {
         this.tier = stats.tier || 1; //tier / challenge rating
         this.partyName = stats.partyName || "";
         this.id = stats.id || "noid";
-        this.lobby = stats.lobby || this.id;
+        this.lobbyName = stats.lobbyName || this.id;
         this.gold = stats.gold || 10;
         this.hp = stats.hp || 10;
         this.turn = stats.turn || 1;

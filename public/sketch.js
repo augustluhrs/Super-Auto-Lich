@@ -62,6 +62,27 @@ socket.on('connect', () => {
   playerID = socket.id;
 });
 
+//wait screen for lobby
+socket.on("waitingForLobby", (data) => {
+  state = "waiting for lobby";
+  // lobbyName = lobby.lobbyName;
+  lobby = data;
+  lobby.playersArray = []; //dumb but w/e
+  for (let p of Object.keys(lobby.players)){
+    lobby.playersArray.push(lobby.players[p]); //this is so dumb but it's 11pm TODO fix
+  }
+  while (lobby.playersArray.length < lobby.numPlayers){
+    lobby.playersArray.push(null); //hmmmmmmmmmm
+  }
+  // lobbyPlayers = lobby.players;
+});
+
+//lobby connect error
+socket.on("lobbyJoinError", (data) => {
+  console.log("ERROR JOINING LOBBY:");
+  console.log(data.lobbyName);
+});
+
 // basic setup on connecting to server or after battle when going back to market
 socket.on('goToMarket', (data) => {
   console.log('going to market');
@@ -73,11 +94,12 @@ socket.on('goToMarket', (data) => {
   hires = data.hires;
   party = data.party; //refreshes after battle
   
-  if (doneSetup){
+  if (doneSetup){ //TODO irrelevant now
     slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
     refreshButt.show();
     readyButt.show();
     showEverything();
+    backButt.hide();
   }
 });
 
@@ -151,6 +173,10 @@ let state = "start";
 // let availableHireNum = 3; //now just using hires
 let hires = [null, null, null]; //available monsters in market
 let doneSetup = false;
+// let lobbyName = "";
+// let lobbyPlayers = {};
+let lobby;
+let userName = "";
 
 // player stuff
 let party = [null, null, null, null, null];
@@ -284,7 +310,7 @@ function setup(){
     lobbyButt.hide();
     loginButt.hide();
     settingsButt.hide();
-    createButt.text = "Join Lobby";
+    createButt.html("Join Lobby");
     state = "join lobby";
   });
   lobbyButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{
@@ -297,7 +323,7 @@ function setup(){
     lobbyButt.hide();
     loginButt.hide();
     settingsButt.hide();
-    createButt.text = "Create Lobby";
+    createButt.html("Create Lobby");
     state = "create lobby";
   });
   loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
@@ -316,18 +342,23 @@ function setup(){
   lobbyInput.hide();
   createButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth / 2).style("height", startButtHeight).mousePressed(()=>{
     if (state == "create lobby"){
-      socket.emit("createLobby", {lobbyID: lobbyInput.value(), numPlayers: numPlayersInput.value()});
+      socket.emit("createLobby", {lobbyName: lobbyInput.value(), numPlayers: numPlayersInput.value(), userName: userName});
     } else if (state == "join lobby"){
-      socket.emit("joinLobby", {lobbyID: lobbyInput.value()});
+      socket.emit("joinLobby", {lobbyName: lobbyInput.value(), userName: userName}); //TODO userName on login
     }
-  });
-  createButt.center("horizontal");
-  createButt.hide();
-  backButt = createButton('BACK').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf / 2).style("height", startButtHeight / 2).mousePressed(()=>{
+    // background(112,16,15);
     numPlayersInput.hide();
     lobbyInput.hide();
     createButt.hide();
-    backButt.hide();
+    //backButt.show(); //hmmm TODO -- need to remove from lobby when goes back
+  });
+  createButt.center("horizontal");
+  createButt.hide();
+  backButt = createButton('BACK').position(width / 8, 6 * height / 7).class("startButts").style("width", startButtWidthHalf / 2).style("height", startButtHeight / 2).mousePressed(()=>{
+    numPlayersInput.hide();
+    lobbyInput.hide();
+    createButt.hide();
+    backButt.hide(); //TODO -- need to remove from lobby when goes back
     state = "start";
     arenaButt.show();
     joinButt.show();
@@ -371,6 +402,9 @@ function setup(){
   //display
   doneSetup = true;
   showEverything();
+
+  //placeholder TODO login
+  userName = "Player " + floor(random(100));
 } 
 
 //
@@ -379,7 +413,7 @@ function setup(){
 
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
-  if (state == "start") {
+  if (state == "start" || state == "create lobby" || state == "join lobby") {
     //title
     push();
     background(112,16,15);
@@ -401,10 +435,20 @@ function draw(){
       image(m.asset, 0, 0, assetSize / 2, assetSize / 2);
       pop();
     }
-  } else if (state == "create lobby") {
-    
-  } else if (state == "join lobby") {
-    
+  } else if (state == "waiting for lobby"){
+    push();
+    background(112,16,15);
+    textSize(width/20);
+    text(lobby.lobbyName, width / 2, height / 8);
+    text("Num Players To Start: " + lobby.numPlayers, width/2, 2 * height / 8);
+    text("PLAYERS: ", width/2, 4 * height / 8);
+    textSize(width/25);
+    for (let i = 0; i < lobby.numPlayers; i++){
+      if (lobby.playersArray[i] != null){
+        text(lobby.playersArray[i].userName, width / 2, map(i, 0, lobby.numPlayers, 5 * height / 8, 8 * height / 8));  //shh
+      }
+    }
+    pop();
   } else if (state == "market"){
     if (pickedUpSomething) {
       //show dragged image

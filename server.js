@@ -10,6 +10,7 @@ const structuredClone = require('realistic-structured-clone');
 //create server
 let port = process.env.PORT || 8000;
 let express = require('express');
+const e = require('express');
 let app = express();
 let server = require('http').createServer(app).listen(port, function(){
   console.log('Server is listening at port: ', port);
@@ -29,10 +30,12 @@ const Player = require("./modules/player").Player;
 const Monster = require("./modules/monsters").Monster;
 const monsters = require("./modules/monsters").monsters;
 const Names = require("./modules/names").Names;
+const Lobby = require("./modules/lobby").Lobby;
 let players = {}; // holds all current players, their parties, their stats, etc.
 let tieTimer = 0;
 let tieTimerMax = 8; //TODO test/think about more
 let testLobby = "testLobby";
+let lobbies = {}; //mainly for checking for player counts
 
 //
 // SERVER EVENTS
@@ -47,9 +50,40 @@ inputs.on('connection', (socket) => {
   //add entry to players object (search by id);
   players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null]), lobby: testLobby});
 
-  //send starting data
-  // socket.emit('goToMarket', players[socket.id]);
-  // socket.join(players[socket.id].lobby); //TODO placeholder just for testing
+  //create a lobby
+  socket.on("createLobby", (data) => {
+    let newLobby = new Lobby({lobbyName: data.lobbyName, numPlayers: data.numPlayers});
+    players[socket.id].userName = data.userName;
+    players[socket.id].lobbyName = data.lobbyName;
+    newLobby.players[socket.id] = players[socket.id]; //hmm
+    lobbies[newLobby.lobbyName] = newLobby; //hmmmm
+    socket.join(newLobby.lobbyName);
+    socket.emit("waitingForLobby", newLobby);
+  });
+  
+  //join a lobby
+  socket.on("joinLobby", (data) => {
+    console.log(data.userName + " joining " + data.lobbyName);
+    players[socket.id].userName = data.userName;
+    players[socket.id].lobbyName = data.lobbyName;
+    if (lobbies[data.lobbyName] != undefined){
+      let lobby = lobbies[data.lobbyName];
+      lobby.players[socket.id] = players[socket.id]; //hmm
+      socket.join(lobby.lobbyName);
+      if (Object.keys(lobby.players).length == lobby.numPlayers) {
+        console.log("STARTING LOBBY " + lobby.lobbyName);
+        for (let pID of Object.keys(lobby.players)){
+          let player = players[pID];
+          io.to(pID).emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)});
+        }
+        // io.to(lobby.lobbyName).emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)});
+      } else {
+        io.to(lobby.lobbyName).emit("waitingForLobby", lobby);
+      }
+    } else {
+      socket.emit("lobbyJoinError", data);
+    }
+  });
 
   //send possible team names
   socket.on("getPartyNames", () => {
@@ -100,7 +134,7 @@ inputs.on('connection', (socket) => {
     player.partyName = data.partyName;
 
     // check to see if both are ready, if so, send to battle
-    let lobby = io.sockets.adapter.rooms.get(player.lobby);
+    let lobby = io.sockets.adapter.rooms.get(player.lobbyName);
     console.log(lobby);
     if (lobby.size == 2){ //size instead of length because its a set
       let enemyIsReady = false;
