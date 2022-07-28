@@ -62,6 +62,27 @@ socket.on('connect', () => {
   playerID = socket.id;
 });
 
+//wait screen for lobby
+socket.on("waitingForLobby", (data) => {
+  state = "waiting for lobby";
+  // lobbyName = lobby.lobbyName;
+  lobby = data;
+  lobby.playersArray = []; //dumb but w/e
+  for (let p of Object.keys(lobby.players)){
+    lobby.playersArray.push(lobby.players[p]); //this is so dumb but it's 11pm TODO fix
+  }
+  while (lobby.playersArray.length < lobby.numPlayers){
+    lobby.playersArray.push(null); //hmmmmmmmmmm
+  }
+  // lobbyPlayers = lobby.players;
+});
+
+//lobby connect error
+socket.on("lobbyJoinError", (data) => {
+  console.log("ERROR JOINING LOBBY:");
+  console.log(data.lobbyName);
+});
+
 // basic setup on connecting to server or after battle when going back to market
 socket.on('goToMarket', (data) => {
   console.log('going to market');
@@ -73,11 +94,12 @@ socket.on('goToMarket', (data) => {
   hires = data.hires;
   party = data.party; //refreshes after battle
   
-  if (doneSetup){
+  if (doneSetup){ //TODO irrelevant now
     slots = [{sX: marketSlots, sY: marketSlotY, m:party}, {sX: hireSlots, sY: hireSlotY, m: hires}]; //array for all draggable slots, with appropriate Ys
     refreshButt.show();
     readyButt.show();
     showEverything();
+    backButt.hide();
   }
 });
 
@@ -151,6 +173,10 @@ let state = "start";
 // let availableHireNum = 3; //now just using hires
 let hires = [null, null, null]; //available monsters in market
 let doneSetup = false;
+// let lobbyName = "";
+// let lobbyPlayers = {};
+let lobby;
+let userName = "";
 
 // player stuff
 let party = [null, null, null, null, null];
@@ -200,7 +226,9 @@ let shouldShowMonsterInfo = false;
 let infoBox = {name: "", abilityText: "", x: 0, y: 0, width: 0, height: 0, textSize: 0};
 let nameSlotWidth;
 let textSizeUI, textSizeOver, textSizePartyName;
-let arenaButt, joinButt, createButt, loginButt, settingsButt;
+let arenaButt, joinButt, lobbyButt, loginButt, settingsButt;
+let startMonsters = [];
+let lobbyInput, createButt, numPlayersInput, backButt; //using the same button for both because couldn't decide on variable names
 
 // ITEMS
 let randomSpots = [];
@@ -249,7 +277,6 @@ function setup(){
   textSizeOver = width / 8;
   textSizePartyName = 4 * nameSlotWidth / 5;
 
-
   battleResultColors = {"TIE": color(230), "WIN": color(0, 255, 50), "LOSS": color(200, 0, 0)};
 
   infoBox.width = width/4;
@@ -258,6 +285,7 @@ function setup(){
   
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
+  refreshButt.class("startButts");
   refreshButt.hide(); //not on start
   readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{
     if (partyName == "") {
@@ -266,19 +294,103 @@ function setup(){
       socket.emit("readyUp", {party: party, hires: hires, partyName: partyName}); //sends msg that we're ready to battle
     }
   });
+  readyButt.class("startButts");
   readyButt.hide(); //hiding until there's a party to send to battle
   let startButtWidth = width/3 + "px";
-  arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  joinButt = createButton('Join Lobby').position(width / 2, 4 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  lobbyaButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
-  settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidth).mousePressed(()=>{});
+  let startButtWidthHalf = width/6 + "px";
+  let startButtHeight = height/8 + "px";
+  //TODO make functions
+  arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{});
+  joinButt = createButton('Join Lobby').position(width / 2, 4 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{
+    lobbyInput.show();
+    createButt.show();
+    backButt.show();
+    arenaButt.hide();
+    joinButt.hide();
+    lobbyButt.hide();
+    loginButt.hide();
+    settingsButt.hide();
+    createButt.html("Join Lobby");
+    state = "join lobby";
+  });
+  lobbyButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{
+    numPlayersInput.show();
+    lobbyInput.show();
+    createButt.show();
+    backButt.show();
+    arenaButt.hide();
+    joinButt.hide();
+    lobbyButt.hide();
+    loginButt.hide();
+    settingsButt.hide();
+    createButt.html("Create Lobby");
+    state = "create lobby";
+  });
+  loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
+  settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
+  arenaButt.center("horizontal");
+  joinButt.center("horizontal");
+  lobbyButt.center("horizontal");
+  loginButt.style("margin-left", "-15%");
+  settingsButt.style("margin-right", "-25%");
 
-
+  numPlayersInput = createInput('Enter Number of Players').position(width / 2, 3 * height / 7).style("width", startButtWidth / 2).style("height", startButtHeight / 2);
+  numPlayersInput.center("horizontal");
+  numPlayersInput.hide();
+  lobbyInput = createInput('Enter a Lobby ID').position(width / 2, 4 * height / 7).style("width", startButtWidth / 2).style("height", startButtHeight / 2);
+  lobbyInput.center("horizontal");
+  lobbyInput.hide();
+  createButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth / 2).style("height", startButtHeight).mousePressed(()=>{
+    if (state == "create lobby"){
+      socket.emit("createLobby", {lobbyName: lobbyInput.value(), numPlayers: numPlayersInput.value(), userName: userName});
+    } else if (state == "join lobby"){
+      socket.emit("joinLobby", {lobbyName: lobbyInput.value(), userName: userName}); //TODO userName on login
+    }
+    // background(112,16,15);
+    numPlayersInput.hide();
+    lobbyInput.hide();
+    createButt.hide();
+    //backButt.show(); //hmmm TODO -- need to remove from lobby when goes back
+  });
+  createButt.center("horizontal");
+  createButt.hide();
+  backButt = createButton('BACK').position(width / 8, 6 * height / 7).class("startButts").style("width", startButtWidthHalf / 2).style("height", startButtHeight / 2).mousePressed(()=>{
+    numPlayersInput.hide();
+    lobbyInput.hide();
+    createButt.hide();
+    backButt.hide(); //TODO -- need to remove from lobby when goes back
+    state = "start";
+    arenaButt.show();
+    joinButt.show();
+    lobbyButt.show();
+    loginButt.show();
+    settingsButt.show();
+  });
+  backButt.hide();
 
   //assets after loadImage
   loadMonsterAssets();
   diceAssets = [null, dice1, dice2, dice3, dice4, dice5, dice6];
+
+  //for start screen animation
+  startMonsters = [
+    {isFlipped: false, asset: gnoll},
+    {isFlipped: false, asset: stirge},
+    {isFlipped: false, asset: kobold},
+    {isFlipped: false, asset: vegepygmy},
+    {isFlipped: false, asset: skeleton},
+    {isFlipped: false, asset: beholder},
+    {isFlipped: false, asset: bulette},
+    {isFlipped: false, asset: goblin},
+    {isFlipped: false, asset: flumph},
+    {isFlipped: false, asset: mephit},
+    {isFlipped: false, asset: cavebear}
+  ];
+  for (let m of startMonsters){
+    if (random() < 0.3){
+      m.isFlipped = true;
+    }
+  }
 
   //Items
   for (let i = 0; i < sporeNum; i++){
@@ -290,6 +402,9 @@ function setup(){
   //display
   doneSetup = true;
   showEverything();
+
+  //placeholder TODO login
+  userName = "Player " + floor(random(100));
 } 
 
 //
@@ -298,7 +413,7 @@ function setup(){
 
 function draw(){
   //had to move drag hover functions here or else would only trigger on move, makes hover wonky
-  if (state == "start") {
+  if (state == "start" || state == "create lobby" || state == "join lobby") {
     //title
     push();
     background(112,16,15);
@@ -306,8 +421,34 @@ function draw(){
     stroke(255);
     strokeWeight(8);
     fill(0);
-    text("Super Auto Lich", width/2, height/8);
-    //buttons
+    text("Super Auto Lich", width/2, height/7);
+    //monsters
+    for (let [i, m] of startMonsters.entries()){
+      push();
+      translate(i * width / 18 + 4 * width / 18, 2 * height / 7);
+      if(random() < 0.01){
+        m.isFlipped = !m.isFlipped;
+      }
+      if(m.isFlipped){
+        scale(-1,1);
+      }
+      image(m.asset, 0, 0, assetSize / 2, assetSize / 2);
+      pop();
+    }
+  } else if (state == "waiting for lobby"){
+    push();
+    background(112,16,15);
+    textSize(width/20);
+    text(lobby.lobbyName, width / 2, height / 8);
+    text("Num Players To Start: " + lobby.numPlayers, width/2, 2 * height / 8);
+    text("PLAYERS: ", width/2, 4 * height / 8);
+    textSize(width/25);
+    for (let i = 0; i < lobby.numPlayers; i++){
+      if (lobby.playersArray[i] != null){
+        text(lobby.playersArray[i].userName, width / 2, map(i, 0, lobby.numPlayers, 5 * height / 8, 8 * height / 8));  //shh
+      }
+    }
+    pop();
   } else if (state == "market"){
     if (pickedUpSomething) {
       //show dragged image
