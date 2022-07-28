@@ -48,7 +48,7 @@ inputs.on('connection', (socket) => {
   console.log('new input client!: ' + socket.id);
 
   //add entry to players object (search by id);
-  players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null]), lobby: testLobby});
+  players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null])});
 
   //create a lobby
   socket.on("createLobby", (data) => {
@@ -133,9 +133,13 @@ inputs.on('connection', (socket) => {
     player.battleParty = structuredClone(data.party);
     player.partyName = data.partyName;
 
+    //now just sending party to lobby waiting and triggering when all are there since might be >2
+    lobbies[player.lobbyName].parties.push({id: socket.id, party: player.battleParty});
+    checkLobbyForReady(player);
     // check to see if both are ready, if so, send to battle
-    let lobby = io.sockets.adapter.rooms.get(player.lobbyName);
-    console.log(lobby);
+    // let lobby = io.sockets.adapter.rooms.get(player.lobbyName);
+    // console.log(lobby);
+    /*
     if (lobby.size == 2){ //size instead of length because its a set
       let enemyIsReady = false;
       let enemy = {};
@@ -213,6 +217,7 @@ inputs.on('connection', (socket) => {
     } else {
       socket.emit("waitingForBattle");
     }
+    */
   });
 
   //after battle timeout, send back to market, trigger tier stuff
@@ -893,6 +898,118 @@ function resetMonsters(parties){
     monster.isDamaged = false;
   }
   return parties;
+}
+
+//send waiting or ready for multiplayer lobby
+function checkLobbyForReady(player){
+  let lobby = lobbies[player.lobbyName];
+  if (lobby.parties.length < lobby.numPlayers) {
+    // io.to(lobbyName).emit("waitingForBattle");
+    io.to(player.id).emit("waitingForBattle");
+  } else {
+    //need to split lobby evenly, with extra battle if odd num
+    //determine enemies for this round
+    let battlePairs = [];
+    let lobbyParties = structuredClone(lobby.parties);
+    console.log("lobby parties");
+    console.log(lobbyParties);
+    if (lobbyParties.length % 2 == 0){
+      for (let [i, p] of lobbyParties.entries()) { //hmm
+        let p1 = structuredClone(lobbyParties[i]);
+        lobbyParties.splice(i, 1);
+        let opponentIndex = Math.floor(Math.random() * lobbyParties.length);
+        let p2 = structuredClone(lobbyParties[opponentIndex]);
+        battlePairs.push([p1, p2]); //TODO could just send p1 p2 but need to refactor battlesteps
+        battlePairs.push([p2, p1]); //okay going to dupe so that its only sending to first client for loss/win
+        lobbyParties.splice(opponentIndex, 1);
+        console.log(battlePairs);
+      }
+    } else { //odd -- need to figure out how to only count for one battle in HP tally... guess it makes sense to kind of do it client side? easy to do trophies then too...
+      //take someone at random out and have them fight someone random from remaining
+      let rIndex = Math.floor(Math.random() * lobbyParties.length);
+      let r1 = structuredClone(lobbyParties[rIndex]);
+      lobbyParties.splice(rIndex, 1);
+      let r2 = structuredClone(lobbyParties[Math.floor(Math.random() * lobbyParties.length)]);
+      battlePairs.push([r1, r2]);
+      console.log(battlePairs);
+      for (let [i, player] of lobbyParties.entries()) { //hmm not right use-case
+        let p1 = structuredClone(lobbyParties[i]);
+        lobbyParties.splice(i, 1);
+        let opponentIndex = Math.floor(Math.random() * lobbyParties.length);
+        let p2 = structuredClone(lobbyParties[opponentIndex]);
+        battlePairs.push([p1, p2]); //TODO could just send p1 p2 but need to refactor battlesteps
+        battlePairs.push([p2, p1]);
+        lobbyParties.splice(opponentIndex, 1);
+        console.log(battlePairs);
+      }
+    }
+    //run the party trim functions
+    
+    //run the battlesteps for each pair and send results to each client
+    
+  }
+  /*
+    //TODO need to do this less 1/2 and more player 1 player 2... 
+    //TODO make less clunky... trims up the parties for better battle display
+    if (enemyIsReady){
+      //remove nulls from party so battle step works
+      let party1 = player.battleParty;
+      for(let i = 0; i < party1.length; i++){
+        if (party1[i] == null){
+          for (let j = i; j < party1.length - 1; j++){
+            party1[j] = party1[j+1];
+            if (j == party1.length - 2 && party1[j+1] !== null){
+              party1[j+1] = null;
+            }
+          }
+        }
+      }
+      for (let i = party1.length - 1; i >= 0; i--){
+        if (party1[i] == null){
+          party1.splice(i, 1);
+        }
+      }
+      //reset indexes and add lichID
+      for (let i = 0; i < party1.length; i++){
+        party1[i].index = i;
+        party1[i].lichID = player.id;
+      }
+
+      let party2 = enemy.battleParty;
+      for(let i = 0; i < party2.length; i++){
+        if (party2[i] == null){
+          for (let j = i; j < party2.length - 1; j++){
+            party2[j] = party2[j+1];
+            if (j == party2.length - 2 && party2[j+1] !== null){
+              party2[j+1] = null;
+            }
+          }
+        }
+      }
+      for (let i = party2.length - 1; i >= 0; i--){
+        if (party2[i] == null){
+          party2.splice(i, 1);
+        }
+      }
+      //reset indexes and add lichID
+      for (let i = 0; i < party2.length; i++){
+        party2[i].index = i;
+        party2[i].lichID = enemy.id;
+      }
+
+      //reset here since we only check when starting battle
+      players[player.id].ready = false;
+      players[enemy.id].ready = false;
+
+      //start battle sequence
+      let battle = [{id: player.id, partyName: player.partyName, party: party1}, {id: enemy.id, partyName: players[enemy.id].partyName, party: party2}];
+      let startParties = structuredClone(battle);
+
+      io.to(player.lobby).emit("startBattle", {startParties: startParties, battleSteps: getBattleSteps(battle)});
+    } else {
+      socket.emit("waitingForBattle");
+    }
+    */
 }
 
 function refreshHires(tier, hires){

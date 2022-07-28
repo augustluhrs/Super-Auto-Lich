@@ -4,6 +4,7 @@ class Lobby {
         this.lobbyName = options.lobbyName || "noname";
         this.players = options.players || {};
         this.numPlayers = options.numPlayers || 2;
+        this.parties = options.parties || [];
     }
 }
 

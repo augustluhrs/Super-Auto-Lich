@@ -65,7 +65,6 @@ socket.on('connect', () => {
 //wait screen for lobby
 socket.on("waitingForLobby", (data) => {
   state = "waiting for lobby";
-  // lobbyName = lobby.lobbyName;
   lobby = data;
   lobby.playersArray = []; //dumb but w/e
   for (let p of Object.keys(lobby.players)){
@@ -74,7 +73,6 @@ socket.on("waitingForLobby", (data) => {
   while (lobby.playersArray.length < lobby.numPlayers){
     lobby.playersArray.push(null); //hmmmmmmmmmm
   }
-  // lobbyPlayers = lobby.players;
 });
 
 //lobby connect error

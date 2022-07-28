@@ -153,12 +153,16 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] lobby wait screen
         - [X] joined player names
         - [ ] start button when ready
+        - [X] random pairings
+        - [X] duplicate battles if odd number
       - [ ] settings/info/options
-        - [ ] random pairings
-        - [ ] duplicate battles if odd number
       - [X] monster animation
+    - [ ] Matchmaking refactor
       - [ ] fix ready for multiple fighters (server.js:137)
-  - [ ] code refactor
+      - [ ] fix p1,p2 in battlesteps
+      - [ ] client side event for win/loss to account for odds and trophies for arena
+      - [ ] global chat for matchmaking? w/ current users online number
+  - [ ] old code refactor
     - [X] use realistic-structured-clone & node 16.x for glitch
     - [ ] fix the battle mess
     - [ ] get rid of the duplicate party display market vs battle
