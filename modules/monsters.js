@@ -133,7 +133,7 @@ class Kobold extends Monster {
     this.currentHP = 1;
     this.ability = null;
     this.timing = "before start";
-    this.abilityText = "Pack Tactics: At the beginning of combat, gains (+X/+X*2/+X*3) power and HP, where X is the number of other kobolds in your party.";
+    this.abilityText = "Pack Tactics: At the beginning of combat, if you have more than one kobold, each gains (+X/+X*2/+X*3) power and HP, where X is the total number of kobolds in your party.";
   }
 }
 

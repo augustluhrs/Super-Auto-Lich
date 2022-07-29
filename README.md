@@ -158,9 +158,11 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [ ] settings/info/options
       - [X] monster animation
     - [ ] Matchmaking refactor
-      - [ ] fix ready for multiple fighters (server.js:137)
-      - [ ] fix p1,p2 in battlesteps
+      - [X] fix ready for multiple fighters (server.js:137)
+      - [X] fix p1,p2 in battlesteps
+      - [ ] need to sync random events now... fuck
       - [ ] client side event for win/loss to account for odds and trophies for arena
+      - [ ] send player message of win if only player left -- needs refactor of battleSteps "gameOver" message
       - [ ] global chat for matchmaking? w/ current users online number
   - [ ] old code refactor
     - [X] use realistic-structured-clone & node 16.x for glitch
@@ -170,15 +172,17 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] parties/ids/indexes code smell
     - [ ] figure out the battle party references stuff (server.js:300)
     - [ ] common but different name for cloned arrays
-    - [ ] "battle" vs "parties"
+    - [X] "battle" vs "parties"
     - [ ] need to clone at all? or change up what battleSteps sends... in middle
   - [ ] bugs/issues
     - [ ] "The" party name fix for names like Xanathar's
+    - [ ] center names instead of left/right? or like start from center rather than edges
     - [ ] first move display getting cut short
     - [ ] fix move steps and remove move step if no one needs to
     - [ ] sleeping should wear off if creature takes damage
     - [ ] ability sort by strength won't work if monsters somehow have negative power
     - [ ] waiting for battle different alignment on party name and market (sketch.js:985)
+    - [X] tint slowing performance
   - [ ] TODOs/Things to think about
     - [ ] look up networking patterns
     - [ ] look up game ability patterns
@@ -265,6 +269,11 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [ ] some sort of data gathering for what is picked and what wins?
 
   ## Playtest Notes
+
+  ### 0.3
+
+  **Balance Notes**
+  - changed kobolds to total num kobolds instead of total -1, but still only triggers if multiple
 
   ### 0.2
 

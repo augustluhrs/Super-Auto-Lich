@@ -67,8 +67,8 @@ socket.on("waitingForLobby", (data) => {
   state = "waiting for lobby";
   lobby = data;
   lobby.playersArray = []; //dumb but w/e
-  for (let p of Object.keys(lobby.players)){
-    lobby.playersArray.push(lobby.players[p]); //this is so dumb but it's 11pm TODO fix
+  for (let p of lobby.players){
+    lobby.playersArray.push(p);
   }
   while (lobby.playersArray.length < lobby.numPlayers){
     lobby.playersArray.push(null); //hmmmmmmmmmm
@@ -149,11 +149,12 @@ socket.on("startBattle", (data) => {
   console.log(battleSteps);
   stepThroughBattle(battleSteps);
 
-  for (let p of data.startParties){
-    if (p.id != playerID){
-      enemyName = p.partyName;
-    }
-  }
+  enemyName = data.startPair[1].partyName; //TODO username too?
+  // for (let p of data.startPair){
+  //   if (p.id != playerID){
+  //     enemyName = p.partyName;
+  //   }
+  // }
 
   //remove market stuff
   dragged = {};
@@ -168,11 +169,8 @@ socket.on("startBattle", (data) => {
 
 //overall game state
 let state = "start";
-// let availableHireNum = 3; //now just using hires
 let hires = [null, null, null]; //available monsters in market
 let doneSetup = false;
-// let lobbyName = "";
-// let lobbyPlayers = {};
 let lobby;
 let userName = "";
 
@@ -962,32 +960,43 @@ function showMonster(monster){
   let yOffset = (3 * size / 4);
   let statSize = size / 3;
 
-  //effects
-  if (monster.isSleeping){
-    tint(0, 153, 204);
-  }
-  if (monster.isNullified){
-    tint(204, 0, 153);
-  }
+  //effects -- tint was causing performance issues
+  // if (monster.isSleeping){
+  //   // tint(0, 153, 204);
+  // }
+  // if (monster.isNullified){
+  //   // tint(204, 0, 153);
+  // }
 
   push();
   //annoying, need more elegant solution to flipping images and text
   if (!monster.isMyParty) {
+    translate(-x, y);
     push();
-    translate(-monster.x, monster.y);
     rotate(-monster.rotation);
     scale(-1, 1);
     image(monsterAssets[monster.name], 0, 0, size, size);
     pop();
     x = -x; //so text flips
   } else {
-    translate(monster.x, monster.y);
+    translate(x, y);
+    push();
     rotate(monster.rotation);
     image(monsterAssets[monster.name], 0, 0, size, size);
+    pop();
+  }
+  showMonsterItems(monster, 0, 0);
+  noStroke();
+  if (monster.isSleeping){
+    fill(0, 153, 204, 100);
+    rect(0, 0, assetSize);
+  }
+  if (monster.isNullified){
+    fill(204, 0, 153, 100);
+    rect(0, 0, assetSize);
   }
   pop();
 
-  showMonsterItems(monster, x, y);
 
   let powerX = x - xOffset;
   let hpX = x + xOffset;
@@ -1156,13 +1165,15 @@ function stepThroughBattle(battleSteps){
     let step = battleSteps[0];
     console.log(step.action);
     //reset and update stepSpeed if changed
-    for (let client of step.parties){
-      if (client.id == playerID){
-        battleParty = client.party;
-      } else {
-        enemyParty = client.party;
-      }
-    }
+    // for (let client of step.parties){
+    //   if (client.id == playerID){
+    //     battleParty = client.party;
+    //   } else {
+    //     enemyParty = client.party;
+    //   }
+    // }
+    battleParty = step.pair[0].battleParty;
+    enemyParty = step.pair[1].battleParty;
     //seems redundant but TODO refactor
     for (let i = 0; i < enemyParty.length; i++){
       enemyParty[i].x = battleSlots[i];
@@ -1252,12 +1263,12 @@ function stepThroughBattle(battleSteps){
       }, 3000);
     } else if (step.action == "gameOver"){
       state = "gameOver";
-      if (step.winner == playerID){
+      if (step.winner){
         battleResult = "YOU WON";
       } else {
         battleResult = "YOU LOST";
       }
-    } else if (step.action == "battleOver"){
+    } else if (step.action == "battleOver"){ //TODO match gameOver on server, instead of checking here, now that each client is getting own
       if (battleParty.length == 0){
         // hp -= ; //TODO hp loss animation
         battleResult = "LOSS";
@@ -1277,7 +1288,6 @@ function stepThroughBattle(battleSteps){
     battleSteps.splice(0,1);
   }
 }
-
 
 //upgrades monster after dropping to combine, TODO: should be on server
 function upgradeMonster(index, draggedUpgrades){
