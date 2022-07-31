@@ -296,16 +296,16 @@ function setup(){
   let startButtWidthHalf = width/6 + "px";
   let startButtHeight = height/8 + "px";
   //TODO make functions
-  arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{});
+  // arenaButt = createButton('Play Arena').position(width / 2, 3 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{});
   joinButt = createButton('Join Lobby').position(width / 2, 4 * height / 7).class("startButts").style("width", startButtWidth).style("height", startButtHeight).mousePressed(()=>{
     lobbyInput.show();
     createButt.show();
     backButt.show();
-    arenaButt.hide();
+    // arenaButt.hide();
     joinButt.hide();
     lobbyButt.hide();
-    loginButt.hide();
-    settingsButt.hide();
+    // loginButt.hide();
+    // settingsButt.hide();
     createButt.html("Join Lobby");
     state = "join lobby";
   });
@@ -314,21 +314,21 @@ function setup(){
     lobbyInput.show();
     createButt.show();
     backButt.show();
-    arenaButt.hide();
+    // arenaButt.hide();
     joinButt.hide();
     lobbyButt.hide();
-    loginButt.hide();
-    settingsButt.hide();
+    // loginButt.hide();
+    // settingsButt.hide();
     createButt.html("Create Lobby");
     state = "create lobby";
   });
-  loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
-  settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
-  arenaButt.center("horizontal");
+  // loginButt = createButton('Log In').position(width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
+  // settingsButt = createButton('Settings').position(3 * width / 4, 6 * height / 7).class("startButts").style("width", startButtWidthHalf).style("height", startButtHeight).mousePressed(()=>{});
+  // arenaButt.center("horizontal");
   joinButt.center("horizontal");
   lobbyButt.center("horizontal");
-  loginButt.style("margin-left", "-15%");
-  settingsButt.style("margin-right", "-25%");
+  // loginButt.style("margin-left", "-15%");
+  // settingsButt.style("margin-right", "-25%");
 
   numPlayersInput = createInput('Enter Number of Players').position(width / 2, 3 * height / 7).style("width", startButtWidth / 2).style("height", startButtHeight / 2);
   numPlayersInput.center("horizontal");
@@ -356,11 +356,11 @@ function setup(){
     createButt.hide();
     backButt.hide(); //TODO -- need to remove from lobby when goes back
     state = "start";
-    arenaButt.show();
+    // arenaButt.show();
     joinButt.show();
     lobbyButt.show();
-    loginButt.show();
-    settingsButt.show();
+    // loginButt.show();
+    // settingsButt.show();
   });
   backButt.hide();
 
