@@ -148,6 +148,7 @@ socket.on("startBattle", (data) => {
   console.log("battle start");
   console.log(battleSteps);
   stepThroughBattle(battleSteps);
+  numPlayersInLobby = data.numPlayersInLobby;
 
   // enemyName = data.startPair[1].partyName; //TODO username too?
   if (data.startPair[0].id == playerID){
@@ -178,6 +179,7 @@ let hires = [null, null, null]; //available monsters in market
 let doneSetup = false;
 let lobby;
 let userName = "";
+let numPlayersInLobby = 0;
 
 // player stuff
 let party = [null, null, null, null, null];
@@ -515,7 +517,7 @@ function draw(){
   }else if (state == "gameOver") {
     background(20);
     textSize(textSizeOver);
-    if (battleResult == "YOU WON") {
+    if (battleResult == "YOU WON" ) {
       fill(0, 250, 80);
     } else if (battleResult == "YOU LOST") {
       fill(200, 0, 0);
@@ -533,7 +535,7 @@ function draw(){
         stepThroughBattle(battleSteps);
       } else {
         stepTimer++;
-        if (stepTimer%50 == 0) {console.log(stepTimer)};
+        // if (stepTimer%50 == 0) {console.log(stepTimer)};
         updateAnimations();
       }
       if (isBattleOver) { //text not showing b/c getting overwritten
@@ -569,7 +571,6 @@ function mouseClicked(){
       stepSpeed = regularSpeed / 2;
     }
   } else if (state == "party name"){
-    
     for (let i = 0; i < 3; i++){
       //top name buttons
       if (mouseX > nameSlots.x[i] - 4 * nameSlotWidth && mouseX < nameSlots.x[i] + 4 * nameSlotWidth && mouseY > nameSlots.y[0] - 2 * nameSlotWidth && mouseY < nameSlots.y[0] + 2 * nameSlotWidth){
@@ -589,7 +590,9 @@ function mouseDragged(){ //just for pickup now
   if (state == "market" && !waitingForBattle && !pickedUpSomething) {
     for (let s of slots){
       for (let [i, slotX] of s.sX.entries()){
-        if (s.m[i] !== null && mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+        if (s.m[i] !== null && s.m[i] !== undefined && mouseX > slotX - r && mouseX < slotX + r && mouseY > s.sY - r && mouseY < s.sY + r) {
+          console.log(i);
+          console.log(s.m[i]);
           //in bounds, grab image and remove from original spot
           pickedUpSomething = true;
           dragged = {
@@ -1280,11 +1283,19 @@ function stepThroughBattle(battleSteps){
         socket.emit("goToMarket")
       }, 3000);
     } else if (step.action == "gameOver"){
-      state = "gameOver";
-      if (step.winner == playerID){
+      if (step.winner != playerID){
+        state = "gameOver";
+        battleResult = "YOU LOST";
+      } else if (numPlayersInLobby == 1){
+        state = "gameOver";
         battleResult = "YOU WON";
       } else {
-        battleResult = "YOU LOST";
+        battleResult = "WIN";
+        isBattleOver = true;
+        //set timer for going back to market
+        setTimeout(() => {
+          socket.emit("goToMarket")
+        }, 3000);
       }
     } else if (step.action == "battleOver"){ //TODO match gameOver on server, instead of checking here, now that each client is getting own
       if (battleParty.length == 0){

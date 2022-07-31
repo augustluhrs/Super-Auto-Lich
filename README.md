@@ -44,7 +44,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
   - [X] put on glitch
   - [X] playtest bugs
     - [X] party dupe after first battle
-    - [ ] refresh hires after battle (can't reproduce)
+    - [X] refresh hires after battle (can't reproduce)
     - [X] server line 146 null (shouldn't happen...)
 
 - [X] 0.2
@@ -162,7 +162,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
       - [X] fix p1,p2 in battlesteps
       - [X] need to sync random events now... fuck
       - [ ] client side event for win/loss to account for odds and trophies for arena
-      - [ ] send player message of win if only player left -- needs refactor of battleSteps "gameOver" message
+      - [X] send player message of win if only player left -- needs refactor of battleSteps "gameOver" message
       - [ ] global chat for matchmaking? w/ current users online number
   - [ ] old code refactor
     - [X] use realistic-structured-clone & node 16.x for glitch
@@ -184,6 +184,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] waiting for battle different alignment on party name and market (sketch.js:985)
     - [X] tint slowing performance
     - [X] fix stroke after start
+    - [X] undefined vs null in mouseDragged
   - [ ] TODOs/Things to think about
     - [ ] look up networking patterns
     - [ ] look up game ability patterns

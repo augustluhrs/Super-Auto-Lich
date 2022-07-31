@@ -181,25 +181,37 @@ inputs.on('connection', (socket) => {
 //
 
 function getBattleSteps(pair){
+  let numLost = 0; //for reducing players in lobby and sending final win msg
   let clonePair = structuredClone(pair); //TODO need better names for these parties I keep making
   let startPair = structuredClone(pair);
   let battleSteps = [{pair: clonePair, action: "start"}]; //confusing because abilites are "before start", but start is always first TODO just make it "on start" instead
-  battleSteps = checkStartAbilities(startPair, "before start", battleSteps);
-  battleSteps = battleStep(startPair, battleSteps, tieTimer);
-  return battleSteps;
+  ([pair, battleSteps] = checkStartAbilities(startPair, "before start", battleSteps));
+  console.log("steps0");
+  console.log(battleSteps);
+  ([battleSteps, numLost] = battleStep(startPair, battleSteps, tieTimer)); //wtf "Note: The parentheses ( ... ) around the assignment statement are required when using object literal destructuring assignment without a declaration."
+  console.log("steps1");
+  console.log(structuredClone(battleSteps));
+  return [battleSteps, numLost];
 }
 
 function battleStep(pair, battleSteps, tieTimer){
+  let numLost = 0;
   console.log("battleStep");
   let shouldTickTimer = true; //TODO there's a better way to check if should tick tie timer
 
   //check for before attack abilities
   let beforeAttackPair = structuredClone(pair);
-  [pair, battleSteps] = checkAttackAbilities(beforeAttackPair, "before attack", battleSteps);
+  ([pair, battleSteps] = checkAttackAbilities(beforeAttackPair, "before attack", battleSteps));
+
+  console.log("first");
+  console.log(structuredClone(battleSteps));
 
   //make copy and store in array for client display -- moving before so showing monster before effects not after
   let attackPair = structuredClone(pair);
   battleSteps.push({pair: attackPair, action: "attack"}); //hmm this timing is problematic TODO
+
+  console.log("second");
+  console.log(structuredClone(battleSteps));
 
   let party1 = pair[0].battleParty;
   let party2 = pair[1].battleParty;
@@ -248,12 +260,16 @@ function battleStep(pair, battleSteps, tieTimer){
 
   //check for after attack abilities
   let afterAttackPair = structuredClone(pair);
-  [pair, battleSteps] = checkAttackAbilities(afterAttackPair, "after attack", battleSteps);
+  ([pair, battleSteps] = checkAttackAbilities(afterAttackPair, "after attack", battleSteps));
+
+  console.log("third");
+  console.log(structuredClone(battleSteps));
 
   //check death abilities and move up animation before actual splice, if still fighting
   if (hasBeenDeath){
+    shouldTickTimer = false;
     let preDeathPair = structuredClone(pair);
-    [pair, battleSteps] = checkDeathAbilities(preDeathPair, "after death", battleSteps, deadMonsters);
+    ([pair, battleSteps] = checkDeathAbilities(preDeathPair, "after death", battleSteps, deadMonsters));
     if (preDeathPair[0].battleParty.length > pair[0].battleParty.length || preDeathPair[1].battleParty.length > pair[1].battleParty.length){ //prevent from sending move if no one actually was removed
       let postDeathPair = structuredClone(pair);
       battleSteps.push({pair: postDeathPair, action: "move"}); //going to have to hide first index...
@@ -261,7 +277,7 @@ function battleStep(pair, battleSteps, tieTimer){
   }
 
   let p1 = players[pair[0].id]; //hmmmm
-  // p2 = pair[1];
+  let p2 = players[pair[1].id]; //hmmmm
   party1 = pair[0].battleParty; //hmmm
   party2 = pair[1].battleParty;
 
@@ -290,24 +306,35 @@ function battleStep(pair, battleSteps, tieTimer){
   //check for end, send next step or end event
   if ((party1.length == 0 && party2.length == 0) || tieTimer >= tieTimerMax) { //tie or check for tie timer
     battleSteps.push({pair: finalPair, action: "tie"});
-    return battleSteps;
+    console.log("tie");
+    console.log(structuredClone(battleSteps));
+    return [battleSteps, numLost];
   } else if (party1.length == 0){ //player1 loss
     p1.hp -= p1.hpLoss;
     if (p1.hp <= 0) { //player1 lose game
-      battleSteps.push({pair: finalPair, action: "gameOver", winner: p2.id});
-      return battleSteps; //not needed but don't want errors
+      numLost++;
+      battleSteps.push({pair: finalPair, action: "gameOver", winner: p2.id, numPlayersInLobby: lobbies[pair[0].lobbyName].players.length});
+      return [battleSteps, numLost]; //not needed but don't want errors
     } else {
       battleSteps.push({pair: finalPair, action: "battleOver"});
-      return battleSteps;
+      console.log("p1 over");
+      console.log(structuredClone(battleSteps));
+      return [battleSteps, numLost];
     }
   } else if (party2.length == 0){ //player2 loss
-    p2.hp -= p2.hpLoss;
+    //only if not an odd round
+    if (pair[2].length == 2){
+      p2.hp -= p2.hpLoss;
+    }
     if (p2.hp <= 0) { //player2 lose game
-      battleSteps.push({pair: finalPair, action: "gameOver", winner: p1.id});
-      return battleSteps;
+      numLost++;
+      battleSteps.push({pair: finalPair, action: "gameOver", winner: p1.id, numPlayersInLobby: lobbies[pair[0].lobbyName].players.length});
+      return [battleSteps, numLost];
     } else {
       battleSteps.push({pair: finalPair, action: "battleOver"});
-      return battleSteps;
+      console.log("p2 over");
+      console.log(structuredClone(battleSteps));
+      return [battleSteps, numLost];
     }
   } else {
     //check to see if a death has happened, if not, tick tieTimer (ugh this skelly...)
@@ -317,7 +344,12 @@ function battleStep(pair, battleSteps, tieTimer){
       tieTimer = 0;
     }
     pair = resetMonsters(pair);
+
+    console.log("fourth");
+    console.log(structuredClone(battleSteps));
+
     return battleStep(pair, battleSteps, tieTimer);
+    // return [battleStep(pair, battleSteps, tieTimer), numLost];
   }
 }
 
@@ -369,7 +401,7 @@ function checkStartAbilities(pair, timing, battleSteps){ //needs parties, timing
     }
   }
 
-  return battleSteps;
+  return [pair, battleSteps];
 }
 
 //mid-battle abilities
@@ -443,7 +475,7 @@ function checkAttackAbilities(pair, timing, battleSteps){ //needs parties, timin
                 }
               } else { //chance of hitting ally
                 if (Math.random() < 0.20) { //blood blind, hits ally
-                  for (let j = monster.index - 1; j < party.length; j++){
+                  for (let j = monster.index + 1; j < party.length; j++){
                     if (!party[j].isDead){
                       party[j].currentHP -= monster.currentPower;
                       if (party[j].currentHP <= 0){
@@ -664,7 +696,7 @@ function checkDeathAbilities(pair, timing, battleSteps, deadMonsters){
   }
 
   if (deadMonsters2.length > 0){
-    [pair, battleSteps] = checkDeathAbilities(pair, "after death", battleSteps, deadMonsters2);
+    ([pair, battleSteps] = checkDeathAbilities(pair, "after death", battleSteps, deadMonsters2));
 
     //TODO code smell, this shouldn't be necessary...
     party1 = pair[0].battleParty;
@@ -760,20 +792,29 @@ function checkLobbyForReady(player){
     
     //run the battlesteps for each pair and send results to each client
     let sendToPairs = [];
+    let numLost = 0;
     for (let pair of battlePairs){
-      let steps = getBattleSteps(pair); //TODO might be too big?
+      let [steps, lost] = getBattleSteps(pair); //TODO might be too big?
+      console.log("steps2");
+      console.log(steps);
+      numLost += lost;
       let startPair = structuredClone(pair); //unnecessary but w/e TODO
       sendToPairs.push([pair[2], startPair, steps]);
     }
+    if (numLost > 0){
+      lobbies[player.lobbyName].numPlayers -= numLost;
+    }
     for (let battle of sendToPairs){
       for (let client of battle[0]){
-        io.to(client).emit("startBattle", {startPair: battle[1], battleSteps: battle[2]});
+        io.to(client).emit("startBattle", {startPair: battle[1], battleSteps: battle[2], numPlayersInLobby: lobbies[player.lobbyName].numPlayers});
       }
       // io.to(pair[0].id).emit("startBattle", {startPair: startPair, battleSteps: getBattleSteps(pair)});
     }
 
     //reset lobby.players so readyup works
     lobby.players = [];
+    console.log("round over, num lost: " + numLost);
+
   }
 }
 
@@ -808,26 +849,42 @@ function getActingMonsters(timing, party1, party2){
   //check for abilities that match the timing and make new array of monsters that need to act
   let actingMonsters = [];
   let maxPower = 0;
-
-  for (let m of party1){
-    if (m.timing == timing){
-      if (m.currentPower > maxPower){
-        maxPower = m.currentPower;
+  
+  if (timing == "before attack" || timing == "after attack"){
+    if (party1[0].timing == timing){
+      if (party1[0].currentPower > maxPower){
+        maxPower = party1[0].currentPower;
       }
-      actingMonsters.push(m);
+      actingMonsters.push(party1[0]);
     }
-  }
-
-  if (party2.length != 0){ //hack for deadmonsters sorting
-    for (let m of party2) {
-      if (m.timing == timing){ //wasn't doing this before refactor.... wtf?
+    if (party2[0].timing == timing){
+      if (party2[0].currentPower > maxPower){
+        maxPower = party2[0].currentPower;
+      }
+      actingMonsters.push(party2[0]);
+    }
+  } else {
+    for (let m of party1){
+      if (m.timing == timing){
         if (m.currentPower > maxPower){
           maxPower = m.currentPower;
         }
         actingMonsters.push(m);
       }
     }
+  
+    if (party2.length != 0){ //hack for deadmonsters sorting
+      for (let m of party2) {
+        if (m.timing == timing){ //wasn't doing this before refactor.... wtf?
+          if (m.currentPower > maxPower){
+            maxPower = m.currentPower;
+          }
+          actingMonsters.push(m);
+        }
+      }
+    }
   }
+  
 
   //sort array by strength, ties are random
   let sortedMonsters = [];
