@@ -8,6 +8,11 @@ Browser based version using p5.js and socket.io, hosted on glitch.
 
 Made by [August Luhrs](https://augustluhrs.art) and [Casey Conchinha](https://kccon.ch).
 
+Thanks to our lovely playtesters!
+Calder Hussmann
+Jackson Luhrs
+Ashton Luhrs
+
 Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood Games and Wizards of the Coast respectively. We make no claim to either and only use their likenesses because we love them, plz no sue
 
 
@@ -274,12 +279,24 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
 
   ### 0.3
 
+  **7/31/22**
+  - click and drag still most unintuitive part
+  - upgrade to lvl 2 should only cost 2 monsters
+  - upgrades should spawn a new hire (of a higher tier) in the next available slot
+  - should have an unready button (clicking ready multiple times sends too many messages and you end up fighting yourself)
+  - casey dragged a monster to rearrange and one of the party got deleted
+  - might need to nerf kobolds again (but might nerf itself when higher tiers are added, thus decreasing likelihood of getting kobolds)
+  - combining lvl 2 and lvl 2 not right amount of upgrades
+  - flumph should cancel kobolds 
+  - go back to main menu button after win/loss
+
+
   **Balance Notes**
   - changed kobolds to total num kobolds instead of total -1, but still only triggers if multiple
 
   ### 0.2
 
-  **7/22/22
+  **7/22/22**
   - first instinct was to click on the monsters, had to be told to drag
   - no indication when they don't have enough money to do something, and no warning if they want to ready up while they still have a lot of money
   - info boxes were basically not read or sought after
