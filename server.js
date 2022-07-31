@@ -186,11 +186,9 @@ function getBattleSteps(pair){
   let startPair = structuredClone(pair);
   let battleSteps = [{pair: clonePair, action: "start"}]; //confusing because abilites are "before start", but start is always first TODO just make it "on start" instead
   ([pair, battleSteps] = checkStartAbilities(startPair, "before start", battleSteps));
-  console.log("steps0");
-  console.log(battleSteps);
+
   ([battleSteps, numLost] = battleStep(startPair, battleSteps, tieTimer)); //wtf "Note: The parentheses ( ... ) around the assignment statement are required when using object literal destructuring assignment without a declaration."
-  console.log("steps1");
-  console.log(structuredClone(battleSteps));
+
   return [battleSteps, numLost];
 }
 
@@ -203,15 +201,9 @@ function battleStep(pair, battleSteps, tieTimer){
   let beforeAttackPair = structuredClone(pair);
   ([pair, battleSteps] = checkAttackAbilities(beforeAttackPair, "before attack", battleSteps));
 
-  console.log("first");
-  console.log(structuredClone(battleSteps));
-
   //make copy and store in array for client display -- moving before so showing monster before effects not after
   let attackPair = structuredClone(pair);
   battleSteps.push({pair: attackPair, action: "attack"}); //hmm this timing is problematic TODO
-
-  console.log("second");
-  console.log(structuredClone(battleSteps));
 
   let party1 = pair[0].battleParty;
   let party2 = pair[1].battleParty;
@@ -262,9 +254,6 @@ function battleStep(pair, battleSteps, tieTimer){
   let afterAttackPair = structuredClone(pair);
   ([pair, battleSteps] = checkAttackAbilities(afterAttackPair, "after attack", battleSteps));
 
-  console.log("third");
-  console.log(structuredClone(battleSteps));
-
   //check death abilities and move up animation before actual splice, if still fighting
   if (hasBeenDeath){
     shouldTickTimer = false;
@@ -306,8 +295,6 @@ function battleStep(pair, battleSteps, tieTimer){
   //check for end, send next step or end event
   if ((party1.length == 0 && party2.length == 0) || tieTimer >= tieTimerMax) { //tie or check for tie timer
     battleSteps.push({pair: finalPair, action: "tie"});
-    console.log("tie");
-    console.log(structuredClone(battleSteps));
     return [battleSteps, numLost];
   } else if (party1.length == 0){ //player1 loss
     p1.hp -= p1.hpLoss;
@@ -317,8 +304,6 @@ function battleStep(pair, battleSteps, tieTimer){
       return [battleSteps, numLost]; //not needed but don't want errors
     } else {
       battleSteps.push({pair: finalPair, action: "battleOver"});
-      console.log("p1 over");
-      console.log(structuredClone(battleSteps));
       return [battleSteps, numLost];
     }
   } else if (party2.length == 0){ //player2 loss
@@ -332,8 +317,6 @@ function battleStep(pair, battleSteps, tieTimer){
       return [battleSteps, numLost];
     } else {
       battleSteps.push({pair: finalPair, action: "battleOver"});
-      console.log("p2 over");
-      console.log(structuredClone(battleSteps));
       return [battleSteps, numLost];
     }
   } else {
@@ -344,10 +327,6 @@ function battleStep(pair, battleSteps, tieTimer){
       tieTimer = 0;
     }
     pair = resetMonsters(pair);
-
-    console.log("fourth");
-    console.log(structuredClone(battleSteps));
-
     return battleStep(pair, battleSteps, tieTimer);
     // return [battleStep(pair, battleSteps, tieTimer), numLost];
   }
@@ -795,8 +774,6 @@ function checkLobbyForReady(player){
     let numLost = 0;
     for (let pair of battlePairs){
       let [steps, lost] = getBattleSteps(pair); //TODO might be too big?
-      console.log("steps2");
-      console.log(steps);
       numLost += lost;
       let startPair = structuredClone(pair); //unnecessary but w/e TODO
       sendToPairs.push([pair[2], startPair, steps]);
