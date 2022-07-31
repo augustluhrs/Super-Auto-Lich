@@ -149,7 +149,12 @@ socket.on("startBattle", (data) => {
   console.log(battleSteps);
   stepThroughBattle(battleSteps);
 
-  enemyName = data.startPair[1].partyName; //TODO username too?
+  // enemyName = data.startPair[1].partyName; //TODO username too?
+  if (data.startPair[0].id == playerID){
+    enemyName = data.startPair[1].partyName;
+  } else {
+    enemyName = data.startPair[0].partyName;
+  }
   // for (let p of data.startPair){
   //   if (p.id != playerID){
   //     enemyName = p.partyName;
@@ -282,6 +287,7 @@ function setup(){
   //make UI
   refreshButt = createButton('REFRESH HIRES').position(width / 5, 5 * height / 6).mousePressed(()=>{socket.emit("refreshHires", hires)}); //if gold left, replaces hires with random hires
   refreshButt.class("startButts");
+  // refreshButt.center("horizontal");
   refreshButt.hide(); //not on start
   readyButt = createButton('READY UP').position(4 * width / 5, 5 * height / 6).mousePressed(()=>{
     if (partyName == "") {
@@ -291,6 +297,7 @@ function setup(){
     }
   });
   readyButt.class("startButts");
+  // readyButt.center("horizontal");
   readyButt.hide(); //hiding until there's a party to send to battle
   let startButtWidth = width/3 + "px";
   let startButtWidthHalf = width/6 + "px";
@@ -331,9 +338,11 @@ function setup(){
   // settingsButt.style("margin-right", "-25%");
 
   numPlayersInput = createInput('Enter Number of Players').position(width / 2, 3 * height / 7).style("width", startButtWidth / 2).style("height", startButtHeight / 2);
+  numPlayersInput.class("inputs");
   numPlayersInput.center("horizontal");
   numPlayersInput.hide();
   lobbyInput = createInput('Enter a Lobby ID').position(width / 2, 4 * height / 7).style("width", startButtWidth / 2).style("height", startButtHeight / 2);
+  lobbyInput.class("inputs");
   lobbyInput.center("horizontal");
   lobbyInput.hide();
   createButt = createButton('Create Lobby').position(width / 2, 5 * height / 7).class("startButts").style("width", startButtWidth / 2).style("height", startButtHeight).mousePressed(()=>{
@@ -431,6 +440,7 @@ function draw(){
       image(m.asset, 0, 0, assetSize / 2, assetSize / 2);
       pop();
     }
+    pop();
   } else if (state == "waiting for lobby"){
     push();
     background(112,16,15);
@@ -1052,7 +1062,7 @@ function showMonsterItems(monster, x, y){ //x,y because of flip that happens in 
       noStroke();
       for (let i = 0; i < sporeNum; i++){
         ellipse(x + randomSpots[i].rX, y + randomSpots[i].rY, random(4, 12));
-        console.log(x, y);
+        // console.log(x, y);
       }
       pop();
     }
@@ -1172,8 +1182,16 @@ function stepThroughBattle(battleSteps){
     //     enemyParty = client.party;
     //   }
     // }
-    battleParty = step.pair[0].battleParty;
-    enemyParty = step.pair[1].battleParty;
+    // battleParty = step.pair[0].battleParty;
+    // enemyParty = step.pair[1].battleParty;
+    if (step.pair[0].id == playerID){
+      battleParty = step.pair[0].battleParty;
+      enemyParty = step.pair[1].battleParty;
+    } else {
+      battleParty = step.pair[1].battleParty;
+      enemyParty = step.pair[0].battleParty;
+    }
+
     //seems redundant but TODO refactor
     for (let i = 0; i < enemyParty.length; i++){
       enemyParty[i].x = battleSlots[i];
@@ -1263,7 +1281,7 @@ function stepThroughBattle(battleSteps){
       }, 3000);
     } else if (step.action == "gameOver"){
       state = "gameOver";
-      if (step.winner){
+      if (step.winner == playerID){
         battleResult = "YOU WON";
       } else {
         battleResult = "YOU LOST";

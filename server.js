@@ -294,21 +294,21 @@ function battleStep(pair, battleSteps, tieTimer){
   } else if (party1.length == 0){ //player1 loss
     p1.hp -= p1.hpLoss;
     if (p1.hp <= 0) { //player1 lose game
-      battleSteps.push({pair: finalPair, action: "gameOver", winner: false});
+      battleSteps.push({pair: finalPair, action: "gameOver", winner: p2.id});
       return battleSteps; //not needed but don't want errors
     } else {
       battleSteps.push({pair: finalPair, action: "battleOver"});
       return battleSteps;
     }
   } else if (party2.length == 0){ //player2 loss
-    // p2.hp -= p2.hpLoss;
-    // if (p2.hp <= 0) { //player2 lose game
-    //   battleSteps.push({pair: finalPair, action: "gameOver", winner: true});
-    //   return battleSteps;
-    // } else {
-    battleSteps.push({pair: finalPair, action: "battleOver"});
-    return battleSteps;
-    // }
+    p2.hp -= p2.hpLoss;
+    if (p2.hp <= 0) { //player2 lose game
+      battleSteps.push({pair: finalPair, action: "gameOver", winner: p1.id});
+      return battleSteps;
+    } else {
+      battleSteps.push({pair: finalPair, action: "battleOver"});
+      return battleSteps;
+    }
   } else {
     //check to see if a death has happened, if not, tick tieTimer (ugh this skelly...)
     if (shouldTickTimer){
@@ -723,17 +723,18 @@ function checkLobbyForReady(player){
 
     //need to split lobby evenly, with extra battle if odd num
     //determine enemies for this round
-    let battlePairs = [];
+    let battlePairs = []; //storing the unique battles (no duplicates)
+    // let battleAssignments = []; //storing who is in the battles
     // console.log("lobby parties");
     // console.log(lobbyParties);
-    if (lobby.players.length % 2 == 0){
+    if (lobby.players.length % 2 == 0) {
       for (let [i, p] of lobby.players.entries()) { //hmm
         let p1 = structuredClone(lobby.players[i]);
         lobby.players.splice(i, 1);
         let opponentIndex = Math.floor(Math.random() * lobby.players.length);
         let p2 = structuredClone(lobby.players[opponentIndex]);
-        battlePairs.push([p1, p2]); //TODO could just send p1 p2 but need to refactor battlesteps
-        battlePairs.push([p2, p1]); //okay going to dupe so that its only sending to first client for loss/win
+        battlePairs.push([p1, p2, [p1.id, p2.id]]); //TODO could just send p1 p2 but need to refactor battlesteps
+        // battlePairs.push([p2, p1]); //okay going to dupe so that its only sending to first client for loss/win
         lobby.players.splice(opponentIndex, 1);
         console.log(battlePairs);
       }
@@ -743,24 +744,32 @@ function checkLobbyForReady(player){
       let r1 = structuredClone(lobby.players[rIndex]);
       lobby.players.splice(rIndex, 1);
       let r2 = structuredClone(lobby.players[Math.floor(Math.random() * lobby.players.length)]);
-      battlePairs.push([r1, r2]);
+      battlePairs.push([r1, r2, [r1.id]]);
       console.log(battlePairs);
       for (let [i, player] of lobby.players.entries()) { //hmm not right use-case
         let p1 = structuredClone(lobby.players[i]);
         lobby.players.splice(i, 1);
         let opponentIndex = Math.floor(Math.random() * lobby.players.length);
         let p2 = structuredClone(lobby.players[opponentIndex]);
-        battlePairs.push([p1, p2]); //TODO could just send p1 p2 but need to refactor battlesteps
-        battlePairs.push([p2, p1]);
+        battlePairs.push([p1, p2, [p1.id, p2.id]]);
+        // battlePairs.push([p2, p1]);
         lobby.players.splice(opponentIndex, 1);
         console.log(battlePairs);
       }
     }
     
     //run the battlesteps for each pair and send results to each client
+    let sendToPairs = [];
     for (let pair of battlePairs){
+      let steps = getBattleSteps(pair); //TODO might be too big?
       let startPair = structuredClone(pair); //unnecessary but w/e TODO
-      io.to(pair[0].id).emit("startBattle", {startPair: startPair, battleSteps: getBattleSteps(pair)});
+      sendToPairs.push([pair[2], startPair, steps]);
+    }
+    for (let battle of sendToPairs){
+      for (let client of battle[0]){
+        io.to(client).emit("startBattle", {startPair: battle[1], battleSteps: battle[2]});
+      }
+      // io.to(pair[0].id).emit("startBattle", {startPair: startPair, battleSteps: getBattleSteps(pair)});
     }
 
     //reset lobby.players so readyup works

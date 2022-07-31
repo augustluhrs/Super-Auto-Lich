@@ -2,6 +2,11 @@ body {
   margin: 0px
 }
 
+.inputs {
+  font-size: 150%;
+  font-family: "MochiyPopOne-Regular";
+}
+
 .startButts {
   background-color: black;
   color: goldenrod;

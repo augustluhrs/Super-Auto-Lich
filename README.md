@@ -160,7 +160,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] Matchmaking refactor
       - [X] fix ready for multiple fighters (server.js:137)
       - [X] fix p1,p2 in battlesteps
-      - [ ] need to sync random events now... fuck
+      - [X] need to sync random events now... fuck
       - [ ] client side event for win/loss to account for odds and trophies for arena
       - [ ] send player message of win if only player left -- needs refactor of battleSteps "gameOver" message
       - [ ] global chat for matchmaking? w/ current users online number
@@ -183,6 +183,7 @@ Super Auto Pets and the Dungeons and Dragons monsters are property of Team Wood 
     - [ ] ability sort by strength won't work if monsters somehow have negative power
     - [ ] waiting for battle different alignment on party name and market (sketch.js:985)
     - [X] tint slowing performance
+    - [X] fix stroke after start
   - [ ] TODOs/Things to think about
     - [ ] look up networking patterns
     - [ ] look up game ability patterns
