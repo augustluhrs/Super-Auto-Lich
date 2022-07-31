@@ -48,14 +48,15 @@ inputs.on('connection', (socket) => {
   console.log('new input client!: ' + socket.id);
 
   //add entry to players object (search by id);
-  players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null]), lobby: testLobby});
+  players[socket.id] = new Player({id: socket.id, hires: refreshHires(1, [null, null, null], socket.id)});
 
   //create a lobby
   socket.on("createLobby", (data) => {
     let newLobby = new Lobby({lobbyName: data.lobbyName, numPlayers: data.numPlayers});
     players[socket.id].userName = data.userName;
     players[socket.id].lobbyName = data.lobbyName;
-    newLobby.players[socket.id] = players[socket.id]; //hmm
+    // newLobby.players[socket.id] = players[socket.id]; //hmm
+    newLobby.players.push(players[socket.id]); //hm
     lobbies[newLobby.lobbyName] = newLobby; //hmmmm
     socket.join(newLobby.lobbyName);
     socket.emit("waitingForLobby", newLobby);
@@ -68,15 +69,18 @@ inputs.on('connection', (socket) => {
     players[socket.id].lobbyName = data.lobbyName;
     if (lobbies[data.lobbyName] != undefined){
       let lobby = lobbies[data.lobbyName];
-      lobby.players[socket.id] = players[socket.id]; //hmm
+      // lobby.players[socket.id] = players[socket.id]; //hmm/
+      lobby.players.push(players[socket.id]);
       socket.join(lobby.lobbyName);
-      if (Object.keys(lobby.players).length == lobby.numPlayers) {
+      
+      if (lobby.players.length == lobby.numPlayers) {
         console.log("STARTING LOBBY " + lobby.lobbyName);
-        for (let pID of Object.keys(lobby.players)){
-          let player = players[pID];
-          io.to(pID).emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)});
+        for (let player of lobby.players){
+          // let player = players[p.id]; //TODO check to make sure reference is fine
+          io.to(player.id).emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires, player.id)});
         }
-        // io.to(lobby.lobbyName).emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)});
+        //resetting lobby.players b/c that's the new ready check
+        lobby.players = [];
       } else {
         io.to(lobby.lobbyName).emit("waitingForLobby", lobby);
       }
@@ -97,7 +101,7 @@ inputs.on('connection', (socket) => {
     if (player.gold > 0){ //get random monsters and send them to player's market
       player.hires = data;
       player.gold--;
-      socket.emit("newHires", {gold: player.gold, hires: refreshHires(player.tier, player.hires)});
+      socket.emit("newHires", {gold: player.gold, hires: refreshHires(player.tier, player.hires, player.id)});
       console.log("sent " + socket.id + "new hires");
     } else {
       console.log('not enough gold');
@@ -127,92 +131,16 @@ inputs.on('connection', (socket) => {
   //for test, just going to put in room on here instead of joining lobby at start, TODO
   socket.on("readyUp", (data) => {
     let player = players[socket.id];
-    player.ready = true;
+    // player.ready = true;
     player.hires = data.hires;
     player.party = data.party;
     player.battleParty = structuredClone(data.party);
     player.partyName = data.partyName;
 
-    // check to see if both are ready, if so, send to battle
-    let lobby = io.sockets.adapter.rooms.get(player.lobbyName);
-    console.log(lobby);
-    if (lobby.size == 2){ //size instead of length because its a set
-      let enemyIsReady = false;
-      let enemy = {};
-      for (let id of lobby){
-        console.log(id);
-        if (id !== player.id) { //check to see if other player is ready
-          let other = players[id];
-          if (other.ready){
-            enemy.id = other.id;
-            enemy.battleParty = other.battleParty;
-            enemyIsReady = true;
-          } 
-        }
-      }
-      //TODO need to do this less 1/2 and more player 1 player 2... 
-      //TODO make less clunky... trims up the parties for better battle display
-      if (enemyIsReady){
-        //remove nulls from party so battle step works
-        let party1 = player.battleParty;
-        for(let i = 0; i < party1.length; i++){
-          if (party1[i] == null){
-            for (let j = i; j < party1.length - 1; j++){
-              party1[j] = party1[j+1];
-              if (j == party1.length - 2 && party1[j+1] !== null){
-                party1[j+1] = null;
-              }
-            }
-          }
-        }
-        for (let i = party1.length - 1; i >= 0; i--){
-          if (party1[i] == null){
-            party1.splice(i, 1);
-          }
-        }
-        //reset indexes and add lichID
-        for (let i = 0; i < party1.length; i++){
-          party1[i].index = i;
-          party1[i].lichID = player.id;
-        }
-
-        let party2 = enemy.battleParty;
-        for(let i = 0; i < party2.length; i++){
-          if (party2[i] == null){
-            for (let j = i; j < party2.length - 1; j++){
-              party2[j] = party2[j+1];
-              if (j == party2.length - 2 && party2[j+1] !== null){
-                party2[j+1] = null;
-              }
-            }
-          }
-        }
-        for (let i = party2.length - 1; i >= 0; i--){
-          if (party2[i] == null){
-            party2.splice(i, 1);
-          }
-        }
-        //reset indexes and add lichID
-        for (let i = 0; i < party2.length; i++){
-          party2[i].index = i;
-          party2[i].lichID = enemy.id;
-        }
-
-        //reset here since we only check when starting battle
-        players[player.id].ready = false;
-        players[enemy.id].ready = false;
-
-        //start battle sequence
-        let battle = [{id: player.id, partyName: player.partyName, party: party1}, {id: enemy.id, partyName: players[enemy.id].partyName, party: party2}];
-        let startParties = structuredClone(battle);
-
-        io.to(player.lobby).emit("startBattle", {startParties: startParties, battleSteps: getBattleSteps(battle)});
-      } else {
-        socket.emit("waitingForBattle");
-      }
-    } else {
-      socket.emit("waitingForBattle");
-    }
+    //now just sending party to lobby waiting and triggering when all are there since might be >2
+    // lobbies[player.lobbyName].parties.push({id: socket.id, party: player.battleParty});
+    lobbies[player.lobbyName].players.push(player); //changing parties to just being player objects
+    checkLobbyForReady(player);
   });
 
   //after battle timeout, send back to market, trigger tier stuff
@@ -237,7 +165,7 @@ inputs.on('connection', (socket) => {
       // player.tier = 2;
     }
     // player.ready = false; //wasn't doing this fast enough to prevent spamming battle errors
-    socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires)}); //TODO just send player
+    socket.emit("goToMarket", {gold: player.gold, hp: player.hp, turn: player.turn, party: player.party, hires: refreshHires(player.tier, player.hires, player.id)}); //TODO just send player
   });
 
   //listen for this client to disconnect
@@ -252,31 +180,41 @@ inputs.on('connection', (socket) => {
 // FUNCTIONS
 //
 
-function getBattleSteps(battle){
-  let copyParties = structuredClone(battle); //TODO need better names for these parties I keep making
-  let startParties = structuredClone(battle);
-  let battleSteps = [{parties: copyParties, action: "start"}]; //confusing because abilites are "before start", but start is always first TODO
-  battleSteps = checkStartAbilities(startParties, "before start", battleSteps);
-  battleSteps = battleStep(startParties, battleSteps, tieTimer); //silly naming
-  return battleSteps;
+function getBattleSteps(pair){
+  let numLost = 0; //for reducing players in lobby and sending final win msg
+  let clonePair = structuredClone(pair); //TODO need better names for these parties I keep making
+  let startPair = structuredClone(pair);
+  let battleSteps = [{pair: clonePair, action: "start"}]; //confusing because abilites are "before start", but start is always first TODO just make it "on start" instead
+  ([pair, battleSteps] = checkStartAbilities(startPair, "before start", battleSteps));
+  console.log("steps0");
+  console.log(battleSteps);
+  ([battleSteps, numLost] = battleStep(startPair, battleSteps, tieTimer)); //wtf "Note: The parentheses ( ... ) around the assignment statement are required when using object literal destructuring assignment without a declaration."
+  console.log("steps1");
+  console.log(structuredClone(battleSteps));
+  return [battleSteps, numLost];
 }
 
-function battleStep(battle, battleSteps, tieTimer){
+function battleStep(pair, battleSteps, tieTimer){
+  let numLost = 0;
   console.log("battleStep");
   let shouldTickTimer = true; //TODO there's a better way to check if should tick tie timer
 
   //check for before attack abilities
-  let beforeAttackParties = structuredClone(battle);
-  [battle, battleSteps] = checkAttackAbilities(beforeAttackParties, "before attack", battleSteps);
+  let beforeAttackPair = structuredClone(pair);
+  ([pair, battleSteps] = checkAttackAbilities(beforeAttackPair, "before attack", battleSteps));
+
+  console.log("first");
+  console.log(structuredClone(battleSteps));
 
   //make copy and store in array for client display -- moving before so showing monster before effects not after
-  let copyParties = structuredClone(battle);
-  battleSteps.push({parties: copyParties, action: "attack"}); //hmm this timing is problematic TODO
+  let attackPair = structuredClone(pair);
+  battleSteps.push({pair: attackPair, action: "attack"}); //hmm this timing is problematic TODO
 
-  let party1 = battle[0].party;
-  let party2 = battle[1].party;
-  let p1ID = battle[0].id;
-  let p2ID = battle[1].id;
+  console.log("second");
+  console.log(structuredClone(battleSteps));
+
+  let party1 = pair[0].battleParty;
+  let party2 = pair[1].battleParty;
 
   //apply damage, confirm attacks for abilities, and wake up if sleeping
   if (!party1[0].isSleeping){
@@ -313,29 +251,35 @@ function battleStep(battle, battleSteps, tieTimer){
   }
 
   //send parties after damage
-  let damageParties = structuredClone(battle);
-  battleSteps.push({parties: damageParties, action: "damage"});
+  let damagePair = structuredClone(pair);
+  battleSteps.push({pair: damagePair, action: "damage"});
   //if damaged, wake up TODO
 
   //reset .isDamaged
-  battle = resetMonsters(battle);
+  pair = resetMonsters(pair);
 
   //check for after attack abilities
-  let afterAttackParties = structuredClone(battle);
-  [battle, battleSteps] = checkAttackAbilities(afterAttackParties, "after attack", battleSteps);
+  let afterAttackPair = structuredClone(pair);
+  ([pair, battleSteps] = checkAttackAbilities(afterAttackPair, "after attack", battleSteps));
+
+  console.log("third");
+  console.log(structuredClone(battleSteps));
 
   //check death abilities and move up animation before actual splice, if still fighting
   if (hasBeenDeath){
-    let preDeathParties = structuredClone(battle);
-    [battle, battleSteps] = checkDeathAbilities(preDeathParties, "after death", battleSteps, deadMonsters);
-    if (preDeathParties[0].party.length > battle[0].party.length || preDeathParties[1].party.length > battle[1].party.length){ //prevent from sending move if no one actually was removed
-      let postDeathParties = structuredClone(battle);
-      battleSteps.push({parties: postDeathParties, action: "move"}); //going to have to hide first index...
+    shouldTickTimer = false;
+    let preDeathPair = structuredClone(pair);
+    ([pair, battleSteps] = checkDeathAbilities(preDeathPair, "after death", battleSteps, deadMonsters));
+    if (preDeathPair[0].battleParty.length > pair[0].battleParty.length || preDeathPair[1].battleParty.length > pair[1].battleParty.length){ //prevent from sending move if no one actually was removed
+      let postDeathPair = structuredClone(pair);
+      battleSteps.push({pair: postDeathPair, action: "move"}); //going to have to hide first index...
     }
   }
 
-  party1 = battle[0].party; //hmmmmmmmmmmmmmmmmmm
-  party2 = battle[1].party;
+  let p1 = players[pair[0].id]; //hmmmm
+  let p2 = players[pair[1].id]; //hmmmm
+  party1 = pair[0].battleParty; //hmmm
+  party2 = pair[1].battleParty;
 
   //move up party if death
   for (let i = party1.length - 1; i >= 0; i--){
@@ -358,91 +302,64 @@ function battleStep(battle, battleSteps, tieTimer){
     party2[i].index = i;
   }
 
-  let p1 = players[p1ID];
-  let p2 = players[p2ID];
-
-
-  let finalParties = structuredClone(battle);
+  let finalPair = structuredClone(pair);
   //check for end, send next step or end event
   if ((party1.length == 0 && party2.length == 0) || tieTimer >= tieTimerMax) { //tie or check for tie timer
-    battleSteps.push({parties: finalParties, action: "tie"});
-    return battleSteps;
+    battleSteps.push({pair: finalPair, action: "tie"});
+    console.log("tie");
+    console.log(structuredClone(battleSteps));
+    return [battleSteps, numLost];
   } else if (party1.length == 0){ //player1 loss
     p1.hp -= p1.hpLoss;
     if (p1.hp <= 0) { //player1 lose game
-      battleSteps.push({parties: finalParties, action: "gameOver", winner: p2ID});
-      return battleSteps; //not needed but don't want errors
+      numLost++;
+      battleSteps.push({pair: finalPair, action: "gameOver", winner: p2.id, numPlayersInLobby: lobbies[pair[0].lobbyName].players.length});
+      return [battleSteps, numLost]; //not needed but don't want errors
     } else {
-      battleSteps.push({parties: finalParties, action: "battleOver"});
-      return battleSteps;
+      battleSteps.push({pair: finalPair, action: "battleOver"});
+      console.log("p1 over");
+      console.log(structuredClone(battleSteps));
+      return [battleSteps, numLost];
     }
   } else if (party2.length == 0){ //player2 loss
-    p2.hp -= p2.hpLoss;
+    //only if not an odd round
+    if (pair[2].length == 2){
+      p2.hp -= p2.hpLoss;
+    }
     if (p2.hp <= 0) { //player2 lose game
-      battleSteps.push({parties: finalParties, action: "gameOver", winner: p1ID});
-      return battleSteps;
+      numLost++;
+      battleSteps.push({pair: finalPair, action: "gameOver", winner: p1.id, numPlayersInLobby: lobbies[pair[0].lobbyName].players.length});
+      return [battleSteps, numLost];
     } else {
-      battleSteps.push({parties: finalParties, action: "battleOver"});
-      return battleSteps;
+      battleSteps.push({pair: finalPair, action: "battleOver"});
+      console.log("p2 over");
+      console.log(structuredClone(battleSteps));
+      return [battleSteps, numLost];
     }
   } else {
     //check to see if a death has happened, if not, tick tieTimer (ugh this skelly...)
     if (shouldTickTimer){
       tieTimer++;
+    } else {
+      tieTimer = 0;
     }
-    battle = resetMonsters(battle);
-    return battleStep(battle, battleSteps, tieTimer);
+    pair = resetMonsters(pair);
+
+    console.log("fourth");
+    console.log(structuredClone(battleSteps));
+
+    return battleStep(pair, battleSteps, tieTimer);
+    // return [battleStep(pair, battleSteps, tieTimer), numLost];
   }
 }
 
 //ability function -- not trying to optimize yet, though TODO could have all abilities in one?
-function checkStartAbilities(parties, timing, battleSteps){ //needs parties, timing, and battleSteps array
-  let p1 = parties[0].id;
-  let p2 = parties[1].id;
-  let party1 = parties[0].party;
-  let party2 = parties[1].party;
-
-  //get deep copy before any changes
-  let copyParties = structuredClone(parties);
-
-  //check for abilities that match the timing and make new array of monsters that need to act
-  let actingMonsters = [];
-  let maxPower = 0;
-  for (let i = 0; i < party1.length; i++){
-    if (party1[i].timing == timing){
-      party1[i].lichID = p1;
-      if (party1[i].currentPower > maxPower){
-        maxPower = party1[i].currentPower;
-      }
-      actingMonsters.push(party1[i]);
-    }
-  }
-  for (let i = 0; i < party2.length; i++){
-    party2[i].lichID = p2;
-    if (party2[i].currentPower > maxPower){
-      maxPower = party2[i].currentPower;
-    }
-    actingMonsters.push(party2[i]);
-  }
-
-  //sort array by strength, ties are random
-  let sortedMonsters = [];
-  //prob an existing sorting algorithm for this but w/e
-  for (let i = maxPower; i >= 0; i--){ //TODO this won't work if there are effects that bring a monster to negative power
-    let powerArray = [];
-    for (let monster of actingMonsters){ //code smell TODO -- something about ids, parties, indexes
-      if (monster.currentPower == i) {
-        powerArray.push(monster);
-      }
-    }
-    sortedMonsters.push(powerArray);
-  }
-  for (let powerArray of sortedMonsters){
-    if (powerArray.length > 1){
-      shuffleArray(powerArray);
-    }
-  }
-  //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
+function checkStartAbilities(pair, timing, battleSteps){ //needs parties, timing, and battleSteps array
+  // let p1 = parties[0].id;
+  // let p2 = parties[1].id;
+  let party1 = pair[0].battleParty;
+  let party2 = pair[1].battleParty;
+  let sortedMonsters = getActingMonsters(timing, party1, party2);
 
   //need to do the abilities, then check for damage/death...
   for (let powerArray of sortedMonsters) {
@@ -454,14 +371,14 @@ function checkStartAbilities(parties, timing, battleSteps){ //needs parties, tim
           //increases stats by level (+50/100/150%, rounded down)
           // monster.currentPower += Math.floor(monster.currentPower * monster.level * 0.5); //nerf
           monster.currentHP += Math.floor(monster.currentHP * monster.level * 0.5);
-          let partiesAtThisStage = structuredClone(parties);
-          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster}); //idk i don't like overloading the object like this, but w/e.... TODO
+          let pairAtThisStage = structuredClone(pair);
+          battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster}); //idk i don't like overloading the object like this, but w/e.... TODO
         } else if (monster.name == "kobold") {
           let party;
-          if (parties[0].id == monster.lichID){
-            party = parties[0].party;
+          if (pair[0].id == monster.lichID){
+            party = pair[0].battleParty;
           } else {
-            party = parties[1].party;
+            party = pair[1].battleParty;
           }
 
           let numKobolds = 0;
@@ -472,61 +389,30 @@ function checkStartAbilities(parties, timing, battleSteps){ //needs parties, tim
           }
 
           if (numKobolds > 1){
-            monster.currentPower += numKobolds - 1; //TODO even with -1 this could be way OP
-            monster.currentHP += numKobolds - 1;
-            let partiesAtThisStage = structuredClone(parties);
-            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+            // monster.currentPower += numKobolds - 1; //TODO even with -1 this could be way OP
+            // monster.currentHP += numKobolds - 1;
+            monster.currentPower += numKobolds;
+            monster.currentHP += numKobolds;
+            let pairAtThisStage = structuredClone(pair);
+            battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
           }
         }
       }
     }
   }
 
-  return battleSteps;
+  return [pair, battleSteps];
 }
 
 //mid-battle abilities
-function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, timing, and battleSteps array
-  let p1ID = parties[0].id;
-  let p2ID = parties[1].id;
-  let party1 = parties[0].party;
-  let party2 = parties[1].party;
+function checkAttackAbilities(pair, timing, battleSteps){ //needs parties, timing, and battleSteps array
+  // let p1ID = parties[0].id;
+  // let p2ID = parties[1].id;
+  let party1 = pair[0].battleParty;
+  let party2 = pair[1].battleParty;
 
-  //check for abilities that match the timing and make new array of monsters that need to act
-  let actingMonsters = [];
-  let maxPower = 0;
-
-  if (party1[0].timing == timing){
-    if (party1[0].currentPower > maxPower){
-      maxPower = party1[0].currentPower;
-    }
-    actingMonsters.push(party1[0]);
-  }
-
-  if (party2[0].currentPower > maxPower){
-    maxPower = party2[0].currentPower;
-  }
-  actingMonsters.push(party2[0]);
-
-  //sort array by strength, ties are random
-  let sortedMonsters = [];
-  //prob an existing sorting algorithm for this but w/e
-  for (let i = maxPower; i >= 0; i--){ //TODO this won't work if there are effects that bring a monster to negative power
-    let powerArray = [];
-    for (let monster of actingMonsters){ //code smell TODO -- something about ids, parties, indexes
-      if (monster.currentPower == i) {
-        powerArray.push(monster);
-      }
-    }
-    sortedMonsters.push(powerArray);
-  }
-  for (let powerArray of sortedMonsters){
-    if (powerArray.length > 1){
-      shuffleArray(powerArray);
-    }
-  }
-  //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
-
+  let sortedMonsters = getActingMonsters(timing, party1, party2);
+  
   //need to do the abilities, then check for damage/death...
   for (let powerArray of sortedMonsters) {
     for (let monster of powerArray){
@@ -535,14 +421,14 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
         if (monster.name == "goblin") { //TODO should this stop attacking or negate damage??
           //random chance to have opponent not attack (20%/40%/60%)
           if (Math.random() < monster.level * 0.2) {
-            if (monster.lichID == p1ID) {
+            if (monster.lichID == pair[0].id) {
               party2[0].isSleeping = true; //TODO better name for not attacking
-              let partiesAtThisStage = structuredClone(parties);
-              battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
-            } else if (monster.lichID == p2ID) {
+              let pairAtThisStage = structuredClone(pair);
+              battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
+            } else if (monster.lichID == pair[1].id) {
               party1[0].isSleeping = true;
-              let partiesAtThisStage = structuredClone(parties);
-              battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+              let pairAtThisStage = structuredClone(pair);
+              battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
             }
           }
         } else if (monster.name == "stirge") {
@@ -550,8 +436,8 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
           if(!monster.isDead && monster.hasAttacked){
             monster.currentHP += monster.level;
             monster.hasAttacked = false; //TODO not sure if this is necessary/right
-            let partiesAtThisStage = structuredClone(parties);
-            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+            let pairAtThisStage = structuredClone(pair);
+            battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
           }
         } else if (monster.name == "gnoll") {
           if(!monster.isDead && monster.hasKilled){
@@ -568,8 +454,8 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
                 otherParty = party1;
               }
             }
-            let partiesAtThisStage = structuredClone(parties);
-            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+            let pairAtThisStage = structuredClone(pair);
+            battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
 
             //if gnoll kills, makes (1/2/3) attacks and each has a 25% chance of hitting ally (what if at end? fine, b/c enemy may not have enough to make it worth)
             for (let i = 0; i < monster.level; i++){
@@ -589,7 +475,7 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
                 }
               } else { //chance of hitting ally
                 if (Math.random() < 0.20) { //blood blind, hits ally
-                  for (let j = monster.index - 1; j < party.length; j++){
+                  for (let j = monster.index + 1; j < party.length; j++){
                     if (!party[j].isDead){
                       party[j].currentHP -= monster.currentPower;
                       if (party[j].currentHP <= 0){
@@ -616,55 +502,25 @@ function checkAttackAbilities(parties, timing, battleSteps){ //needs parties, ti
               }
               
             }
-            let rampagedParties = structuredClone(parties);
-            battleSteps.push({parties: rampagedParties, action: "damage"});
-            parties = resetMonsters(parties);
+            let rampagedPair = structuredClone(pair);
+            battleSteps.push({pair: rampagedPair, action: "damage"});
+            pair = resetMonsters(pair);
           }
         } 
         
       }
     }
   }
-  return [structuredClone(parties), battleSteps];
+  // return [structuredClone(pair), battleSteps]; //wait why was this cloned?
+  return [pair, battleSteps];
 }
 
 //after death abilities
-function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
-  let p1ID = parties[0].id;
-  let p2ID = parties[1].id;
-  let party1 = parties[0].party;
-  let party2 = parties[1].party;
+function checkDeathAbilities(pair, timing, battleSteps, deadMonsters){
+  let party1 = pair[0].battleParty;
+  let party2 = pair[1].battleParty;
 
-  //check for abilities that match the timing and make new array of monsters that need to act
-  let actingMonsters = [];
-  let maxPower = 0;
-  for (let monster of deadMonsters){
-    if (monster.timing == timing){
-      if (monster.currentPower > maxPower){
-        maxPower = monster.currentPower;
-      }
-      actingMonsters.push(monster);
-    }
-  }
-
-  //sort array by strength, ties are random
-  let sortedMonsters = [];
-  //prob an existing sorting algorithm for this but w/e
-  for (let i = maxPower; i >= 0; i--){ //TODO this won't work if there are effects that bring a monster to negative power
-    let powerArray = [];
-    for (let monster of actingMonsters){ //code smell TODO -- something about ids, parties, indexes
-      if (monster.currentPower == i) {
-        powerArray.push(monster);
-      }
-    }
-    sortedMonsters.push(powerArray);
-  }
-  for (let powerArray of sortedMonsters){
-    if (powerArray.length > 1){
-      shuffleArray(powerArray);
-    }
-  }
-  //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
+  let sortedMonsters = getActingMonsters(timing, deadMonsters, []);
 
   //need to do the abilities, then check for damage/death...
   //moving dead monsters here, so will do all first dead monsters, then subsequent dead, instead of nested, skelly issue
@@ -693,8 +549,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
             skelly.currentPower = skelly.level;
             skelly.spawnChance -= skelly.spawnChance / (skelly.level + 1);
             skelly.isDead = false;
-            let partiesAtThisStage = structuredClone(parties);
-            battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: skelly});
+            let pairAtThisStage = structuredClone(pair);
+            battleSteps.push({pair: pairAtThisStage, action: "ability", monster: skelly});
           } else{
             needsMove = true;
           }
@@ -712,8 +568,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
               otherParty = party1;
             }
           }
-          let partiesAtThisStage = structuredClone(parties);
-          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          let pairAtThisStage = structuredClone(pair);
+          battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
           let numInfected = monster.level;
           for (let i = 0; i < otherParty.length; i++){
             if (otherParty[i].isDead) {
@@ -741,8 +597,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
             }
           }
 
-          let partiesAtThisStage = structuredClone(parties);
-          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          let pairAtThisStage = structuredClone(pair);
+          battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
           let numInfected = monster.level;
           for (let i = 0; i < otherParty.length; i++){
             if (otherParty[i].isDead) {
@@ -776,8 +632,8 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
               otherParty = party1;
             }
           }
-          let partiesAtThisStage = structuredClone(parties);
-          battleSteps.push({parties: partiesAtThisStage, action: "ability", monster: monster});
+          let pairAtThisStage = structuredClone(pair);
+          battleSteps.push({pair: pairAtThisStage, action: "ability", monster: monster});
           //find adjacent monsters and deal them damage
           let hasDealtDamage = false;
           
@@ -829,23 +685,22 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
           }
 
           if (hasDealtDamage){
-            let damagedParties = structuredClone(parties);
-            battleSteps.push({parties: damagedParties, action: "damage"});
-            parties = resetMonsters(parties); //TODO check if this is okay time to do this
+            let damagedPair = structuredClone(pair);
+            battleSteps.push({pair: damagedPair, action: "damage"});
+            pair = resetMonsters(pair); //TODO check if this is okay time to do this
           }
       
         }
-        //other death monsters TODO
       }
     }
   }
 
   if (deadMonsters2.length > 0){
-    [parties, battleSteps] = checkDeathAbilities(parties, "after death", battleSteps, deadMonsters2);
+    ([pair, battleSteps] = checkDeathAbilities(pair, "after death", battleSteps, deadMonsters2));
 
-    //TODO code smell
-    party1 = parties[0].party;
-    party2 = parties[1].party;
+    //TODO code smell, this shouldn't be necessary...
+    party1 = pair[0].battleParty;
+    party2 = pair[1].battleParty;
   }
 
   //this isnt' working -- all bunched up at end, eliminating for now TODO
@@ -855,7 +710,7 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
   //   //move animation will be off if jumping more than one slot or death in middle... TODO
   // }
   
-  //fine b/c only happening once, no matter how many death abilities?
+  //fine b/c only happening once, no matter how many death abilities? uhh no?
   //move up party if death
   for (let i = party1.length - 1; i >= 0; i--){
     if (party1[i].isDead){
@@ -881,27 +736,196 @@ function checkDeathAbilities(parties, timing, battleSteps, deadMonsters){
     party2[i].hasKilled = false;
   }
 
-  return [parties, battleSteps];
+  return [pair, battleSteps];
+}
+
+//send waiting or ready for multiplayer lobby
+function checkLobbyForReady(player){
+  let lobby = lobbies[player.lobbyName];
+  // lobby.players.push(player); //does this on ready
+  // let lobbyPlayers = structuredClone(lobby.players);
+  if (lobby.players.length < lobby.numPlayers) {
+    // io.to(lobbyName).emit("waitingForBattle");
+    io.to(player.id).emit("waitingForBattle");
+  } else {
+    //run the party trim functions
+    for (let p of lobby.players) {
+      p.battleParty = prepParty(p.battleParty);
+    }
+
+    //need to split lobby evenly, with extra battle if odd num
+    //determine enemies for this round
+    let battlePairs = []; //storing the unique battles (no duplicates)
+    // let battleAssignments = []; //storing who is in the battles
+    // console.log("lobby parties");
+    // console.log(lobbyParties);
+    if (lobby.players.length % 2 == 0) {
+      for (let [i, p] of lobby.players.entries()) { //hmm
+        let p1 = structuredClone(lobby.players[i]);
+        lobby.players.splice(i, 1);
+        let opponentIndex = Math.floor(Math.random() * lobby.players.length);
+        let p2 = structuredClone(lobby.players[opponentIndex]);
+        battlePairs.push([p1, p2, [p1.id, p2.id]]); //TODO could just send p1 p2 but need to refactor battlesteps
+        // battlePairs.push([p2, p1]); //okay going to dupe so that its only sending to first client for loss/win
+        lobby.players.splice(opponentIndex, 1);
+        console.log(battlePairs);
+      }
+    } else { //odd -- need to figure out how to only count for one battle in HP tally... guess it makes sense to kind of do it client side? easy to do trophies then too...
+      //take someone at random out and have them fight someone random from remaining
+      let rIndex = Math.floor(Math.random() * lobby.players.length);
+      let r1 = structuredClone(lobby.players[rIndex]);
+      lobby.players.splice(rIndex, 1);
+      let r2 = structuredClone(lobby.players[Math.floor(Math.random() * lobby.players.length)]);
+      battlePairs.push([r1, r2, [r1.id]]);
+      console.log(battlePairs);
+      for (let [i, player] of lobby.players.entries()) { //hmm not right use-case
+        let p1 = structuredClone(lobby.players[i]);
+        lobby.players.splice(i, 1);
+        let opponentIndex = Math.floor(Math.random() * lobby.players.length);
+        let p2 = structuredClone(lobby.players[opponentIndex]);
+        battlePairs.push([p1, p2, [p1.id, p2.id]]);
+        // battlePairs.push([p2, p1]);
+        lobby.players.splice(opponentIndex, 1);
+        console.log(battlePairs);
+      }
+    }
+    
+    //run the battlesteps for each pair and send results to each client
+    let sendToPairs = [];
+    let numLost = 0;
+    for (let pair of battlePairs){
+      let [steps, lost] = getBattleSteps(pair); //TODO might be too big?
+      console.log("steps2");
+      console.log(steps);
+      numLost += lost;
+      let startPair = structuredClone(pair); //unnecessary but w/e TODO
+      sendToPairs.push([pair[2], startPair, steps]);
+    }
+    if (numLost > 0){
+      lobbies[player.lobbyName].numPlayers -= numLost;
+    }
+    for (let battle of sendToPairs){
+      for (let client of battle[0]){
+        io.to(client).emit("startBattle", {startPair: battle[1], battleSteps: battle[2], numPlayersInLobby: lobbies[player.lobbyName].numPlayers});
+      }
+      // io.to(pair[0].id).emit("startBattle", {startPair: startPair, battleSteps: getBattleSteps(pair)});
+    }
+
+    //reset lobby.players so readyup works
+    lobby.players = [];
+    console.log("round over, num lost: " + numLost);
+
+  }
+}
+
+//trims the party arrays to only include monsters and shift them to the front
+function prepParty(preParty) {
+  let party = structuredClone(preParty);
+  for(let i = 0; i < party.length; i++){
+    if (party[i] == null){
+      for (let j = i; j < party.length - 1; j++){
+        party[j] = party[j+1];
+        if (j == party.length - 2 && party[j+1] !== null){
+          party[j+1] = null;
+        }
+      }
+    }
+  }
+  for (let i = party.length - 1; i >= 0; i--){
+    if (party[i] == null){
+      party.splice(i, 1);
+    }
+  }
+  //reset indexes
+  for (let i = 0; i < party.length; i++){
+    party[i].index = i;
+    // party[i].lichID = player.id;
+  }
+  return party;
+}
+
+//checks timing and sorts monsters by strength for ability triggers
+function getActingMonsters(timing, party1, party2){
+  //check for abilities that match the timing and make new array of monsters that need to act
+  let actingMonsters = [];
+  let maxPower = 0;
+  
+  if (timing == "before attack" || timing == "after attack"){
+    if (party1[0].timing == timing){
+      if (party1[0].currentPower > maxPower){
+        maxPower = party1[0].currentPower;
+      }
+      actingMonsters.push(party1[0]);
+    }
+    if (party2[0].timing == timing){
+      if (party2[0].currentPower > maxPower){
+        maxPower = party2[0].currentPower;
+      }
+      actingMonsters.push(party2[0]);
+    }
+  } else {
+    for (let m of party1){
+      if (m.timing == timing){
+        if (m.currentPower > maxPower){
+          maxPower = m.currentPower;
+        }
+        actingMonsters.push(m);
+      }
+    }
+  
+    if (party2.length != 0){ //hack for deadmonsters sorting
+      for (let m of party2) {
+        if (m.timing == timing){ //wasn't doing this before refactor.... wtf?
+          if (m.currentPower > maxPower){
+            maxPower = m.currentPower;
+          }
+          actingMonsters.push(m);
+        }
+      }
+    }
+  }
+  
+
+  //sort array by strength, ties are random
+  let sortedMonsters = [];
+  //prob an existing sorting algorithm for this but w/e
+  for (let i = maxPower; i >= 0; i--){ //TODO this won't work if there are effects that bring a monster to negative power
+    let powerArray = [];
+    for (let monster of actingMonsters){ //code smell TODO -- something about ids, parties, indexes
+      if (monster.currentPower == i) {
+        powerArray.push(monster);
+      }
+    }
+    sortedMonsters.push(powerArray);
+  }
+  for (let powerArray of sortedMonsters){
+    if (powerArray.length > 1){
+      shuffleArray(powerArray);
+    }
+  }
+  //now we have all monsters who are acting in this stage of the battle, with stronger monsters going first
+  return sortedMonsters;
 }
 
 //hmm TODO resets monster properties that should refresh after certain steps...
-function resetMonsters(parties){
-  for (let monster of parties[0].party){
+function resetMonsters(pair){
+  for (let monster of pair[0].battleParty){
     monster.isDamaged = false;
   }
-  for (let monster of parties[1].party){
+  for (let monster of pair[1].battleParty){
     monster.isDamaged = false;
   }
-  return parties;
+  return pair;
 }
 
-function refreshHires(tier, hires){
+//for sending client new hire options, taking frozen into account
+function refreshHires(tier, hires, playerID){
   for (let i = 0; i < hires.length; i++){
     if (hires[i] == null || !hires[i].isFrozen) {
       //select randomly from all unlocked tiers
       let randomTier = Math.floor(Math.random()*tier); //monster array starts at 0 for tier 1, should be fine
       let RandomMonster = monsters[randomTier][Math.floor(Math.random()*monsters[randomTier].length)];
-      hires[i] = new RandomMonster({index: i});
+      hires[i] = new RandomMonster({index: i, lichID: playerID});
     }
   }
   return hires;
